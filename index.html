@@ -337,12 +337,31 @@ let countdownTimer=0;
 
 const keys={};
 let mouseX=W/2,mouseY=H/2,mouseDown=false,rightDown=false;
-addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','Tab','KeyQ','KeyE'].includes(e.code))e.preventDefault()});
+addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','Tab','KeyQ','KeyE','KeyR'].includes(e.code))e.preventDefault()});
 addEventListener('keyup',e=>{keys[e.code]=false});
-canvas.addEventListener('mousemove',e=>{mouseX=e.clientX;mouseY=e.clientY});
-canvas.addEventListener('mousedown',e=>{if(e.button===0)mouseDown=true;if(e.button===2)rightDown=true;e.preventDefault()});
+// Mouse: support both normal and pointer lock mode
+canvas.addEventListener('mousemove',e=>{
+  if(document.pointerLockElement===canvas){
+    // Pointer locked: accumulate movement
+    mouseX=clamp(mouseX+(e.movementX||0),0,W);
+    mouseY=clamp(mouseY+(e.movementY||0),0,H);
+  } else {
+    mouseX=e.clientX;mouseY=e.clientY;
+  }
+});
+canvas.addEventListener('mousedown',e=>{
+  if(e.button===0)mouseDown=true;if(e.button===2)rightDown=true;e.preventDefault();
+  // Request pointer lock on first click during gameplay
+  if(document.body.classList.contains('in-game')&&document.pointerLockElement!==canvas){
+    canvas.requestPointerLock();
+  }
+});
 canvas.addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2)rightDown=false});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
+// Release pointer lock when leaving gameplay
+document.addEventListener('pointerlockchange',()=>{
+  if(document.pointerLockElement!==canvas){mouseDown=false;rightDown=false;}
+});
 
 // Entities
 let players=[],enemies=[],spells=[],particles=[],trails=[],shockwaves=[],texts=[],beams=[],zones=[],aoeMarkers=[],eProj=[];
@@ -527,6 +546,7 @@ let pendingNextRoom=null;
 function showUpgradeScreen(nextRoom){
   gamePhase='upgrade';
   document.body.classList.remove('in-game');
+  if(document.pointerLockElement)document.exitPointerLock();
   upgradePickedLocal=false;
   upgradePickedRemote=false;
   pendingNextRoom=nextRoom;
@@ -552,6 +572,7 @@ function showUpgradeFromHost(indices){
   // Guest receives upgrade choices from host
   gamePhase='upgrade';
   document.body.classList.remove('in-game');
+  if(document.pointerLockElement)document.exitPointerLock();
   upgradePickedLocal=false;
   pendingUpgradeChoices=indices;
   showUpgradeUI(indices);
@@ -1203,7 +1224,7 @@ function drawMinimap(){
     if(!r.visited){mmCtx.fillStyle='rgba(40,30,60,.3)';mmCtx.fillRect(rx-5,ry-4,10,8);continue;}
     let col='#335533';
     if(r.type==='start')col='#446688';if(r.type==='boss')col='#884433';if(r.type==='treasure')col='#887744';
-    if(r===currentRoom)col='#88aa66';
+    if(currentRoom&&r.gx===currentRoom.gx&&r.gy===currentRoom.gy)col='#88aa66';
     mmCtx.fillStyle=col;mmCtx.fillRect(rx-5,ry-4,10,8);
     // Door lines
     mmCtx.strokeStyle='rgba(100,80,140,.4)';mmCtx.lineWidth=1;
@@ -1311,14 +1332,15 @@ function beginGame(c1,c2){
   document.body.classList.add('in-game');
   floor=1;roomsCleared=0;totalKills=0;gold=0;
   spawnPlayers(c1,c2);
+  document.getElementById('minimap-wrap').style.display='block';
   if(mode!=='guest'){
     // Host/local: generate dungeon and enter first room
-    document.getElementById('minimap-wrap').style.display='block';
     const start=generateFloor();enterRoom(start);
   } else {
-    // Guest: just set up a dummy room, state will come from host
+    // Guest: dummy room, state comes from host. Minimap shows what host sends.
     currentRoom={doors:{n:false,s:false,e:false,w:false},visited:true,type:'combat',gx:2,gy:2};
     doorsOpen=false;
+    dungeon=[currentRoom]; // will be updated by host state
   }
   gamePhase='countdown';countdownTimer=3;sfx('door');
   // Snap camera to center immediately
@@ -1339,7 +1361,10 @@ function sendState(){if(!conn||!conn.open||mode!=='host')return;
     pk:pickups.filter(p=>!p.collected).map(p=>({x:~~p.x,y:~~p.y,t:p.type})),
     pl:pillars.map(p=>({x:~~p.x,y:~~p.y,r:~~p.radius})),
     doors:currentRoom?currentRoom.doors:null,
+    crType:currentRoom?currentRoom.type:null,
+    crGx:currentRoom?currentRoom.gx:0,crGy:currentRoom?currentRoom.gy:0,
     dOpen:doorsOpen,rClr:roomCleared,
+    dng:dungeon.map(r=>({gx:r.gx,gy:r.gy,type:r.type,visited:r.visited,doors:r.doors})),
     fl:floor,rc:roomsCleared,g:gold,gp:gamePhase,ct:countdownTimer,
     sc:screenFlash>0?screenFlash:0,sk:shakeI>0?shakeI:0,
   };
@@ -1379,10 +1404,14 @@ function applyState(msg){
   if(msg.pl){pillars.length=0;for(const pd of msg.pl){
     pillars.push({x:pd.x,y:pd.y,radius:pd.r});}}
   // Room state
-  if(msg.doors){if(!currentRoom)currentRoom={doors:msg.doors,visited:true,type:'combat',gx:2,gy:2};
-    else currentRoom.doors=msg.doors;}
+  if(msg.doors){
+    if(!currentRoom)currentRoom={doors:msg.doors,visited:true,type:msg.crType||'combat',gx:msg.crGx||2,gy:msg.crGy||2};
+    else{currentRoom.doors=msg.doors;currentRoom.type=msg.crType||currentRoom.type;currentRoom.gx=msg.crGx;currentRoom.gy=msg.crGy;}
+  }
   if(msg.dOpen!==undefined)doorsOpen=msg.dOpen;
   if(msg.rClr!==undefined)roomCleared=msg.rClr;
+  // Dungeon layout for minimap
+  if(msg.dng&&msg.dng.length>0){dungeon=msg.dng;}
   // Globals
   if(msg.fl){floor=msg.fl;document.getElementById('floor-num').textContent=floor;}
   if(msg.rc!==undefined){roomsCleared=msg.rc;document.getElementById('room-num').textContent=roomsCleared+1;}
