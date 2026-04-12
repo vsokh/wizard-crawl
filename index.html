@@ -134,44 +134,100 @@ const DOOR_W=60;
 //        WIZARD CLASSES
 // ═══════════════════════════════════
 const CLASSES={
-  pyromancer:{name:'Pyromancer',color:'#ff6633',glow:'#ff4400',desc:'Fire. High burst.',
+  pyromancer:{name:'Pyromancer',color:'#ff6633',glow:'#ff4400',
+    desc:'Fire mastery. High burst damage.',
+    passive:{name:'Ignite',desc:'Enemies hit burn for 2 dmg over 2s'},
     spells:[
-      {name:'Fireball',key:'LMB',type:'projectile',dmg:2,speed:400,radius:10,mana:8,cd:.35,life:1.2,explode:35,color:'#ff6633',trail:'#ff3300'},
+      {name:'Fireball',key:'LMB',type:'projectile',dmg:2,speed:400,radius:10,mana:8,cd:.35,life:1.2,explode:35,color:'#ff6633',trail:'#ff3300',burn:2},
       {name:'Flame Wave',key:'RMB',type:'cone',dmg:2,range:110,mana:22,cd:2.5,angle:.8,color:'#ff4400'},
       {name:'Meteor',key:'Q',type:'aoe_delayed',dmg:4,mana:40,cd:8,delay:.8,radius:75,color:'#ff2200'},
+      {name:'Inferno',key:'R',type:'ultimate',ultCharge:100,color:'#ff2200'},
     ]},
-  cryomancer:{name:'Cryomancer',color:'#44bbff',glow:'#2288dd',desc:'Ice. Slows foes.',
+  cryomancer:{name:'Cryomancer',color:'#44bbff',glow:'#2288dd',
+    desc:'Ice magic. Crowd control.',
+    passive:{name:'Frostbite',desc:'Slowed enemies take +1 damage'},
     spells:[
       {name:'Ice Shard',key:'LMB',type:'projectile',dmg:1,speed:520,radius:7,mana:6,cd:.22,life:1,slow:.6,color:'#88ddff',trail:'#44aadd'},
       {name:'Frost Nova',key:'RMB',type:'nova',dmg:2,range:95,mana:22,cd:3.5,slow:1.5,color:'#44bbff'},
       {name:'Blizzard',key:'Q',type:'zone',dmg:1,mana:35,cd:10,radius:90,duration:4,tickRate:.7,slow:.8,color:'#2288dd'},
+      {name:'Absolute Zero',key:'R',type:'ultimate',ultCharge:100,color:'#2288dd'},
     ]},
-  stormcaller:{name:'Stormcaller',color:'#bb66ff',glow:'#9944dd',desc:'Lightning. Instant.',
+  stormcaller:{name:'Stormcaller',color:'#bb66ff',glow:'#9944dd',
+    desc:'Lightning. Instant strikes.',
+    passive:{name:'Static',desc:'Every 5th hit stuns the target for 0.5s'},
     spells:[
       {name:'Lightning',key:'LMB',type:'beam',dmg:1,range:320,mana:7,cd:.28,width:3,color:'#cc88ff',trail:'#aa55ff'},
       {name:'Ball Zap',key:'RMB',type:'projectile',dmg:1,speed:140,radius:16,mana:18,cd:3,life:3.5,zap:75,zapRate:.45,color:'#bb66ff',trail:'#9944dd'},
       {name:'Thunder',key:'Q',type:'aoe_delayed',dmg:3,mana:35,cd:8,delay:.5,radius:65,stun:1,color:'#ffcc44'},
+      {name:'Storm Fury',key:'R',type:'ultimate',ultCharge:100,color:'#ffcc44'},
     ]},
-  arcanist:{name:'Arcanist',color:'#ff55aa',glow:'#dd3388',desc:'Arcane. Mobile.',
+  arcanist:{name:'Arcanist',color:'#ff55aa',glow:'#dd3388',
+    desc:'Arcane arts. Mobility & homing.',
+    passive:{name:'Arcane Echo',desc:'Spells have 20% chance to fire twice'},
     spells:[
       {name:'Arcane Bolt',key:'LMB',type:'homing',dmg:1,speed:300,radius:8,mana:7,cd:.28,life:2,homing:2.5,color:'#ff55aa',trail:'#dd3388'},
       {name:'Blink',key:'RMB',type:'blink',range:170,mana:18,cd:2.5,color:'#ff88cc'},
       {name:'Barrage',key:'Q',type:'barrage',dmg:1,speed:380,radius:7,mana:35,cd:7,count:7,spread:.4,life:1.2,color:'#ff55aa',trail:'#cc2277'},
+      {name:'Arcane Storm',key:'R',type:'ultimate',ultCharge:100,color:'#ff55aa'},
     ]},
-  necromancer:{name:'Necromancer',color:'#55cc55',glow:'#228822',desc:'Death magic. Drains life.',
+  necromancer:{name:'Necromancer',color:'#55cc55',glow:'#228822',
+    desc:'Death magic. Drains life.',
+    passive:{name:'Soul Harvest',desc:'Kills heal 1 HP'},
     spells:[
       {name:'Soul Bolt',key:'LMB',type:'projectile',dmg:1,speed:380,radius:9,mana:7,cd:.3,life:1.3,drain:1,color:'#55cc55',trail:'#228822'},
       {name:'Death Wave',key:'RMB',type:'nova',dmg:2,range:100,mana:24,cd:3.5,drain:2,color:'#44aa44'},
       {name:'Plague',key:'Q',type:'zone',dmg:1,mana:38,cd:9,radius:95,duration:5,tickRate:.6,slow:.4,drain:1,color:'#338833'},
+      {name:'Army of Dead',key:'R',type:'ultimate',ultCharge:100,color:'#228822'},
     ]},
-  chronomancer:{name:'Chronomancer',color:'#ffcc44',glow:'#cc9922',desc:'Time magic. Haste & slow.',
+  chronomancer:{name:'Chronomancer',color:'#ffcc44',glow:'#cc9922',
+    desc:'Time magic. Haste & slow.',
+    passive:{name:'Haste Aura',desc:'+10% move speed for nearby ally'},
     spells:[
       {name:'Time Bolt',key:'LMB',type:'projectile',dmg:1,speed:480,radius:8,mana:6,cd:.25,life:1,slow:1,color:'#ffcc44',trail:'#cc9922'},
       {name:'Time Warp',key:'RMB',type:'nova',dmg:1,range:110,mana:22,cd:4,slow:2.5,stun:.5,color:'#ffdd66'},
       {name:'Rewind',key:'Q',type:'rewind',mana:45,cd:12,color:'#ffcc44'},
+      {name:'Time Stop',key:'R',type:'ultimate',ultCharge:100,color:'#ffdd66'},
     ]},
 };
-const CLASS_ORDER=['pyromancer','cryomancer','stormcaller','arcanist','necromancer','chronomancer'];
+  // ── NON-MAGE CLASSES ──
+  knight:{name:'Knight',color:'#aabbcc',glow:'#778899',
+    desc:'Tank. Absorbs damage, protects ally.',
+    passive:{name:'Bulwark',desc:'Take 25% less damage'},
+    spells:[
+      {name:'Sword Slash',key:'LMB',type:'cone',dmg:2,range:55,mana:3,cd:.3,angle:1.2,color:'#ccddee'},
+      {name:'Shield Bash',key:'RMB',type:'nova',dmg:3,range:45,mana:15,cd:2,stun:1,color:'#8899aa'},
+      {name:'Charge',key:'Q',type:'blink',range:200,mana:20,cd:4,color:'#aabbcc'},
+      {name:'Shield Wall',key:'R',type:'ultimate',ultCharge:100,color:'#ccddee'},
+    ]},
+  berserker:{name:'Berserker',color:'#ff4444',glow:'#cc2222',
+    desc:'Melee DPS. The lower the HP, the stronger.',
+    passive:{name:'Fury',desc:'Below 50% HP: +50% damage and speed'},
+    spells:[
+      {name:'Axe Swing',key:'LMB',type:'cone',dmg:3,range:50,mana:2,cd:.35,angle:1.5,color:'#ff6644'},
+      {name:'Throwing Axe',key:'RMB',type:'projectile',dmg:2,speed:450,radius:8,mana:10,cd:1,life:1,color:'#ff4444',trail:'#cc2222'},
+      {name:'Leap Slam',key:'Q',type:'leap',range:180,mana:20,cd:3.5,dmg:3,aoeR:60,color:'#ff3322'},
+      {name:'Blood Rage',key:'R',type:'ultimate',ultCharge:100,color:'#ff2222'},
+    ]},
+  paladin:{name:'Paladin',color:'#ffddaa',glow:'#ccaa66',
+    desc:'Support. Heals ally, smites undead.',
+    passive:{name:'Aura of Light',desc:'Nearby ally regens 2 HP/s'},
+    spells:[
+      {name:'Smite',key:'LMB',type:'projectile',dmg:2,speed:380,radius:9,mana:7,cd:.35,life:1.2,color:'#ffddaa',trail:'#ccaa66'},
+      {name:'Holy Shield',key:'RMB',type:'ally_shield',mana:25,cd:5,duration:3,color:'#ffffcc'},
+      {name:'Consecrate',key:'Q',type:'zone',dmg:2,mana:30,cd:7,radius:80,duration:3,tickRate:.6,slow:.3,color:'#ffeeaa',heal:1},
+      {name:'Holy Light',key:'R',type:'ultimate',ultCharge:100,color:'#ffffcc'},
+    ]},
+  ranger:{name:'Ranger',color:'#88cc44',glow:'#668833',
+    desc:'Ranged DPS. Fast attacks, high mobility.',
+    passive:{name:'Eagle Eye',desc:'Primary range +30%, crits at max range'},
+    spells:[
+      {name:'Arrow',key:'LMB',type:'projectile',dmg:1,speed:600,radius:5,mana:4,cd:.18,life:1.4,color:'#88cc44',trail:'#668833'},
+      {name:'Volley',key:'RMB',type:'barrage',dmg:1,speed:500,radius:5,mana:18,cd:2.5,count:5,spread:.6,life:1,color:'#88cc44',trail:'#556622'},
+      {name:'Trap',key:'Q',type:'trap',mana:15,cd:4,dmg:3,radius:50,slow:2,color:'#aadd55'},
+      {name:'Arrow Rain',key:'R',type:'ultimate',ultCharge:100,color:'#88cc44'},
+    ]},
+};
+const CLASS_ORDER=['pyromancer','cryomancer','stormcaller','arcanist','necromancer','chronomancer','knight','berserker','paladin','ranger'];
 
 // ═══════════════════════════════════
 //        ENEMY TYPES
@@ -183,6 +239,7 @@ const ENEMIES={
   wraith:{name:'Wraith',hp:3,speed:130,size:10,color:'#8855cc',dmg:2,xp:3,gold:3,ai:'chase',atkR:18,atkCd:.8,phase:true},
   golem:{name:'Golem',hp:20,speed:35,size:24,color:'#886644',dmg:3,xp:10,gold:10,ai:'chase',atkR:32,atkCd:2,boss:true},
   demon:{name:'Demon',hp:25,speed:50,size:22,color:'#cc3333',dmg:3,xp:12,gold:12,ai:'ranged',atkR:250,atkCd:1.2,projSpd:350,projCol:'#ff4422',boss:true},
+  _ally:{name:'Skeleton',hp:4,speed:80,size:9,color:'#55cc55',dmg:2,xp:0,gold:0,ai:'chase',atkR:20,atkCd:.8},
 };
 
 // ═══════════════════════════════════
@@ -413,7 +470,8 @@ function spawnPlayers(cls1,cls2){
       x:RW/2+(i===0?-30:30),y:RH*0.6,vx:0,vy:0,angle:0,
       hp:WIZ_HP,maxHp:WIZ_HP,mana:MAX_MANA,maxMana:MAX_MANA,manaRegen:MANA_REGEN,
       alive:true,iframes:1.5,slowTimer:0,stunTimer:0,
-      cd:[0,0,0],moveSpeed:190,
+      cd:[0,0,0,0],moveSpeed:190,
+      ultCharge:0,ultReady:false,hitCounter:0,
       killCount:0,vampirism:0,pierce:0,armor:0,
     });
   }
@@ -571,7 +629,7 @@ function getInput(pIdx){
     angle:Math.atan2(wp.y-p.y,wp.x-p.x),
     mx:keys.KeyA?-1:(keys.KeyD?1:0),
     my:keys.KeyW?-1:(keys.KeyS?1:0),
-    shoot:mouseDown,shoot2:rightDown,ability:!!keys.KeyQ,
+    shoot:mouseDown,shoot2:rightDown,ability:!!keys.KeyQ,ult:!!keys.KeyR,
   };
 }
 
@@ -601,7 +659,7 @@ function updatePlayers(dt){
     for(const pl of pillars){const d=dist(p.x,p.y,pl.x,pl.y);if(d<pl.radius+WIZ_SZ){const nx=(p.x-pl.x)/d,ny=(p.y-pl.y)/d;p.x=pl.x+nx*(pl.radius+WIZ_SZ+1);p.y=pl.y+ny*(pl.radius+WIZ_SZ+1);}}
 
     p.mana=Math.min(p.maxMana,p.mana+p.manaRegen*dt);
-    for(let i=0;i<3;i++)if(p.cd[i]>0)p.cd[i]-=dt;
+    for(let i=0;i<4;i++)if(p.cd[i]>0)p.cd[i]-=dt;
     if(p.iframes>0)p.iframes-=dt;
     // Rewind snapshot (save every 3s)
     p._snapTimer=(p._snapTimer||0)+dt;
@@ -618,6 +676,27 @@ function updatePlayers(dt){
     if(input.shoot2&&p.cd[1]<=0&&p.mana>=sd[1].mana)castSpell(p,1,input.angle);
     if(input.ability&&p.cd[2]<=0&&p.mana>=sd[2].mana&&!keys[`_q${p.idx}`]){keys[`_q${p.idx}`]=true;castSpell(p,2,input.angle);}
     if(!input.ability)keys[`_q${p.idx}`]=false;
+    // Ultimate (R) — needs full charge
+    if(input.ult&&p.ultCharge>=100&&!keys[`_r${p.idx}`]){keys[`_r${p.idx}`]=true;castUltimate(p,input.angle);}
+    if(!input.ult)keys[`_r${p.idx}`]=false;
+
+    // ── PASSIVES ──
+    // Chronomancer: haste aura for ally
+    if(p.clsKey==='chronomancer'){const ally=players[1-p.idx];if(ally&&ally.alive&&dist(p.x,p.y,ally.x,ally.y)<150)ally._hasteBonus=true;else if(ally)ally._hasteBonus=false;}
+    if(p._hasteBonus)p.moveSpeed=Math.max(p.moveSpeed,190*1.1);
+    // Berserker: fury below 50% HP
+    if(p.clsKey==='berserker'&&p.hp<=p.maxHp/2){p._furyActive=true;}else{p._furyActive=false;}
+    // Paladin: aura of light — heal nearby ally 2 HP/s
+    if(p.clsKey==='paladin'){const ally=players[1-p.idx];if(ally&&ally.alive&&dist(p.x,p.y,ally.x,ally.y)<120){
+      p._auraTick=(p._auraTick||0)+dt;if(p._auraTick>=.5){p._auraTick=0;if(ally.hp<ally.maxHp){ally.hp=Math.min(ally.maxHp,ally.hp+1);spawnText(ally.x,ally.y-20,'+1','#ffffaa');}}}}
+    // Time stop decay
+    if(p._timeStopTimer>0){p._timeStopTimer-=dt;if(p._timeStopTimer<=0)p.moveSpeed=190;}
+    // Blood rage decay
+    if(p._rage>0){p._rage-=dt;if(p._rage<=0)p._rageDmgMul=1;}
+    // Shield wall decay
+    if(p._shieldWall>0){p._shieldWall-=dt;}
+    // Holy shield decay
+    if(p._holyShield>0){p._holyShield-=dt;}
 
     // Dash (SHIFT)
     if(p.hasDash){
@@ -651,6 +730,90 @@ function updatePlayers(dt){
 //       SPELL CASTING (same as before, trimmed)
 // ═══════════════════════════════════
 // Silent cast: no mana cost, no cooldown, no sound (for split shot / double tap)
+// ═══════════════════════════════════
+//       ULTIMATE ABILITIES
+// ═══════════════════════════════════
+function castUltimate(p,angle){
+  p.ultCharge=0;p.ultReady=false;
+  sfx('boom');shake(12);screenFlash=.3;
+  spawnP(p.x,p.y,p.cls.color,30,1.5);spawnSW(p.x,p.y,120,p.cls.color);
+  spawnText(p.x,p.y-35,'ULTIMATE!',p.cls.color);
+
+  if(p.clsKey==='pyromancer'){
+    // Inferno: rain 5 meteors across the room
+    for(let i=0;i<5;i++){
+      const mx=rand(60,RW-60),my=rand(60,RH-60);
+      setTimeout(()=>{aoeMarkers.push({x:mx,y:my,radius:65,delay:.5,dmg:5,color:'#ff2200',owner:p.idx,stun:0,age:0});sfx('fire');},i*200);
+    }
+  } else if(p.clsKey==='cryomancer'){
+    // Absolute Zero: freeze ALL enemies for 3s + damage
+    for(const e of enemies){if(!e.alive)continue;e.stunTimer=(e.stunTimer||0)+3;damageEnemy(e,3,p.idx);}
+    spawnSW(p.x,p.y,RW,'rgba(100,200,255,.3)');
+  } else if(p.clsKey==='stormcaller'){
+    // Storm Fury: 8 random lightning bolts hitting enemies
+    const alive=enemies.filter(e=>e.alive);
+    for(let i=0;i<8;i++){
+      setTimeout(()=>{
+        const target=alive[Math.floor(Math.random()*alive.length)];
+        if(target&&target.alive){
+          beams.push({x:target.x+rand(-20,20),y:-10,angle:Math.PI/2,range:target.y+20,width:4,color:'#ffcc44',life:.2});
+          damageEnemy(target,2,p.idx);sfx('zap');shake(2);
+        }
+      },i*100);
+    }
+  } else if(p.clsKey==='arcanist'){
+    // Arcane Storm: spiral of 20 homing missiles
+    for(let i=0;i<20;i++){
+      const sa=p.angle+(i/20)*Math.PI*4;
+      setTimeout(()=>{
+        spells.push({type:'homing',dmg:2,speed:250,radius:6,life:2.5,homing:3,color:'#ff55aa',trail:'#dd3388',
+          x:p.x+Math.cos(sa)*20,y:p.y+Math.sin(sa)*20,
+          vx:Math.cos(sa)*200,vy:Math.sin(sa)*200,
+          owner:p.idx,age:0,zapTimer:0,pierceLeft:0});
+        sfx('arcane');
+      },i*50);
+    }
+  } else if(p.clsKey==='necromancer'){
+    // Army of Dead: summon 6 friendly skeletons (temporary allies)
+    for(let i=0;i<6;i++){
+      const sa=p.angle+(i/6)*Math.PI*2;
+      const sx=p.x+Math.cos(sa)*50,sy=p.y+Math.sin(sa)*50;
+      enemies.push({type:'_ally',x:sx,y:sy,vx:0,vy:0,hp:4,maxHp:4,alive:true,
+        atkTimer:0,target:-1,iframes:0,slowTimer:0,stunTimer:0,
+        _friendly:true,_owner:p.idx,_lifespan:8});
+      spawnP(sx,sy,'#55cc55',8);
+    }
+  } else if(p.clsKey==='chronomancer'){
+    // Time Stop: freeze all enemies for 4s, player moves at 2x speed
+    for(const e of enemies){if(!e.alive)continue;e.stunTimer=(e.stunTimer||0)+4;}
+    p.moveSpeed*=2;p._timeStopTimer=4;
+    spawnSW(p.x,p.y,RW,'rgba(255,200,60,.2)');
+  } else if(p.clsKey==='knight'){
+    // Shield Wall: become invulnerable for 3s + reflect all damage
+    p.iframes=3;p._shieldWall=3;
+    spawnSW(p.x,p.y,80,'rgba(200,200,255,.4)');
+  } else if(p.clsKey==='berserker'){
+    // Blood Rage: 2x damage, 2x speed, take 2x damage for 5s
+    p._rage=5;p._rageDmgMul=2;
+    spawnP(p.x,p.y,'#ff3333',25,1.2);
+  } else if(p.clsKey==='paladin'){
+    // Holy Light: heal both players to full + damage all enemies for 3
+    for(const pl of players){if(pl.alive){pl.hp=pl.maxHp;spawnP(pl.x,pl.y,'#ffffaa',15);spawnText(pl.x,pl.y-20,'FULL HEAL','#ffffaa');}}
+    for(const e of enemies){if(!e.alive)continue;damageEnemy(e,3,p.idx);}
+    spawnSW(p.x,p.y,RW,'rgba(255,255,180,.3)');
+  } else if(p.clsKey==='ranger'){
+    // Arrow Rain: barrage of 15 arrows across the room
+    for(let i=0;i<15;i++){
+      const tx=rand(40,RW-40),ty=rand(40,RH-40);
+      setTimeout(()=>{
+        spells.push({type:'projectile',dmg:2,speed:500,radius:5,life:.8,color:'#88cc44',trail:'#668833',
+          x:tx,y:-20,vx:0,vy:500,owner:p.idx,age:0,zapTimer:0,pierceLeft:1});
+        sfx('hit');
+      },i*60);
+    }
+  }
+}
+
 function castSpellSilent(p,idx,angle){
   const def=p.cls.spells[idx];
   if(def.type==='projectile'||def.type==='homing'){
@@ -702,6 +865,29 @@ function castSpell(p,idx,angle){
       spawnP(p.x,p.y,'#ffcc44',20);spawnSW(p.x,p.y,60,'rgba(255,200,60,.4)');spawnText(p.x,p.y-25,'REWIND','#ffcc44');sfx('blink');shake(3);screenFlash=.15;}
     else{spawnText(p.x,p.y-20,'NO SNAPSHOT','#886644');p.mana+=def.mana;p.cd[2]=0;} // refund if no snap
   }
+  else if(def.type==='leap'){
+    // Berserker leap slam
+    const cos=Math.cos(angle),sin=Math.sin(angle);
+    const nx=clamp(p.x+cos*def.range,WIZ_SZ,RW-WIZ_SZ),ny=clamp(p.y+sin*def.range,WIZ_SZ,RH-WIZ_SZ);
+    spawnP(p.x,p.y,def.color,8);p.x=nx;p.y=ny;p.iframes=.3;
+    // AoE damage on landing
+    spawnSW(p.x,p.y,def.aoeR,def.color);spawnP(p.x,p.y,def.color,15,1);sfx('boom');shake(6);
+    for(const e of enemies){if(!e.alive)continue;if(dist(p.x,p.y,e.x,e.y)<def.aoeR+ENEMIES[e.type].size){damageEnemy(e,def.dmg,p.idx);}}
+  }
+  else if(def.type==='ally_shield'){
+    // Paladin: shield ally (or self if solo)
+    const ally=players[1-p.idx];
+    const target=(ally&&ally.alive)?ally:p;
+    target.iframes=Math.max(target.iframes,def.duration);target._holyShield=def.duration;
+    spawnP(target.x,target.y,'#ffffcc',15);spawnSW(target.x,target.y,40,'rgba(255,255,200,.4)');sfx('pickup');
+    spawnText(target.x,target.y-20,'SHIELDED','#ffffcc');
+  }
+  else if(def.type==='trap'){
+    // Ranger trap: place at mouse position
+    const wp=toWorld(mouseX,mouseY);
+    pickups.push({x:wp.x,y:wp.y,type:'trap',collected:false,_owner:p.idx,_dmg:def.dmg,_radius:def.radius,_slow:def.slow||0,_color:def.color});
+    sfx('hit');
+  }
 }
 
 // ═══════════════════════════════════
@@ -714,6 +900,10 @@ function damageEnemy(e,rawDmg,pIdx){
 
   // Chaos damage: random 1-4
   if(p&&p.chaosDmg)dmg=1+Math.floor(Math.random()*4);
+  // Berserker fury: +50% dmg below half HP
+  if(p&&p._furyActive)dmg=Math.ceil(dmg*1.5);
+  // Blood rage: 2x damage
+  if(p&&p._rageDmgMul>1)dmg=Math.ceil(dmg*p._rageDmgMul);
   // Critical strike
   if(p&&p.critChance&&Math.random()<p.critChance){dmg*=2;spawnText(e.x,e.y-25,'CRIT!','#ffcc44');}
   // Momentum bonus
@@ -721,6 +911,16 @@ function damageEnemy(e,rawDmg,pIdx){
 
   e.hp-=dmg;e.iframes=.1;spawnP(e.x,e.y,'#ff6644',5,.5);sfx('hit');
 
+  // Ultimate charge (+5 per hit, +15 per kill)
+  if(p){p.ultCharge=Math.min(100,(p.ultCharge||0)+5);if(p.ultCharge>=100)p.ultReady=true;}
+  // Passive: Stormcaller static (every 5th hit stuns)
+  if(p&&p.clsKey==='stormcaller'){p.hitCounter=(p.hitCounter||0)+1;if(p.hitCounter%5===0){e.stunTimer=(e.stunTimer||0)+.5;spawnText(e.x,e.y-15,'STUN','#ffcc44');}}
+  // Passive: Cryomancer frostbite (+1 dmg if slowed)
+  if(p&&p.clsKey==='cryomancer'&&e.slowTimer>0){e.hp-=1;spawnText(e.x,e.y-15,'+1','#88ddff');}
+  // Passive: Arcanist echo (20% chance double cast)
+  if(p&&p.clsKey==='arcanist'&&Math.random()<0.2){castSpellSilent(p,0,Math.atan2(e.y-p.y,e.x-p.x));}
+  // Passive: burn DOT
+  if(p&&p.clsKey==='pyromancer'){e._burnTimer=(e._burnTimer||0)+2;e._burnOwner=p.idx;}
   // Mana on hit
   if(p&&p.manaOnHit){p.mana=Math.min(p.maxMana,p.mana+p.manaOnHit);}
   // Life steal
@@ -734,6 +934,10 @@ function damageEnemy(e,rawDmg,pIdx){
 
     if(p){
       p.killCount++;
+      // Ultimate charge on kill
+      p.ultCharge=Math.min(100,(p.ultCharge||0)+15);if(p.ultCharge>=100)p.ultReady=true;
+      // Passive: Necro soul harvest
+      if(p.clsKey==='necromancer'){p.hp=Math.min(p.maxHp,p.hp+1);spawnText(p.x,p.y-15,'+1 HP','#44ff88');}
       // Vampirism
       if(p.vampirism&&p.killCount%(p.vampKillReq||5)===0){p.hp=Math.min(p.maxHp,p.hp+1);spawnText(p.x,p.y-20,'+1 HP','#44ff88');}
       // Mana on kill
@@ -777,7 +981,12 @@ function damagePlayer(p,rawDmg,attacker){
   if(p.iframes>0)return;
   // Dodge
   if(p.dodgeChance&&Math.random()<p.dodgeChance){spawnText(p.x,p.y-20,'DODGE','#88ccff');return;}
-  const dmg=Math.max(1,rawDmg-(p.armor||0));
+  let reducedDmg=rawDmg;
+  // Knight bulwark: 25% less damage
+  if(p.clsKey==='knight')reducedDmg=Math.ceil(reducedDmg*0.75);
+  // Blood rage: take 2x damage
+  if(p._rage>0)reducedDmg=Math.ceil(reducedDmg*2);
+  const dmg=Math.max(1,reducedDmg-(p.armor||0));
   p.hp-=dmg;p.iframes=.4;shake(3);spawnP(p.x,p.y,'#ff4444',8);sfx('hit');spawnText(p.x,p.y-20,`-${dmg}`,'#ff4444');
   // Thorns
   if(p.thorns&&attacker&&attacker.alive!==undefined){
@@ -833,8 +1042,19 @@ function updateZones(dt){for(let i=zones.length-1;i>=0;i--){const z=zones[i];z.a
 // ═══════════════════════════════════
 function updateEnemies(dt){
   for(const e of enemies){
-    if(!e.alive)continue;const et=ENEMIES[e.type];
+    if(!e.alive)continue;
+    // Friendly summons (necro ult)
+    if(e._friendly){e._lifespan-=dt;if(e._lifespan<=0){e.alive=false;spawnP(e.x,e.y,'#55cc55',6);continue;}
+      // Chase nearest non-friendly enemy
+      let nt=null,nd=Infinity;for(const e2 of enemies){if(!e2.alive||e2._friendly||e2===e)continue;const d=dist(e.x,e.y,e2.x,e2.y);if(d<nd){nd=d;nt=e2;}}
+      if(nt){const dx=nt.x-e.x,dy=nt.y-e.y,dd=Math.max(1,Math.sqrt(dx*dx+dy*dy));e.x+=(dx/dd)*80*dt;e.y+=(dy/dd)*80*dt;
+        e.atkTimer-=dt;if(e.atkTimer<=0&&dd<25){e.atkTimer=.8;damageEnemy(nt,2,e._owner);}}
+      continue;
+    }
+    const et=ENEMIES[e.type];
     if(e.iframes>0)e.iframes-=dt;if(e.slowTimer>0)e.slowTimer-=dt;if(e.stunTimer>0){e.stunTimer-=dt;continue;}
+    // Burn DOT
+    if(e._burnTimer>0){e._burnTimer-=dt;e._burnTick=(e._burnTick||0)-dt;if(e._burnTick<=0){e._burnTick=.5;damageEnemy(e,1,e._burnOwner||0);}}
     const slow=e.slowTimer>0?.4:1;
     let target=players[e.target];if(!target||!target.alive){target=players.find(p=>p.alive);if(!target)continue;e.target=target.idx;}
     if(Math.random()<dt*.5){const o=players[1-e.target];if(o&&o.alive&&dist(e.x,e.y,o.x,o.y)<dist(e.x,e.y,target.x,target.y)*.7){e.target=o.idx;target=o;}}
@@ -848,6 +1068,10 @@ function updateEnemies(dt){
     if(e.atkTimer<=0&&d<et.atkR){e.atkTimer=et.atkCd;
       if(et.ai==='chase'){if(target.iframes<=0)damagePlayer(target,et.dmg,e);}
       else if(et.projSpd){const a=Math.atan2(dy,dx);eProj.push({x:e.x,y:e.y,vx:Math.cos(a)*et.projSpd,vy:Math.sin(a)*et.projSpd,dmg:et.dmg,life:2,radius:5,color:et.projCol||'#cc8866'});}}
+    // Trap check (ranger)
+    for(const pk of pickups){if(pk.collected||pk.type!=='trap')continue;if(dist(e.x,e.y,pk.x,pk.y)<pk._radius){
+      pk.collected=true;damageEnemy(e,pk._dmg,pk._owner);if(pk._slow)e.slowTimer=(e.slowTimer||0)+pk._slow;
+      spawnP(pk.x,pk.y,pk._color,15);spawnSW(pk.x,pk.y,pk._radius,pk._color);sfx('boom');shake(3);break;}}
   }
 }
 
@@ -922,6 +1146,10 @@ function drawPickups(){
       g.addColorStop(0,'rgba(50,255,120,.3)');g.addColorStop(1,'transparent');
       ctx.fillStyle=g;ctx.beginPath();ctx.arc(pk.x,pk.y,12+p*4,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='rgba(50,255,120,.7)';ctx.font='bold 12px Courier New';ctx.textAlign='center';ctx.fillText('+',pk.x,pk.y+5);
+    } else if(pk.type==='trap'){
+      ctx.strokeStyle=`rgba(170,220,85,${.3+p*.2})`;ctx.lineWidth=1;ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.arc(pk.x,pk.y,pk._radius||30,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='rgba(170,220,85,.5)';ctx.font='9px Courier New';ctx.textAlign='center';ctx.fillText('TRAP',pk.x,pk.y+3);
     }
   }
 }
@@ -993,12 +1221,21 @@ function drawMinimap(){
 function updateHUD(){
   const p=players[localIdx];if(!p)return;
   let spH='<div class="spell-icons">';
-  for(let i=0;i<3;i++){const sd=p.cls.spells[i];const ok=p.cd[i]<=0&&p.mana>=sd.mana;const cdP=p.cd[i]>0?Math.round(p.cd[i]/sd.cd*100):0;
-  spH+=`<div class="sp-icon" style="border-color:${ok?p.cls.color:'rgba(60,40,80,.3)'}"><span style="color:${ok?p.cls.color:'#332244'}">${sd.key}</span>${cdP>0?`<div class="cd-ov" style="height:${cdP}%"></div>`:''}</div>`;}
+  for(let i=0;i<Math.min(4,p.cls.spells.length);i++){const sd=p.cls.spells[i];
+    if(sd.type==='ultimate'){
+      const ultOk=p.ultCharge>=100;
+      spH+=`<div class="sp-icon" style="border-color:${ultOk?'#ffcc44':'rgba(60,40,80,.3)'}"><span style="color:${ultOk?'#ffcc44':'#332244'}">R</span>${!ultOk?`<div class="cd-ov" style="height:${100-p.ultCharge}%"></div>`:''}</div>`;
+    } else {
+      const ok=p.cd[i]<=0&&p.mana>=sd.mana;const cdP=p.cd[i]>0?Math.round(p.cd[i]/sd.cd*100):0;
+      spH+=`<div class="sp-icon" style="border-color:${ok?p.cls.color:'rgba(60,40,80,.3)'}"><span style="color:${ok?p.cls.color:'#332244'}">${sd.key}</span>${cdP>0?`<div class="cd-ov" style="height:${cdP}%"></div>`:''}</div>`;
+    }
+  }
   spH+='</div>';
-  document.getElementById('hud-p1').innerHTML=`<span style="color:${p.cls.color}">${p.cls.name}</span>
+  const fury=p._furyActive?' <span style="color:#ff4444">FURY</span>':'';
+  document.getElementById('hud-p1').innerHTML=`<span style="color:${p.cls.color}">${p.cls.name}</span>${fury}
     <div><div class="bar-o"><div class="bar-i" style="width:${p.hp/p.maxHp*100}%;background:${p.hp/p.maxHp>.5?'#33cc55':'#cc3333'}"></div></div>
-    <div class="bar-o" style="margin-top:2px"><div class="bar-i" style="width:${p.mana/p.maxMana*100}%;background:#4488ff"></div></div></div>${spH}`;
+    <div class="bar-o" style="margin-top:2px"><div class="bar-i" style="width:${p.mana/p.maxMana*100}%;background:#4488ff"></div></div>
+    <div class="bar-o" style="margin-top:1px"><div class="bar-i" style="width:${p.ultCharge}%;background:${p.ultCharge>=100?'#ffcc44':'#886633'}"></div></div></div>${spH}`;
   document.getElementById('hud-room').textContent=`F${floor} R${roomsCleared+1} · ${enemies.filter(e=>e.alive).length} enemies`;
   document.getElementById('gold-val').textContent=gold;
   const p2=players[1];
@@ -1053,7 +1290,10 @@ function startLocal(){initAudio();mode='local';localIdx=0;showSelect();}
 
 let selCls=0;
 function showSelect(){document.getElementById('lobby').style.display='none';document.getElementById('select-screen').style.display='flex';buildGrid();}
-function buildGrid(){const g=document.getElementById('class-grid');g.innerHTML='';CLASS_ORDER.forEach((k,i)=>{const c=CLASSES[k];const d=document.createElement('div');d.className='class-card'+(i===selCls?' selected':'');d.innerHTML=`<div class="cname" style="color:${c.color}">${c.name}</div><div class="cdesc">${c.desc}</div>`;d.onclick=()=>{selCls=i;buildGrid()};g.appendChild(d)});}
+function buildGrid(){const g=document.getElementById('class-grid');g.innerHTML='';CLASS_ORDER.forEach((k,i)=>{const c=CLASSES[k];const d=document.createElement('div');d.className='class-card'+(i===selCls?' selected':'');
+  const spList=c.spells.map(s=>`<span style="color:${s.color||c.color}">${s.key}</span> ${s.name}`).join(' · ');
+  d.innerHTML=`<div class="cname" style="color:${c.color}">${c.name}</div><div class="cdesc">${c.desc}</div><div class="cdesc" style="margin-top:3px;color:#554466;font-size:9px">Passive: ${c.passive.desc}</div><div class="cdesc" style="font-size:9px;margin-top:2px">${spList}</div>`;
+  d.onclick=()=>{selCls=i;buildGrid()};g.appendChild(d)});}
 
 function confirmClass(){
   const cls=CLASS_ORDER[selCls];
