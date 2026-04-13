@@ -4,6 +4,7 @@ import {
   ROOM_WIDTH,
   ROOM_HEIGHT,
   ENEMIES,
+  MAX_WAVES,
   MIN_PILLARS,
   MAX_EXTRA_PILLARS,
   PILLAR_MARGIN,
@@ -100,9 +101,47 @@ export function startWave(state: GameState): void {
   state.waveActive = true;
   const wave = state.wave;
   const isBoss = wave % 5 === 0;
-  const hpScale = 1 + Math.floor(wave / 4);
-  const spdScale = 1 + wave * 0.02;
+  const hpScale = wave <= 10 ? 1 + Math.floor(wave / 4) : 2 + Math.floor(wave / 3);
+  const spdScale = 1 + wave * 0.03;
   const timeMul = 1 + (state.time / 60) * 0.05;
+
+  // FINALE — The Archlord (wave 20)
+  if (wave === MAX_WAVES) {
+    const et = ENEMIES['archlord'];
+    const bossHp = Math.ceil((et.hp + wave * 5) * timeMul); // 160+ HP with time scaling
+    state.enemies.push({
+      type: 'archlord',
+      x: ROOM_WIDTH / 2,
+      y: 60,
+      vx: 0, vy: 0,
+      hp: bossHp, maxHp: bossHp,
+      alive: true,
+      atkTimer: 2,
+      target: 0,
+      iframes: 0,
+      slowTimer: 0, stunTimer: 0,
+      _burnTimer: 0, _burnTick: 0, _burnOwner: 0,
+      _friendly: false, _owner: 0, _lifespan: 0,
+      _spdMul: 1,
+      _dmgMul: timeMul,
+    });
+    // Elite guard — spawn 8 mixed elites
+    const elitePool = ['shieldbearer', 'necro', 'assassin', 'wraith'];
+    for (let i = 0; i < 8; i++) {
+      spawnEnemy(state, elitePool[i % elitePool.length], hpScale + 2, spdScale, timeMul);
+    }
+    spawnText(state, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 80, 'THE ARCHLORD', '#ffaa00');
+    spawnText(state, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 50, 'FINAL WAVE!', '#ff4444');
+    sfx(SfxName.Boom);
+    shake(state, 10);
+    state.screenFlash = 0.3;
+
+    state.waveEnemiesTotal = state.enemies.filter(e => e.alive && !e._friendly).length;
+    sfx(SfxName.Door);
+    const waveNumEl = document.getElementById('wave-num');
+    if (waveNumEl) waveNumEl.textContent = String(wave);
+    return; // Skip normal wave logic
+  }
 
   if (isBoss) {
     // Boss wave
@@ -141,8 +180,15 @@ export function startWave(state: GameState): void {
     sfx(SfxName.Boom);
     shake(state, 6);
   } else {
-    // Normal wave — enemy count scales up, no cap
-    const count = 5 + wave * 3;
+    // Normal wave — difficulty curve: gentle early, steep late
+    let count: number;
+    if (wave <= 7) {
+      count = 5 + wave * 2;       // 7-19 enemies
+    } else if (wave <= 14) {
+      count = 10 + wave * 3;      // 34-52 enemies
+    } else {
+      count = 15 + wave * 4;      // 75-91 enemies
+    }
     const immediateCount = Math.ceil(count * 0.6);
     for (let i = 0; i < immediateCount; i++) {
       spawnEnemy(state, pickWaveEnemy(wave), hpScale, spdScale, timeMul);
@@ -214,6 +260,19 @@ export function checkWaveComplete(state: GameState): void {
     }
 
     // Upgrades are now XP-driven (level-ups), not wave-driven
+
+    // Victory check — completed all waves
+    if (state.wave >= MAX_WAVES) {
+      state.gamePhase = GamePhase.Victory;
+      setTimeout(() => {
+        const statsEl = document.getElementById('victory-stats');
+        if (statsEl) {
+          statsEl.innerHTML = `Waves Cleared: ${state.wave}<br>Total Kills: ${state.totalKills}<br>Gold: ${state.gold}`;
+        }
+        const victoryEl = document.getElementById('victory-screen');
+        if (victoryEl) victoryEl.style.display = 'flex';
+      }, 1500);
+    }
   }
 }
 
@@ -242,6 +301,7 @@ export function updateWaves(state: GameState, dt: number): void {
   // Between waves: countdown to next
   state.waveBreakTimer -= dt;
   if (state.waveBreakTimer <= 0) {
+    if (state.wave >= MAX_WAVES) return; // Don't start wave 21
     state.wave++;
     startWave(state);
   }

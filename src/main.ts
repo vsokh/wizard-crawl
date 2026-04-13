@@ -144,7 +144,8 @@ function loop(now: number): void {
     state.gamePhase === GamePhase.Lobby ||
     state.gamePhase === GamePhase.Select ||
     state.gamePhase === GamePhase.Upgrade ||
-    state.gamePhase === GamePhase.GameOver
+    state.gamePhase === GamePhase.GameOver ||
+    state.gamePhase === GamePhase.Victory
   ) {
     requestAnimationFrame(loop);
     return;

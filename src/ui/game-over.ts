@@ -3,4 +3,8 @@ export function setupGameOver(): void {
   if (btn) {
     btn.addEventListener('click', () => location.reload());
   }
+  const victoryBtn = document.getElementById('btn-victory-restart');
+  if (victoryBtn) {
+    victoryBtn.addEventListener('click', () => location.reload());
+  }
 }

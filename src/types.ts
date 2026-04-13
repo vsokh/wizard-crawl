@@ -9,6 +9,7 @@ export enum GamePhase {
   Playing = 'playing',
   Upgrade = 'upgrade',
   GameOver = 'gameover',
+  Victory = 'victory',
 }
 
 export enum NetworkMode {

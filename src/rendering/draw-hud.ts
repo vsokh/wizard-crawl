@@ -1,4 +1,5 @@
 import { GameState } from '../state';
+import { MAX_WAVES } from '../constants';
 
 // ═══════════════════════════════════
 //       HUD UPDATE
@@ -48,7 +49,7 @@ export function updateHUD(state: GameState): void {
   const hudRoom = document.getElementById('hud-room');
   if (hudRoom) {
     const aliveEnemies = state.enemies.filter(e => e.alive && !e._friendly).length;
-    hudRoom.textContent = `Wave ${state.wave} \u00b7 ${aliveEnemies} enemies \u00b7 ${state.totalKills} kills`;
+    hudRoom.textContent = `Wave ${state.wave} / ${MAX_WAVES} \u00b7 ${aliveEnemies} enemies \u00b7 ${state.totalKills} kills`;
   }
 
   const goldVal = document.getElementById('gold-val');

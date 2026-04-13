@@ -48,13 +48,20 @@
   <div style="text-align:center;font-size:10px;color:#443355" id="hud-room"></div>
   <div class="hud-side" id="hud-p2"></div>
 </div>
-<div id="floor-display">WAVE <span id="wave-num">1</span></div>
+<div id="floor-display">WAVE <span id="wave-num">1</span> / 20</div>
 <div id="gold-display">Gold: <span id="gold-val">0</span></div>
 
 <div id="gameover">
   <h2>RUN OVER</h2>
   <div class="stats" id="go-stats"></div>
   <button class="btn btn-primary" id="btn-restart">TRY AGAIN</button>
+</div>
+
+<div id="victory-screen">
+  <h2>VICTORY</h2>
+  <div class="sub-victory">The Archlord has fallen!</div>
+  <div class="stats" id="victory-stats"></div>
+  <button class="btn btn-primary" id="btn-victory-restart">PLAY AGAIN</button>
 </div>
 
 <canvas id="c"></canvas>

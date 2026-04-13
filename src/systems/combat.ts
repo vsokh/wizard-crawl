@@ -308,7 +308,7 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
       setTimeout(() => {
         const statsEl = document.getElementById('go-stats');
         if (statsEl) {
-          statsEl.innerHTML = `Wave ${state.wave}<br>Kills: ${state.totalKills}<br>Gold: ${state.gold}`;
+          statsEl.innerHTML = `Wave Reached: ${state.wave} / 20<br>Kills: ${state.totalKills}<br>Gold: ${state.gold}`;
         }
         const goEl = document.getElementById('gameover');
         if (goEl) goEl.style.display = 'flex';

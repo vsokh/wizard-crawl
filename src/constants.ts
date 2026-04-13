@@ -57,6 +57,9 @@ export const RESPAWN_DELAY_MS = 3000;
 /** Game over delay after all players die, in ms */
 export const GAME_OVER_DELAY_MS = 1500;
 
+/** Fixed run length — 20 waves with a finale boss */
+export const MAX_WAVES = 20;
+
 /** Health drop chance on enemy kill */
 export const HEALTH_DROP_CHANCE = 0.15;
 
@@ -264,6 +267,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
   shieldbearer: { name: 'Shield Bearer', hp: 8, speed: 40, size: 14, color: '#7788aa', dmg: 2, xp: 4, gold: 4, ai: EnemyAI.Chase, atkR: 24, atkCd: 1.5 },
   assassin: { name: 'Assassin', hp: 2, speed: 160, size: 8, color: '#334455', dmg: 4, xp: 3, gold: 3, ai: EnemyAI.Chase, atkR: 16, atkCd: 1.2 },
   swarm_bat: { name: 'Swarm Bat', hp: 1, speed: 140, size: 6, color: '#9977bb', dmg: 1, xp: 1, gold: 0, ai: EnemyAI.Chase, atkR: 14, atkCd: 0.6 },
+  archlord: { name: 'Archlord', hp: 60, speed: 45, size: 28, color: '#ffaa00', dmg: 4, xp: 25, gold: 25, ai: EnemyAI.Ranged, atkR: 280, atkCd: 1.0, projSpd: 400, projCol: '#ffcc44', boss: true },
   _ally: { name: 'Skeleton', hp: 4, speed: 80, size: 9, color: '#55cc55', dmg: 2, xp: 0, gold: 0, ai: EnemyAI.Chase, atkR: 20, atkCd: 0.8 },
   _wolf: { name: 'Wolf', hp: 8, speed: 120, size: 10, color: '#88aa66', dmg: 2, xp: 0, gold: 0, ai: EnemyAI.Chase, atkR: 20, atkCd: 0.6 },
   _imp: { name: 'Imp', hp: 5, speed: 90, size: 8, color: '#cc4466', dmg: 1, xp: 0, gold: 0, ai: EnemyAI.Ranged, atkR: 150, atkCd: 1.0, projSpd: 300, projCol: '#ff5577' },
