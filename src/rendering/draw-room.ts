@@ -344,6 +344,83 @@ function generateFloorTexture(): OffscreenCanvas {
 }
 
 // ═══════════════════════════════════
+//       GROUND FOG LAYER
+// ═══════════════════════════════════
+
+interface GroundFogBlob {
+  baseX: number;
+  y: number;
+  radius: number;
+  alpha: number;
+  hue: number;
+  driftSpeed: number;
+  driftAmplitude: number;
+  phase: number;
+}
+
+const groundFogBlobs: GroundFogBlob[] = [
+  { baseX: ROOM_WIDTH * 0.1, y: ROOM_HEIGHT * 0.75, radius: 160, alpha: 0.02, hue: 250, driftSpeed: 0.12, driftAmplitude: 90, phase: 0 },
+  { baseX: ROOM_WIDTH * 0.3, y: ROOM_HEIGHT * 0.82, radius: 140, alpha: 0.025, hue: 230, driftSpeed: 0.09, driftAmplitude: 70, phase: 1.2 },
+  { baseX: ROOM_WIDTH * 0.5, y: ROOM_HEIGHT * 0.7, radius: 170, alpha: 0.018, hue: 260, driftSpeed: 0.14, driftAmplitude: 100, phase: 2.5 },
+  { baseX: ROOM_WIDTH * 0.7, y: ROOM_HEIGHT * 0.78, radius: 130, alpha: 0.028, hue: 240, driftSpeed: 0.11, driftAmplitude: 80, phase: 3.8 },
+  { baseX: ROOM_WIDTH * 0.9, y: ROOM_HEIGHT * 0.85, radius: 150, alpha: 0.022, hue: 255, driftSpeed: 0.1, driftAmplitude: 85, phase: 5.0 },
+  { baseX: ROOM_WIDTH * 0.15, y: ROOM_HEIGHT * 0.88, radius: 120, alpha: 0.015, hue: 235, driftSpeed: 0.13, driftAmplitude: 95, phase: 0.7 },
+  { baseX: ROOM_WIDTH * 0.55, y: ROOM_HEIGHT * 0.9, radius: 155, alpha: 0.02, hue: 245, driftSpeed: 0.08, driftAmplitude: 75, phase: 4.2 },
+];
+
+// ═══════════════════════════════════
+//       TORCH EMBER PARTICLES
+// ═══════════════════════════════════
+
+interface EmberParticle {
+  x: number; y: number;
+  vx: number; vy: number;
+  life: number; maxLife: number;
+  size: number;
+  hue: number;
+  phase: number;
+  torchIndex: number;
+}
+
+const emberParticles: EmberParticle[] = [];
+
+function spawnEmber(torchIndex: number, torch: Torch): void {
+  let spawnX = torch.x, spawnY = torch.y;
+  if (torch.side === 'top') spawnY += 6;
+  else if (torch.side === 'bottom') spawnY -= 6;
+  else if (torch.side === 'left') spawnX += 6;
+  else spawnX -= 6;
+
+  emberParticles.push({
+    x: spawnX + (Math.random() - 0.5) * 4,
+    y: spawnY + (Math.random() - 0.5) * 4,
+    vx: (Math.random() - 0.5) * 12,
+    vy: -15 - Math.random() * 25,
+    life: 2.0 + Math.random() * 1.0,
+    maxLife: 2.0 + Math.random() * 1.0,
+    size: 0.5 + Math.random() * 1.5,
+    hue: 25 + Math.random() * 30, // orange to yellow
+    phase: Math.random() * Math.PI * 2,
+    torchIndex,
+  });
+}
+
+function updateEmbers(dt: number): void {
+  for (let i = emberParticles.length - 1; i >= 0; i--) {
+    const e = emberParticles[i];
+    e.x += e.vx * dt;
+    e.y += e.vy * dt;
+    e.life -= dt;
+    // Slow lateral drift
+    e.vx *= 0.98;
+    e.vy *= 0.995;
+    if (e.life <= 0) {
+      emberParticles.splice(i, 1);
+    }
+  }
+}
+
+// ═══════════════════════════════════
 //       TORCH POSITIONS
 // ═══════════════════════════════════
 
@@ -401,6 +478,29 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
 
   const t = state.time;
   const cx = ROOM_WIDTH / 2, cy = ROOM_HEIGHT / 2;
+
+  // ── Dynamic ambient lighting shift ──
+  // Slowly cycles between cool purple, warm amber, and deep blue
+  {
+    const cyclePeriod = 25; // ~25 second full cycle
+    const phase = (t / cyclePeriod) * Math.PI * 2;
+    // Blend between three tint colors using sine waves
+    const purpleWeight = Math.max(0, Math.sin(phase));
+    const amberWeight = Math.max(0, Math.sin(phase + Math.PI * 2 / 3));
+    const blueWeight = Math.max(0, Math.sin(phase + Math.PI * 4 / 3));
+    const totalWeight = purpleWeight + amberWeight + blueWeight + 0.001;
+    // Weighted RGB blend
+    const r = Math.round((80 * purpleWeight + 180 * amberWeight + 30 * blueWeight) / totalWeight);
+    const g = Math.round((40 * purpleWeight + 130 * amberWeight + 40 * blueWeight) / totalWeight);
+    const b = Math.round((160 * purpleWeight + 50 * amberWeight + 140 * blueWeight) / totalWeight);
+    const ambientAlpha = 0.012 + 0.008 * Math.sin(t * 0.15);
+    const ambientGrad = ctx.createRadialGradient(cx, cy, 50, cx, cy, Math.max(ROOM_WIDTH, ROOM_HEIGHT) * 0.6);
+    ambientGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${ambientAlpha})`);
+    ambientGrad.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, ${ambientAlpha * 0.5})`);
+    ambientGrad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+    ctx.fillStyle = ambientGrad;
+    ctx.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
+  }
 
   // ── Animated rune glow ──
 
@@ -460,6 +560,18 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
     ctx.fillRect(fx - fog.radius, fy - fog.radius, fog.radius * 2, fog.radius * 2);
   }
 
+  // ── Ground-level fog layer ──
+  for (const gf of groundFogBlobs) {
+    const fogX = gf.baseX + Math.sin(t * gf.driftSpeed + gf.phase) * gf.driftAmplitude;
+    const fogY = gf.y + Math.cos(t * gf.driftSpeed * 0.7 + gf.phase) * 20;
+    const gfGrad = ctx.createRadialGradient(fogX, fogY, 0, fogX, fogY, gf.radius);
+    gfGrad.addColorStop(0, `hsla(${gf.hue}, 35%, 15%, ${gf.alpha})`);
+    gfGrad.addColorStop(0.6, `hsla(${gf.hue}, 35%, 12%, ${gf.alpha * 0.5})`);
+    gfGrad.addColorStop(1, `hsla(${gf.hue}, 35%, 10%, 0)`);
+    ctx.fillStyle = gfGrad;
+    ctx.fillRect(fogX - gf.radius, fogY - gf.radius, gf.radius * 2, gf.radius * 2);
+  }
+
   // ── Wall torches ──
   for (const torch of torches) {
     // Torch light pool on floor
@@ -512,19 +624,96 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
     ctx.globalAlpha = 1;
   }
 
+  // ── Torch ember particles ──
+  // Spawn embers for each torch (~2-3 active per torch)
+  for (let ti = 0; ti < torches.length; ti++) {
+    const torchEmberCount = emberParticles.filter(e => e.torchIndex === ti).length;
+    if (torchEmberCount < 3 && Math.random() < 0.03) {
+      spawnEmber(ti, torches[ti]);
+    }
+  }
+  updateEmbers(0.016);
+
+  // Draw embers
+  for (const e of emberParticles) {
+    const lifeRatio = e.life / e.maxLife;
+    const fadeAlpha = lifeRatio < 0.3 ? lifeRatio / 0.3 : 1.0;
+    const flickerAlpha = fadeAlpha * (0.4 + 0.3 * Math.sin(t * 12 + e.phase));
+    if (flickerAlpha <= 0) continue;
+    ctx.globalAlpha = Math.min(0.7, flickerAlpha);
+    const lightness = 55 + 15 * lifeRatio;
+    ctx.fillStyle = `hsl(${e.hue}, 90%, ${lightness}%)`;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, e.size * (0.5 + 0.5 * lifeRatio), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
   // Ambient floating motes
   ensureMotes();
   updateMotes(0.016, t);
   for (const m of ambientMotes) {
     const flicker = m.alpha + Math.sin(t * 1.5 + m.phase) * 0.03;
     if (flicker <= 0) continue;
-    ctx.globalAlpha = Math.max(0, Math.min(0.25, flicker));
-    ctx.fillStyle = `hsl(${m.hue}, 40%, 70%)`;
+
+    // Check torch proximity for light interaction
+    let nearTorch = false;
+    for (const torch of torches) {
+      const dx = m.x - torch.x;
+      const dy = m.y - torch.y;
+      if (dx * dx + dy * dy < 70 * 70) {
+        nearTorch = true;
+        break;
+      }
+    }
+
+    if (nearTorch) {
+      // Boost alpha and shift hue toward warm gold
+      ctx.globalAlpha = Math.max(0, Math.min(0.35, flicker + 0.08));
+      ctx.fillStyle = `hsl(40, 60%, 75%)`;
+    } else {
+      ctx.globalAlpha = Math.max(0, Math.min(0.25, flicker));
+      ctx.fillStyle = `hsl(${m.hue}, 40%, 70%)`;
+    }
     ctx.beginPath();
     ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
+
+  // ── Vignette overlay ──
+  // Darkened corners/edges for depth and focus on center
+  {
+    const vigRadius = Math.min(ROOM_WIDTH, ROOM_HEIGHT) * 0.35;
+    const vigOuter = Math.max(ROOM_WIDTH, ROOM_HEIGHT) * 0.65;
+    const vigGrad = ctx.createRadialGradient(cx, cy, vigRadius, cx, cy, vigOuter);
+    vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    vigGrad.addColorStop(0.5, 'rgba(0, 0, 0, 0.04)');
+    vigGrad.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+    ctx.fillStyle = vigGrad;
+    ctx.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
+  }
+
+  // ── Corner shadow pools ──
+  {
+    const cornerPositions: [number, number][] = [
+      [80, 60],
+      [ROOM_WIDTH - 80, 60],
+      [80, ROOM_HEIGHT - 60],
+      [ROOM_WIDTH - 80, ROOM_HEIGHT - 60],
+    ];
+    for (let ci = 0; ci < cornerPositions.length; ci++) {
+      const [csx, csy] = cornerPositions[ci];
+      const shadowRadius = 130 + 20 * Math.sin(t * 0.3 + ci * 1.5);
+      const shadowAlpha = 0.06 + 0.02 * Math.sin(t * 0.25 + ci * 1.2);
+      const csGrad = ctx.createRadialGradient(csx, csy, 0, csx, csy, shadowRadius);
+      csGrad.addColorStop(0, `rgba(5, 2, 15, ${shadowAlpha})`);
+      csGrad.addColorStop(0.6, `rgba(5, 2, 15, ${shadowAlpha * 0.4})`);
+      csGrad.addColorStop(1, 'rgba(5, 2, 15, 0)');
+      ctx.fillStyle = csGrad;
+      ctx.fillRect(csx - shadowRadius, csy - shadowRadius, shadowRadius * 2, shadowRadius * 2);
+    }
+  }
 
   // Walls — over everything else
   ctx.fillStyle = '#1a1428';
