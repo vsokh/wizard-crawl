@@ -45,6 +45,81 @@ function buildSpellEffects(spell: SpellDefInput): string {
   return tags ? `<div class="cd-spell-effects">${tags}</div>` : '';
 }
 
+function generateSpellDescription(spell: SpellDefInput): string {
+  // Ultimate abilities
+  if (spell.ultCharge && spell.mana === 0) {
+    return 'Ultimate ability. Charges through combat.';
+  }
+
+  const parts: string[] = [];
+
+  // Type-specific opener
+  switch (spell.type) {
+    case 'ally_shield':
+      return `Shields your ally for ${spell.duration || 0}s.`;
+    case 'blink':
+      return `Dash ${spell.range || 0} units forward.`;
+    case 'rewind':
+      return 'Rewind to your position from 3s ago.';
+    case 'beam':
+      parts.push(`Channels a beam dealing ${spell.dmg || 0} dmg at ${spell.range || 0} range`);
+      break;
+    case 'cone':
+      parts.push(`Releases a cone blast dealing ${spell.dmg || 0} dmg`);
+      break;
+    case 'nova':
+      parts.push(`Emits a nova dealing ${spell.dmg || 0} dmg`);
+      break;
+    case 'zone':
+      parts.push(`Creates a zone dealing ${spell.dmg || 0} dmg/tick`);
+      break;
+    case 'leap':
+      parts.push(`Leaps and slams dealing ${spell.dmg || 0} dmg`);
+      break;
+    case 'barrage':
+      parts.push(`Fires ${spell.count || 0} projectiles in a spread dealing ${spell.dmg || 0} dmg`);
+      break;
+    case 'trap':
+      parts.push('Places a trap that triggers on enemies');
+      break;
+    case 'aoe_delayed':
+      parts.push(`Summons a delayed area dealing ${spell.dmg || 0} dmg`);
+      break;
+    default: {
+      const dmg = spell.dmg || 0;
+      if (spell.explode) {
+        parts.push(`Fires an explosive projectile dealing ${dmg} dmg`);
+      } else {
+        parts.push(`Fires a ${spell.homing ? 'homing' : 'fast'} projectile dealing ${dmg} dmg`);
+      }
+      break;
+    }
+  }
+
+  // Effects
+  const effects: string[] = [];
+  if (spell.burn) effects.push(`burns for ${spell.burn} dmg`);
+  if (spell.slow) effects.push('slows enemies');
+  if (spell.stun) effects.push(`stuns for ${spell.stun}s`);
+  if (spell.drain) effects.push(`drains ${spell.drain} HP`);
+  if (spell.heal) effects.push(`heals ${spell.heal} HP/tick`);
+  if (spell.explode && spell.type !== 'projectile' && spell.type !== 'homing') effects.push('explodes on impact');
+  if (spell.pierce) effects.push('pierces enemies');
+  if (spell.homing && spell.type !== 'projectile' && spell.type !== 'homing') effects.push('tracks targets');
+  if (spell.zap) effects.push('chains to nearby enemies');
+
+  // Duration for zones
+  if (spell.duration && spell.type === 'zone') {
+    effects.push(`lasts ${spell.duration}s`);
+  }
+
+  if (effects.length > 0) {
+    parts.push('that ' + effects.join(', '));
+  }
+
+  return parts.join(' ') + '.';
+}
+
 function buildSpellStats(spell: SpellDefInput): string {
   // Ultimate spells with ultCharge show a different note
   if (spell.ultCharge && spell.mana === 0 && spell.cd === 0) {
@@ -80,6 +155,7 @@ function updateDetailPanel(state: GameState): void {
         <span class="cd-spell-type">${typeLabel}</span>
       </div>
       ${buildSpellStats(spell)}
+      <div class="cd-spell-desc">${generateSpellDescription(spell)}</div>
       ${buildSpellEffects(spell)}
     </div>`;
   }).join('');
