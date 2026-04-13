@@ -188,13 +188,36 @@ export function updateZones(state: GameState, dt: number): void {
           damageEnemy(state, e, z.dmg, z.owner);
           if (z.slow) e.slowTimer = (e.slowTimer || 0) + z.slow;
           if (z.drain) zHealed += z.drain;
+          if (z.pull) {
+            const pullAngle = Math.atan2(z.y - e.y, z.x - e.x);
+            e.x += Math.cos(pullAngle) * z.pull * dt;
+            e.y += Math.sin(pullAngle) * z.pull * dt;
+          }
         }
+      }
+      // Freeze-after: stun enemies inside zone once age threshold reached
+      if (z.freezeAfter && z.age >= z.freezeAfter) {
+        for (const e of state.enemies) {
+          if (!e.alive) continue;
+          if (dist(z.x, z.y, e.x, e.y) < z.radius + ENEMIES[e.type].size) {
+            e.stunTimer = Math.max(e.stunTimer || 0, z.duration - z.age);
+          }
+        }
+        z.freezeAfter = 0; // only apply once
       }
       if (zHealed > 0) {
         const p = state.players[z.owner];
         if (p) {
           p.hp = Math.min(p.maxHp, p.hp + zHealed);
           spawnText(state, p.x, p.y - 20, `+${zHealed}`, '#44ff88');
+        }
+      }
+      // Heal: restore HP to the owner while inside the zone
+      if (z.heal) {
+        const p = state.players[z.owner];
+        if (p && dist(z.x, z.y, p.x, p.y) < z.radius) {
+          p.hp = Math.min(p.maxHp, p.hp + z.heal);
+          spawnText(state, p.x, p.y - 20, `+${z.heal}`, '#ffffaa');
         }
       }
     }

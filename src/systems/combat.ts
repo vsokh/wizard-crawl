@@ -402,6 +402,153 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     spawnText(state, p.x, p.y - 15, 'ECHO!', '#ffaa44');
   }
 
+  // ── CLASS-SPECIFIC Q ABILITIES ──
+  if (idx === 2) {
+    // Pyromancer: Meteor Shower — 3 scattered meteors + burn zones
+    if (p.clsKey === 'pyromancer') {
+      const wp = toWorld(state, state.mouseX, state.mouseY);
+      for (let i = 0; i < 3; i++) {
+        const ox = rand(-40, 40);
+        const oy = rand(-40, 40);
+        const meteorDelay = 0.5 + i * 0.25;
+        state.aoeMarkers.push({
+          x: wp.x + ox, y: wp.y + oy, radius: 50, delay: meteorDelay,
+          dmg: 2, color: '#ff2200', owner: p.idx, stun: 0, age: 0,
+        });
+        // Burn zone after each meteor lands
+        setTimeout(() => {
+          state.zones.push({
+            x: wp.x + ox, y: wp.y + oy, radius: 35, duration: 2,
+            dmg: 1, color: '#ff4400', owner: p.idx,
+            slow: 0, tickRate: 0.5, tickTimer: 0, age: 0,
+            drain: 0, heal: 0, pull: 0, freezeAfter: 0,
+          });
+        }, meteorDelay * 1000);
+      }
+      sfx(SfxName.Fire);
+      return;
+    }
+    // Stormcaller: Thunder Strike — AoE + chain lightning on detonation
+    if (p.clsKey === 'stormcaller') {
+      const wp = toWorld(state, state.mouseX, state.mouseY);
+      state.aoeMarkers.push({
+        x: wp.x, y: wp.y, radius: def.radius, delay: def.delay, dmg: def.dmg,
+        color: def.color, owner: p.idx, stun: def.stun || 0, age: 0,
+      });
+      // After detonation, chain to nearby enemies
+      setTimeout(() => {
+        const hitEnemies: Enemy[] = [];
+        let lastX = wp.x, lastY = wp.y;
+        for (let chain = 0; chain < 3; chain++) {
+          let nearest: Enemy | null = null;
+          let nd = Infinity;
+          for (const e of state.enemies) {
+            if (!e.alive || hitEnemies.includes(e)) continue;
+            const d = dist(lastX, lastY, e.x, e.y);
+            if (d < 150 && d > 20 && d < nd) { nd = d; nearest = e; }
+          }
+          if (!nearest) break;
+          hitEnemies.push(nearest);
+          damageEnemy(state, nearest, 2, p.idx);
+          nearest.stunTimer = (nearest.stunTimer || 0) + 0.5;
+          state.beams.push({
+            x: lastX, y: lastY,
+            angle: Math.atan2(nearest.y - lastY, nearest.x - lastX),
+            range: nd, width: 3, color: '#ffcc44', life: 0.25,
+          });
+          spawnParticles(state, nearest.x, nearest.y, '#ffcc44', 5, 0.3);
+          lastX = nearest.x;
+          lastY = nearest.y;
+        }
+        if (hitEnemies.length > 0) sfx(SfxName.Zap);
+      }, (def.delay || 0.5) * 1000);
+      sfx(SfxName.Arcane);
+      return;
+    }
+    // Cryomancer: Frost Prison — strong slow + freeze after 1.5s
+    if (p.clsKey === 'cryomancer') {
+      const wp = toWorld(state, state.mouseX, state.mouseY);
+      state.zones.push({
+        x: wp.x, y: wp.y, radius: def.radius, duration: def.duration,
+        dmg: def.dmg, color: def.color, owner: p.idx,
+        slow: 0.95, tickRate: def.tickRate, tickTimer: 0, age: 0,
+        drain: 0, heal: 0, pull: 0, freezeAfter: 1.5,
+      });
+      sfx(SfxName.Ice);
+      return;
+    }
+    // Necromancer: Death Harvest — drain + pull enemies toward center
+    if (p.clsKey === 'necromancer') {
+      const wp = toWorld(state, state.mouseX, state.mouseY);
+      state.zones.push({
+        x: wp.x, y: wp.y, radius: def.radius, duration: def.duration,
+        dmg: def.dmg, color: def.color, owner: p.idx,
+        slow: def.slow || 0, tickRate: def.tickRate, tickTimer: 0, age: 0,
+        drain: 1, heal: 0, pull: 30, freezeAfter: 0,
+      });
+      sfx(SfxName.Arcane);
+      return;
+    }
+    // Arcanist: Arcane Salvo — 5 homing projectiles
+    if (p.clsKey === 'arcanist') {
+      for (let i = 0; i < 5; i++) {
+        const sa = angle + (i - 2.5) * 0.12 + rand(-0.05, 0.05);
+        setTimeout(() => {
+          state.spells.push({
+            type: SpellType.Homing, dmg: def.dmg, speed: def.speed,
+            radius: def.radius || 7, life: 2, homing: 2.5,
+            color: def.color, trail: def.trail,
+            x: p.x + Math.cos(sa) * WIZARD_SIZE,
+            y: p.y + Math.sin(sa) * WIZARD_SIZE,
+            vx: Math.cos(sa) * def.speed,
+            vy: Math.sin(sa) * def.speed,
+            owner: p.idx, age: 0, zapTimer: 0, pierceLeft: 0,
+            zap: 0, zapRate: 0, slow: 0, drain: 0, explode: 0, burn: 0,
+            stun: 0, clsKey: p.clsKey,
+          });
+          sfx(SfxName.Arcane);
+        }, i * 80);
+      }
+      return;
+    }
+    // Paladin: Hallowed Ground — self-centered healing zone
+    if (p.clsKey === 'paladin') {
+      state.zones.push({
+        x: p.x, y: p.y, radius: 100, duration: def.duration,
+        dmg: def.dmg, color: def.color, owner: p.idx,
+        slow: def.slow || 0, tickRate: def.tickRate, tickTimer: 0, age: 0,
+        drain: 0, heal: 2, pull: 0, freezeAfter: 0,
+      });
+      sfx(SfxName.Pickup);
+      spawnParticles(state, p.x, p.y, '#ffffaa', 15);
+      return;
+    }
+    // Monk: Chi Burst — instant heal + knockback pulse
+    if (p.clsKey === 'monk') {
+      // Heal self
+      p.hp = Math.min(p.maxHp, p.hp + 3);
+      spawnText(state, p.x, p.y - 20, '+3 HP', '#88ff88');
+      // Knockback all enemies in range
+      const knockR = 80;
+      const knockForce = 300;
+      for (const e of state.enemies) {
+        if (!e.alive) continue;
+        const d = dist(p.x, p.y, e.x, e.y);
+        if (d < knockR && d > 0) {
+          const knockAngle = Math.atan2(e.y - p.y, e.x - p.x);
+          e.x += Math.cos(knockAngle) * (knockForce / Math.max(d, 30)) * 3;
+          e.y += Math.sin(knockAngle) * (knockForce / Math.max(d, 30)) * 3;
+          damageEnemy(state, e, 1, p.idx);
+        }
+      }
+      spawnShockwave(state, p.x, p.y, knockR, 'rgba(255,255,200,.4)');
+      spawnParticles(state, p.x, p.y, '#eedd88', 20, 0.8);
+      sfx(SfxName.Boom);
+      shake(state, 4);
+      return;
+    }
+  }
+
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
   const sx = p.x + cos * WIZARD_SIZE * 1.5;
@@ -519,7 +666,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       x: wp.x, y: wp.y, radius: def.radius, duration: def.duration,
       dmg: def.dmg, color: def.color, owner: p.idx,
       slow: def.slow || 0, tickRate: def.tickRate, tickTimer: 0, age: 0,
-      drain: def.drain || 0, heal: def.heal || 0,
+      drain: def.drain || 0, heal: def.heal || 0, pull: 0, freezeAfter: 0,
     });
     sfx(SfxName.Ice);
   } else if (def.type === SpellType.Rewind) {
@@ -835,7 +982,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
         x: zx, y: zy, radius: 40, duration: 6,
         dmg: Math.round(2 * pw), color: '#66aa44', owner: p.idx,
         slow: 0.5, tickRate: 0.5, tickTimer: 0, age: 0,
-        drain: 0, heal: 0,
+        drain: 0, heal: 0, pull: 0, freezeAfter: 0,
       });
       spawnParticles(state, zx, zy, '#88aa66', 6, 0.5);
     }
@@ -910,7 +1057,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
       x: turret.x, y: turret.y, radius: 130, duration: 20,
       dmg: Math.round(3 * pw), color: '#dd8833', owner: p.idx,
       slow: 0, tickRate: 0.7, tickTimer: 0, age: 0,
-      drain: 0, heal: 0,
+      drain: 0, heal: 0, pull: 0, freezeAfter: 0,
     });
   }
 

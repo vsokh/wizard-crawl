@@ -396,6 +396,8 @@ export interface Zone {
   age: number;
   drain: number;
   heal: number;
+  pull: number;
+  freezeAfter: number;
 }
 
 export interface AoeMarker {

@@ -305,7 +305,7 @@ function applyState(state: GameState, msg: NetStateMessage): void {
     for (const zd of msg.zn) {
       state.zones.push({
         x: zd.x, y: zd.y, radius: zd.r, color: zd.c, age: zd.age, duration: zd.dur,
-        tickTimer: 1, tickRate: 1, dmg: 0, owner: 0, slow: 0, drain: 0, heal: 0,
+        tickTimer: 1, tickRate: 1, dmg: 0, owner: 0, slow: 0, drain: 0, heal: 0, pull: 0, freezeAfter: 0,
       });
     }
   }
