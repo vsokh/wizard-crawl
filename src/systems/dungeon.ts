@@ -149,9 +149,9 @@ export function startWave(state: GameState): void {
       _hitFlash: 0, _deathTimer: -1, _atkAnim: 0,
       _dmgReductionActive: false, _dmgReductionTimer: 0, _dmgReductionTriggered: false,
     });
-    // Elite guard — spawn 8 mixed elites
+    // Elite guard — spawn 11 mixed elites
     const elitePool = ['shieldbearer', 'necro', 'assassin', 'wraith'];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 11; i++) {
       spawnEnemy(state, elitePool[i % elitePool.length], hpScale + 2, spdScale, timeMul);
     }
     spawnText(state, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 80, 'THE ARCHLORD', '#ffaa00');
@@ -200,7 +200,7 @@ export function startWave(state: GameState): void {
       _dmgReductionActive: false, _dmgReductionTimer: 0, _dmgReductionTriggered: false,
     });
     // Minions scale with wave
-    const minionCount = 2 + Math.floor(wave / 3);
+    const minionCount = 5 + Math.floor(wave / 3);
     for (let i = 0; i < minionCount; i++) {
       spawnEnemy(state, pickWaveEnemy(wave), hpScale, spdScale, timeMul);
     }

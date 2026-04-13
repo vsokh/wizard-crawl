@@ -38,6 +38,7 @@ import {
   RANGES,
   CD_FLOORS,
   softCapBonusDmg,
+  BOSS_WAVE_XP,
 } from '../constants';
 import { sfx } from '../audio';
 import { createFriendlyEnemy } from './dungeon';
@@ -187,11 +188,16 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
     // ── Spawn XP gems ──
     const isBoss = !!et.boss;
     if (isBoss) {
-      // Boss: single large gem worth 2x
-      state.pickups.push({
-        x: e.x, y: e.y, type: PickupType.Xp, collected: false,
-        value: et.xp * 2, _owner: 0, _dmg: 0, _radius: 0, _slow: 0, _color: '',
-      });
+      // Boss: 3 gems split from wave-scaled XP
+      const bossXp = BOSS_WAVE_XP[state.wave] ?? et.xp * 2;
+      const xpPerGem = Math.max(1, Math.ceil(bossXp / 3));
+      for (let i = 0; i < 3; i++) {
+        state.pickups.push({
+          x: e.x + rand(-20, 20), y: e.y + rand(-20, 20),
+          type: PickupType.Xp, collected: false,
+          value: xpPerGem, _owner: 0, _dmg: 0, _radius: 0, _slow: 0, _color: '',
+        });
+      }
     } else {
       const gemCount = 3 + Math.floor(Math.random() * 4); // 3-6 gems
       const xpPerGem = Math.max(1, Math.ceil(et.xp / gemCount));
