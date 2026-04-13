@@ -107,7 +107,11 @@ export function hostGame(state: GameState): void {
       if (data.type === 'guest_picked') {
         const pickMsg = data as { type: 'guest_picked'; idx: number };
         const up = UPGRADE_POOL[pickMsg.idx];
-        if (up && state.players[1]) up.apply(state.players[1]);
+        if (up && state.players[1]) {
+          const newCount = (state.players[1].takenUpgrades.get(pickMsg.idx) || 0) + 1;
+          state.players[1].takenUpgrades.set(pickMsg.idx, newCount);
+          up.apply(state.players[1], newCount);
+        }
         state.upgradePickedRemote = true;
         checkBothPicked(state);
       }
@@ -174,7 +178,11 @@ export function joinGame(state: GameState): void {
       if (data.type === 'host_picked') {
         const pickMsg = data as { type: 'host_picked'; idx: number };
         const up = UPGRADE_POOL[pickMsg.idx];
-        if (up && state.players[0]) up.apply(state.players[0]);
+        if (up && state.players[0]) {
+          const newCount = (state.players[0].takenUpgrades.get(pickMsg.idx) || 0) + 1;
+          state.players[0].takenUpgrades.set(pickMsg.idx, newCount);
+          up.apply(state.players[0], newCount);
+        }
       }
       if (data.type === 'resume') {
         const screen = document.getElementById('upgrade-screen');

@@ -1296,7 +1296,7 @@ function simulateUpgradeImpact(): UpgradeImpact[] {
 }
 
 /** Map upgrade apply function to our SimPlayer by creating a shim Player-like object */
-function applyUpgradeToSimPlayer(sp: SimPlayer, apply: (p: any) => void): void {
+function applyUpgradeToSimPlayer(sp: SimPlayer, apply: (p: any, stacks: number) => void): void {
   // Create a proxy that maps Player fields to SimPlayer
   const proxy: any = {
     cls: { spells: sp.spells },
@@ -1334,7 +1334,7 @@ function applyUpgradeToSimPlayer(sp: SimPlayer, apply: (p: any) => void): void {
     vampKillReq: sp.vampKillReq,
   };
 
-  apply(proxy);
+  apply(proxy, 1);
 
   // Map back
   sp.maxHp = proxy.maxHp;

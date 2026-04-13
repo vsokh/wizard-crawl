@@ -290,21 +290,32 @@ function hyperStack(p: Player, key: string, base: number): number {
   return 1 - 1 / (1 + acc);
 }
 
+/** Logarithmic diminishing returns for flat stackable upgrades.
+ *  Stacks 1-3: full value. Stack 4+: ln(4)/ln(stacks+1) multiplier. */
+export function flatScaling(baseValue: number, stacks: number): number {
+  if (stacks <= 3) return baseValue;
+  return baseValue * Math.log(4) / Math.log(stacks + 1);
+}
+
 export const UPGRADE_POOL: UpgradeDef[] = [
   // -- DAMAGE --
-  { name: 'Spell Power', desc: 'All spells deal +1 damage', stackable: true, maxStacks: 5, apply: (p: Player) => { for (const s of p.cls.spells) s.dmg = (s.dmg || 0) + 1; } },
-  { name: 'Primary Boost', desc: 'Primary spell +2 damage', stackable: true, maxStacks: 4, apply: (p: Player) => { p.cls.spells[0].dmg += 2; } },
+  { name: 'Spell Power', desc: 'All spells deal +1 damage', stackable: true, maxStacks: 5,
+    apply: (p, stacks) => { const v = flatScaling(1, stacks); for (const s of p.cls.spells) s.dmg = (s.dmg || 0) + v; } },
+  { name: 'Primary Boost', desc: 'Primary spell +2 damage', stackable: true, maxStacks: 4,
+    apply: (p, stacks) => { p.cls.spells[0].dmg += flatScaling(2, stacks); } },
   { name: 'Ultimate Power', desc: 'Ultimate spell +3 damage', apply: (p: Player) => { if (p.cls.spells[2].dmg) p.cls.spells[2].dmg += 3; } },
   { name: 'Glass Cannon', desc: '+3 spell damage, -2 max HP', apply: (p: Player) => { for (const s of p.cls.spells) s.dmg = (s.dmg || 0) + 3; p.maxHp = Math.max(1, p.maxHp - 2); p.hp = Math.min(p.hp, p.maxHp); } },
   { name: 'Critical Strike', desc: '15% chance to deal 2x damage', stackable: true, maxStacks: 3, apply: (p: Player) => { p.critChance = hyperStack(p, 'critChance', 0.15); } },
   { name: 'Overkill', desc: 'Excess kill damage chains to nearby enemy', apply: (p: Player) => { p.overkill = true; } },
 
   // -- PROJECTILE MODIFIERS --
-  { name: 'Piercing', desc: 'Primary passes through +1 enemy', stackable: true, maxStacks: 4, apply: (p: Player) => { p.pierce = (p.pierce || 0) + 1; } },
+  { name: 'Piercing', desc: 'Primary passes through +1 enemy', stackable: true, maxStacks: 4,
+    apply: (p, stacks) => { p.pierce = (p.pierce || 0) + flatScaling(1, stacks); } },
   { name: 'Split Shot', desc: 'Primary fires 2 extra bolts at +/-15 deg', apply: (p: Player) => { p.splitShot = (p.splitShot || 0) + 2; } },
   { name: 'Ricochet', desc: 'Projectiles bounce off walls once', apply: (p: Player) => { p.ricochet = (p.ricochet || 0) + 1; } },
   { name: 'Velocity', desc: 'Projectile speed +40%', apply: (p: Player) => { for (const s of p.cls.spells) if (s.speed) s.speed *= 1.4; } },
-  { name: 'Chain Hit', desc: 'Hits jump to 1 nearby enemy for 50% dmg', stackable: true, maxStacks: 3, apply: (p: Player) => { p.chainHit = (p.chainHit || 0) + 1; } },
+  { name: 'Chain Hit', desc: 'Hits jump to 1 nearby enemy for 50% dmg', stackable: true, maxStacks: 3,
+    apply: (p, stacks) => { p.chainHit = (p.chainHit || 0) + flatScaling(1, stacks); } },
   { name: 'Homing Bolts', desc: 'Primary slightly tracks enemies', apply: (p: Player) => { const s = p.cls.spells[0]; s.homing = (s.homing || 0) + 1.5; } },
   { name: 'Big Spells', desc: 'Projectile size +30%', apply: (p: Player) => { for (const s of p.cls.spells) if (s.radius) s.radius *= 1.3; } },
   { name: 'Blast Radius', desc: 'Explosions +50% area', apply: (p: Player) => { for (const s of p.cls.spells) { if (s.explode) s.explode *= 1.5; if (s.radius && s.type === SpellType.AoeDelayed) s.radius *= 1.5; } } },
@@ -323,8 +334,10 @@ export const UPGRADE_POOL: UpgradeDef[] = [
   { name: 'Spell Thief', desc: 'Hits restore 2 mana', apply: (p: Player) => { p.manaOnHit = (p.manaOnHit || 0) + 2; } },
 
   // -- SURVIVABILITY --
-  { name: 'Vitality', desc: 'Max HP +2, heal to full', stackable: true, maxStacks: 5, apply: (p: Player) => { p.maxHp += 2; p.hp = p.maxHp; } },
-  { name: 'Armor', desc: 'Take -1 damage (min 1)', stackable: true, maxStacks: 4, apply: (p: Player) => { p.armor = (p.armor || 0) + 1; } },
+  { name: 'Vitality', desc: 'Max HP +2, heal to full', stackable: true, maxStacks: 5,
+    apply: (p, stacks) => { p.maxHp += flatScaling(2, stacks); p.hp = p.maxHp; } },
+  { name: 'Armor', desc: 'Take -1 damage (min 1)', stackable: true, maxStacks: 4,
+    apply: (p, stacks) => { p.armor = (p.armor || 0) + flatScaling(1, stacks); } },
   { name: 'Vampirism', desc: 'Heal 1 HP per 4 kills', apply: (p: Player) => { p.vampirism = (p.vampirism || 0) + 1; p.vampKillReq = 4; } },
   { name: 'Life Steal', desc: '5% of damage dealt heals you', apply: (p: Player) => { p.lifeSteal = hyperStack(p, 'lifeSteal', 0.05); } },
   { name: 'Second Wind', desc: 'Revive once per floor with 50% HP', apply: (p: Player) => { p.secondWind = (p.secondWind || 0) + 1; } },
@@ -402,7 +415,7 @@ export const UPGRADE_POOL: UpgradeDef[] = [
 
   // ── Stormcaller ──
   { name: 'Chain Lightning', desc: 'Lightning beam bounces to 2 more enemies', forClass: 'stormcaller', color: '#bb66ff', stackable: true, maxStacks: 3,
-    apply: (p: Player) => { p.chainLightning = (p.chainLightning || 0) + 2; } },
+    apply: (p, stacks) => { p.chainLightning = (p.chainLightning || 0) + flatScaling(2, stacks); } },
   { name: 'Overcharge', desc: 'Every 3rd spell deals 3x damage', forClass: 'stormcaller', color: '#bb66ff',
     apply: (p: Player) => { p.overcharge = true; } },
   { name: 'Storm Shield', desc: 'Lightning randomly strikes enemies near you (120px, 1 dmg/s)', forClass: 'stormcaller', color: '#bb66ff',

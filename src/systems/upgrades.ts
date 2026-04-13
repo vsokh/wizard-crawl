@@ -95,7 +95,11 @@ function showUpgradeUI(state: GameState, indices: number[]): void {
       state.upgradePickedLocal = true;
       // Apply to local player only
       const myPlayer = state.players[state.localIdx];
-      if (myPlayer) { up.apply(myPlayer); myPlayer.takenUpgrades.set(idx, (myPlayer.takenUpgrades.get(idx) || 0) + 1); }
+      if (myPlayer) {
+        const newCount = (myPlayer.takenUpgrades.get(idx) || 0) + 1;
+        myPlayer.takenUpgrades.set(idx, newCount);
+        up.apply(myPlayer, newCount);
+      }
       sfx(SfxName.Pickup);
       card.style.borderColor = '#44cc44';
 

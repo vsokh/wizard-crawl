@@ -481,7 +481,7 @@ export interface PlayerInput {
 export interface UpgradeDef {
   name: string;
   desc: string;
-  apply: (p: Player) => void;
+  apply: (p: Player, stacks: number) => void;
   /** If set, only offered to this class */
   forClass?: string;
   /** Color hint for UI */
