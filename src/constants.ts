@@ -28,8 +28,10 @@ export const DOOR_WIDTH = 60;
 /** Dungeon grid size */
 export const DUNGEON_GRID_SIZE = 5;
 
-/** Network send interval in seconds */
-export const NET_SEND_INTERVAL = 0.05;
+/** Tick rates */
+export const SIM_TICK_RATE = 60;          // simulation runs at 60 FPS (via requestAnimationFrame)
+export const NET_TICK_RATE = 20;          // network state broadcast rate in Hz
+export const NET_SEND_INTERVAL = 1 / NET_TICK_RATE;  // 0.05s = 50ms between net ticks
 /** Minimum network send interval (fastest rate during ideal conditions) */
 export const NET_SEND_INTERVAL_MIN = 0.033;
 /** Maximum network send interval (slowest rate during congestion) */

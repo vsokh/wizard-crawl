@@ -29,6 +29,7 @@ import {
   ROOM_WIDTH,
   ROOM_HEIGHT,
   DEFAULT_LIVES,
+  NET_SEND_INTERVAL,
 } from './constants';
 
 // ═══════════════════════════════════
@@ -108,6 +109,8 @@ export interface GameState {
 
   // Network
   netTimer: number;
+  _lastNetTime: number;    // performance.now() of last received net packet (guest)
+  _netInterval: number;    // measured interval between net packets in seconds (EMA)
 
   // Class selection
   selectedClassIndex: number;
@@ -185,6 +188,8 @@ export function createInitialState(): GameState {
     upgradePickedLocal: false,
     upgradePickedRemote: false,
     netTimer: 0,
+    _lastNetTime: 0,
+    _netInterval: NET_SEND_INTERVAL,
     selectedClassIndex: 0,
     hostClassKey: null,
     guestClassKey: null,

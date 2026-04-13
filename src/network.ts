@@ -414,6 +414,17 @@ export function resetDeltaState(): void {
 // ═══════════════════════════════════
 
 function applyState(state: GameState, msg: NetStateMessage): void {
+  // Track inter-packet timing for adaptive interpolation
+  const now = performance.now();
+  if (state._lastNetTime > 0) {
+    const measured = (now - state._lastNetTime) / 1000; // convert ms to seconds
+    // Exponential moving average (α=0.2) — smooths jitter while adapting to real interval
+    state._netInterval = state._netInterval * 0.8 + measured * 0.2;
+    // Clamp to sane range: 16ms (60Hz) to 200ms (5Hz) to handle outliers
+    state._netInterval = Math.max(0.016, Math.min(0.2, state._netInterval));
+  }
+  state._lastNetTime = now;
+
   // Players — set interpolation targets instead of snapping
   if (msg.p) {
     msg.p.forEach((pd, i) => {

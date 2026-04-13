@@ -255,8 +255,9 @@ function loop(now: number): void {
       lp._animMoving = (Math.abs(mvx) > 1 || Math.abs(mvy) > 1);
     }
 
-    // Interpolation speed: advance lerpT so we reach target in ~50ms (one net tick)
-    const lerpSpeed = 1 / getAdaptiveInterval(); // lerpT advances 0→1 over one tick interval
+    // Adaptive interpolation: use measured packet interval instead of fixed constant.
+    // This smooths motion under network jitter — lerp duration matches actual packet cadence.
+    const lerpSpeed = 1 / state._netInterval;
 
     // Interpolate all players except local (local uses prediction above)
     for (let i = 0; i < state.players.length; i++) {

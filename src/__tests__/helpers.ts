@@ -55,6 +55,8 @@ export function createTestState(): GameState {
     upgradePickedLocal: false,
     upgradePickedRemote: false,
     netTimer: 0,
+    _lastNetTime: 0,
+    _netInterval: 0.05,
     selectedClassIndex: 0,
     hostClassKey: null,
     guestClassKey: null,
