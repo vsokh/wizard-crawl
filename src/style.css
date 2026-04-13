@@ -271,6 +271,57 @@ input[type=text]:focus {
   opacity: 0.85;
 }
 
+.cd-synergy-section {
+  margin-bottom: 14px;
+}
+
+.cd-synergy-item {
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 3px solid #666;
+  border-radius: 0 4px 4px 0;
+  padding: 7px 10px;
+  margin-bottom: 6px;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.cd-synergy-item.cd-synergy-active {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 12px rgba(var(--syn-glow, 120, 60, 200), 0.25);
+}
+
+.cd-synergy-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.cd-synergy-name {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.cd-synergy-partner {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+
+.cd-synergy-flavor {
+  font-size: 8px;
+  font-style: italic;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.cd-synergy-bonuses {
+  font-size: 8px;
+  color: var(--text-mid);
+  line-height: 1.6;
+}
+
 .cd-divider {
   height: 1px;
   background: var(--border-subtle);

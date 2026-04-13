@@ -2,7 +2,7 @@ import { GameState } from '../state';
 import { NetworkMode, SpellDefInput } from '../types';
 import { CLASSES, CLASS_ORDER, WIZARD_SIZE } from '../constants';
 import { sendMessage } from '../network';
-import { getSynergy } from '../systems/synergy';
+import { getSynergy, getSynergiesForClass } from '../systems/synergy';
 import { startPreviews, stopPreviews } from './spell-preview';
 import { drawClassBody, drawWeapon, CLASS_SCALE } from '../rendering/draw-entities';
 
@@ -177,17 +177,40 @@ function updateDetailPanel(state: GameState): void {
     </div>`;
   }).join('');
 
-  // Check for synergy with ally's class
+  // Build synergy section for co-op modes (Host or Guest)
   let synergyHtml = '';
-  const allyKey = state.mode === NetworkMode.Guest ? state.hostClassKey
-    : state.mode === NetworkMode.Host ? state.guestClassKey
-    : null;
-  if (allyKey) {
-    const syn = getSynergy(key, allyKey);
-    if (syn) {
-      synergyHtml = `<div class="cd-synergy-tag" style="color:${syn.color};border-color:${syn.color}">` +
-        `SYNERGY: ${syn.name}</div>` +
-        `<div class="cd-synergy-desc" style="color:${syn.color}">${syn.desc}</div>`;
+  const isCoop = state.mode === NetworkMode.Host || state.mode === NetworkMode.Guest;
+  if (isCoop) {
+    const allyKey = state.mode === NetworkMode.Guest ? state.hostClassKey
+      : state.guestClassKey;
+    const synergies = getSynergiesForClass(key);
+    if (synergies.length > 0) {
+      const items = synergies.map(({ synergy: syn, partnerClass: partnerKey }) => {
+        const partnerCls = CLASSES[partnerKey];
+        if (!partnerCls) return '';
+        const isActive = allyKey === partnerKey;
+        const activeClass = isActive ? ' cd-synergy-active' : '';
+        // Determine bonus labels: match class order from synergy definition
+        const cls0 = CLASSES[syn.classes[0]];
+        const cls1 = CLASSES[syn.classes[1]];
+        const bonus0Label = cls0 ? cls0.name : syn.classes[0];
+        const bonus1Label = cls1 ? cls1.name : syn.classes[1];
+        return `<div class="cd-synergy-item${activeClass}" style="border-left-color:${syn.color}">` +
+          `<div class="cd-synergy-header">` +
+            `<span class="cd-synergy-name" style="color:${syn.color}">${syn.name}</span>` +
+            `<span class="cd-synergy-partner">with <span style="color:${partnerCls.color}">${partnerCls.name}</span></span>` +
+          `</div>` +
+          `<div class="cd-synergy-flavor">${syn.desc}</div>` +
+          `<div class="cd-synergy-bonuses">` +
+            `<div>\u2022 ${bonus0Label}: ${syn.bonuses[0]}</div>` +
+            `<div>\u2022 ${bonus1Label}: ${syn.bonuses[1]}</div>` +
+          `</div>` +
+        `</div>`;
+      }).join('');
+      synergyHtml = `<div class="cd-synergy-section">` +
+        `<div class="cd-section-label">Team Synergies</div>` +
+        items +
+      `</div>`;
     }
   }
 
