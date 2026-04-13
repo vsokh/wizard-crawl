@@ -1859,7 +1859,289 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
     const a = Math.atan2(s.vy, s.vx);
     const t = state.time;
 
-    if (s.explode && s.color.includes('ff66')) {
+    if (s.clsKey === 'knight') {
+      // ── SHIELD DISC: spinning metallic disc with light trail ──
+      const spinRate = t * 14;
+      // Light streak trail behind
+      const speed2 = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
+      const dt2 = speed2 > 0 ? 1 / 60 : 0;
+      for (let i = 1; i <= 5; i++) {
+        const trailX = s.x - s.vx * dt2 * i * 2;
+        const trailY = s.y - s.vy * dt2 * i * 2;
+        const trailAlpha = 0.3 - i * 0.05;
+        ctx.fillStyle = `rgba(200,220,240,${trailAlpha})`;
+        ctx.beginPath(); ctx.arc(trailX, trailY, r * (1.0 - i * 0.12), 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(spinRate);
+      // Outer rim - steel blue
+      const shieldGrad = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, r * 1.2);
+      shieldGrad.addColorStop(0, '#ddeeff');
+      shieldGrad.addColorStop(0.5, '#aabbcc');
+      shieldGrad.addColorStop(0.8, '#8899aa');
+      shieldGrad.addColorStop(1, '#667788');
+      ctx.fillStyle = shieldGrad;
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.2, 0, Math.PI * 2); ctx.fill();
+      // Inner shield emblem - cross pattern
+      ctx.strokeStyle = '#ccddee';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-r * 0.5, 0); ctx.lineTo(r * 0.5, 0); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, -r * 0.5); ctx.lineTo(0, r * 0.5); ctx.stroke();
+      // Metallic glint that rotates
+      const glintAngle = spinRate * 0.3;
+      ctx.fillStyle = `rgba(255,255,255,${0.4 + 0.3 * Math.sin(glintAngle)})`;
+      ctx.beginPath();
+      ctx.arc(Math.cos(glintAngle) * r * 0.5, Math.sin(glintAngle) * r * 0.5, r * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Bright center rivet
+      ctx.fillStyle = '#eef4ff';
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.2, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+    } else if (s.clsKey === 'paladin') {
+      // ── HOLY SMITE: golden bolt with divine radiance ──
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(a);
+      // Radiating light rays
+      const rayCount = 6;
+      for (let i = 0; i < rayCount; i++) {
+        const rayA = (i / rayCount) * Math.PI * 2 + t * 3;
+        const rayLen = r * (1.8 + 0.4 * Math.sin(t * 8 + i * 2));
+        ctx.strokeStyle = `rgba(255,238,170,${0.3 + 0.15 * Math.sin(t * 6 + i)})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(rayA) * r * 0.4, Math.sin(rayA) * r * 0.4);
+        ctx.lineTo(Math.cos(rayA) * rayLen, Math.sin(rayA) * rayLen);
+        ctx.stroke();
+      }
+      // Warm golden glow halo
+      const holyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 2.0);
+      holyGrad.addColorStop(0, 'rgba(255,240,200,0.5)');
+      holyGrad.addColorStop(0.5, 'rgba(255,220,150,0.2)');
+      holyGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = holyGrad;
+      ctx.beginPath(); ctx.arc(0, 0, r * 2.0, 0, Math.PI * 2); ctx.fill();
+      // Teardrop body - bright golden/white
+      const bodyGrad = ctx.createRadialGradient(r * 0.2, 0, r * 0.1, 0, 0, r * 1.0);
+      bodyGrad.addColorStop(0, '#ffffee');
+      bodyGrad.addColorStop(0.4, '#ffddaa');
+      bodyGrad.addColorStop(1, '#ccaa66');
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.moveTo(r * 1.3, 0);
+      ctx.quadraticCurveTo(r * 0.2, -r * 0.8, -r * 1.0, 0);
+      ctx.quadraticCurveTo(r * 0.2, r * 0.8, r * 1.3, 0);
+      ctx.fill();
+      // Star pattern in center
+      ctx.fillStyle = '#ffffdd';
+      const starR = r * 0.35;
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const sa2 = (i / 8) * Math.PI * 2 + t * 5;
+        const sr = i % 2 === 0 ? starR : starR * 0.4;
+        i === 0 ? ctx.moveTo(Math.cos(sa2) * sr, Math.sin(sa2) * sr)
+                : ctx.lineTo(Math.cos(sa2) * sr, Math.sin(sa2) * sr);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+
+    } else if (s.clsKey === 'ranger') {
+      // ── PIERCING ARROW: sleek arrow with green glow trail ──
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      const wobble = Math.sin(t * 25) * 0.02;
+      ctx.rotate(a + wobble);
+      // Green glow trail
+      for (let i = 1; i <= 4; i++) {
+        const gAlpha = 0.2 - i * 0.04;
+        ctx.fillStyle = `rgba(120,200,60,${gAlpha})`;
+        ctx.beginPath(); ctx.arc(-r * i * 0.8, 0, r * (0.6 - i * 0.08), 0, Math.PI * 2); ctx.fill();
+      }
+      // Speed lines
+      ctx.strokeStyle = 'rgba(140,210,80,0.2)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < 3; i++) {
+        const lineY = (i - 1) * r * 0.4;
+        ctx.beginPath();
+        ctx.moveTo(-r * 1.5 - i * 2, lineY);
+        ctx.lineTo(-r * 2.5 - i * 3, lineY);
+        ctx.stroke();
+      }
+      // Shaft
+      ctx.fillStyle = '#88cc44';
+      ctx.fillRect(-r * 1.2, -r * 0.25, r * 2.4, r * 0.5);
+      // Arrowhead
+      ctx.fillStyle = '#aaddaa';
+      ctx.beginPath();
+      ctx.moveTo(r * 1.8, 0);
+      ctx.lineTo(r * 1.0, -r * 0.5);
+      ctx.lineTo(r * 1.0, r * 0.5);
+      ctx.closePath(); ctx.fill();
+      // Metallic glint
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.beginPath();
+      ctx.moveTo(r * 1.6, -r * 0.1);
+      ctx.lineTo(r * 1.2, -r * 0.3);
+      ctx.lineTo(r * 1.2, 0);
+      ctx.closePath(); ctx.fill();
+      // Fletching
+      ctx.fillStyle = '#668833';
+      ctx.beginPath();
+      ctx.moveTo(-r * 1.0, -r * 0.4); ctx.lineTo(-r * 1.5, -r * 0.6); ctx.lineTo(-r * 1.0, 0);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-r * 1.0, r * 0.4); ctx.lineTo(-r * 1.5, r * 0.6); ctx.lineTo(-r * 1.0, 0);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+
+    } else if (s.clsKey === 'druid') {
+      // ── THORN VINE: organic thorny projectile with poison trail ──
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(a);
+      // Leaf particles trailing behind
+      for (let i = 1; i <= 4; i++) {
+        const leafAge = (t * 5 + i * 1.7) % 3;
+        const leafX = -r * (1.0 + i * 0.7) + Math.sin(t * 4 + i * 3) * 2;
+        const leafY = Math.cos(t * 3 + i * 2) * r * 0.4;
+        const leafR2 = r * 0.25 + leafAge * r * 0.1;
+        ctx.fillStyle = `rgba(80,170,50,${0.3 - i * 0.06})`;
+        ctx.beginPath(); ctx.arc(leafX, leafY, leafR2, 0, Math.PI * 2); ctx.fill();
+      }
+      // Irregular organic body
+      const pulseR = r * (1.0 + 0.1 * Math.sin(t * 10));
+      const bodyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, pulseR * 1.3);
+      bodyGrad.addColorStop(0, '#66cc44');
+      bodyGrad.addColorStop(0.5, '#44aa33');
+      bodyGrad.addColorStop(1, '#337722');
+      ctx.fillStyle = bodyGrad;
+      // Draw irregular shape
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const sa2 = (i / 8) * Math.PI * 2;
+        const irregR = pulseR * (0.8 + 0.3 * Math.sin(i * 2.5 + t * 3));
+        i === 0 ? ctx.moveTo(Math.cos(sa2) * irregR, Math.sin(sa2) * irregR)
+                : ctx.lineTo(Math.cos(sa2) * irregR, Math.sin(sa2) * irregR);
+      }
+      ctx.closePath(); ctx.fill();
+      // Thorn spikes sticking out
+      ctx.fillStyle = '#2a7718';
+      for (let i = 0; i < 5; i++) {
+        const thornA = (i / 5) * Math.PI * 2 + t * 2;
+        const thornBase = pulseR * 0.8;
+        const thornTip = pulseR * 1.5;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(thornA - 0.15) * thornBase, Math.sin(thornA - 0.15) * thornBase);
+        ctx.lineTo(Math.cos(thornA) * thornTip, Math.sin(thornA) * thornTip);
+        ctx.lineTo(Math.cos(thornA + 0.15) * thornBase, Math.sin(thornA + 0.15) * thornBase);
+        ctx.closePath(); ctx.fill();
+      }
+      // Poison glow pulse
+      const poisonAlpha = 0.15 + 0.1 * Math.sin(t * 8);
+      ctx.fillStyle = `rgba(100,255,60,${poisonAlpha})`;
+      ctx.beginPath(); ctx.arc(0, 0, pulseR * 1.6, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+    } else if (s.clsKey === 'engineer') {
+      // ── SMART WRENCH: spinning gear/cog with sparks ──
+      const gearSpin = t * 12;
+      // Spark trail
+      for (let i = 0; i < 3; i++) {
+        const sparkAge = (t * 15 + i * 3.7) % 2;
+        const sparkDx = -s.vx / 60 * (i + 1) * 2;
+        const sparkDy = -s.vy / 60 * (i + 1) * 2;
+        ctx.fillStyle = `rgba(255,${180 + Math.floor(sparkAge * 40)},50,${0.5 - i * 0.15})`;
+        ctx.beginPath();
+        ctx.arc(s.x + sparkDx + Math.sin(t * 20 + i * 5) * 3,
+                s.y + sparkDy + Math.cos(t * 18 + i * 4) * 3,
+                1.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(gearSpin);
+      // Gear body
+      const teeth = 8;
+      const innerR = r * 0.6;
+      const outerR = r * 1.3;
+      ctx.fillStyle = '#dd8833';
+      ctx.beginPath();
+      for (let i = 0; i < teeth * 2; i++) {
+        const ga = (i / (teeth * 2)) * Math.PI * 2;
+        const gr = i % 2 === 0 ? outerR : innerR;
+        i === 0 ? ctx.moveTo(Math.cos(ga) * gr, Math.sin(ga) * gr)
+                : ctx.lineTo(Math.cos(ga) * gr, Math.sin(ga) * gr);
+      }
+      ctx.closePath(); ctx.fill();
+      // Center hole
+      ctx.fillStyle = '#aa6622';
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.35, 0, Math.PI * 2); ctx.fill();
+      // Metallic glint on teeth
+      const glintAngle = gearSpin * 0.4;
+      ctx.fillStyle = `rgba(255,255,220,${0.4 + 0.3 * Math.sin(glintAngle)})`;
+      ctx.beginPath();
+      ctx.arc(Math.cos(glintAngle) * r * 0.7, Math.sin(glintAngle) * r * 0.7, r * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Center rivet
+      ctx.fillStyle = '#ffcc88';
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.15, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+    } else if (s.clsKey === 'chronomancer') {
+      // ── TEMPORAL BOLT: clock-like distortion with time-ripple rings ──
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      // Time-ripple rings expanding outward
+      for (let i = 0; i < 3; i++) {
+        const ringPhase = (t * 4 + i * 1.2) % 2;
+        const ringR = r * (0.8 + ringPhase * 1.2);
+        const ringAlpha = 0.3 * (1 - ringPhase / 2);
+        ctx.strokeStyle = `rgba(255,200,60,${ringAlpha})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(0, 0, ringR, 0, Math.PI * 2); ctx.stroke();
+      }
+      // Golden/amber glow
+      const timeGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.5);
+      timeGrad.addColorStop(0, '#ffffcc');
+      timeGrad.addColorStop(0.4, '#ffcc44');
+      timeGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = timeGrad;
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.5, 0, Math.PI * 2); ctx.fill();
+      // Clock face circle
+      ctx.strokeStyle = 'rgba(255,220,100,0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.8, 0, Math.PI * 2); ctx.stroke();
+      // Clock hands (rotating at different speeds)
+      ctx.strokeStyle = '#ffeeaa';
+      ctx.lineWidth = 1.5;
+      // Hour hand
+      const hourA = t * 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(hourA) * r * 0.4, Math.sin(hourA) * r * 0.4);
+      ctx.stroke();
+      // Minute hand (faster)
+      const minA = t * 8;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(minA) * r * 0.65, Math.sin(minA) * r * 0.65);
+      ctx.stroke();
+      // Bright center dot
+      ctx.fillStyle = '#ffffee';
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.15, 0, Math.PI * 2); ctx.fill();
+      // Temporal shimmer particles
+      for (let i = 0; i < 4; i++) {
+        const px = Math.sin(t * 6 + i * 1.5) * r * 0.9;
+        const py = Math.cos(t * 6 + i * 1.5) * r * 0.9;
+        ctx.fillStyle = `rgba(255,220,100,${0.3 + 0.2 * Math.sin(t * 10 + i)})`;
+        ctx.beginPath(); ctx.arc(px, py, 1.2, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+
+    } else if (s.explode && s.color.includes('ff66')) {
       // ── FIREBALL: teardrop with smoke trail and ember sparks ──
       ctx.save();
       ctx.translate(s.x, s.y);

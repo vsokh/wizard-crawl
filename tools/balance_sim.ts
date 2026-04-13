@@ -73,6 +73,7 @@ function normalizeSpellDef(input: SpellDefInput): SpellDef {
     homing: input.homing ?? 0,
     zap: input.zap ?? 0,
     zapRate: input.zapRate ?? 0,
+    pierce: input.pierce ?? 0,
     range: input.range ?? 0,
     width: input.width ?? 0,
     angle: input.angle ?? 0,

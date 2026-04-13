@@ -345,7 +345,8 @@ export function castSpellSilent(state: GameState, p: Player, idx: number, angle:
       ...spellToRuntime(def),
       x: sx, y: sy,
       vx: cos * def.speed, vy: sin * def.speed,
-      owner: p.idx, age: 0, zapTimer: 0, pierceLeft: p.pierce || 0,
+      owner: p.idx, age: 0, zapTimer: 0, pierceLeft: (p.pierce || 0) + (def.pierce || 0),
+      clsKey: p.clsKey,
     });
   }
 }
@@ -368,6 +369,8 @@ function spellToRuntime(def: SpellDef): Spell {
     drain: def.drain,
     explode: def.explode,
     burn: def.burn,
+    stun: def.stun,
+    clsKey: '',
   };
 }
 
@@ -410,7 +413,8 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       ...spellToRuntime(def),
       x: sx, y: sy,
       vx: cos * def.speed, vy: sin * def.speed,
-      owner: p.idx, age: 0, zapTimer: 0, pierceLeft: p.pierce || 0,
+      owner: p.idx, age: 0, zapTimer: 0, pierceLeft: (p.pierce || 0) + (def.pierce || 0),
+      clsKey: p.clsKey,
     };
     spell.dmg = Math.round(spell.dmg * echoDmgMul);
     state.spells.push(spell);
@@ -501,7 +505,8 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
           y: p.y + Math.sin(sa) * WIZARD_SIZE,
           vx: Math.cos(sa) * def.speed,
           vy: Math.sin(sa) * def.speed,
-          owner: p.idx, age: 0, pierceLeft: 0, zapTimer: 0,
+          owner: p.idx, age: 0, pierceLeft: (p.pierce || 0) + (def.pierce || 0), zapTimer: 0,
+          clsKey: p.clsKey,
         });
         sfx(SfxName.Arcane);
       }, i * 60);
@@ -743,6 +748,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
           vx: Math.cos(sa) * 200, vy: Math.sin(sa) * 200,
           owner: p.idx, age: 0, zapTimer: 0, pierceLeft: 0,
           zap: 0, zapRate: 0, slow: 0, drain: 0, explode: 0, burn: 0,
+          stun: 0, clsKey: p.clsKey,
         });
         sfx(SfxName.Arcane);
       }, i * 50);
@@ -810,6 +816,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
           vx: aCos * 400, vy: aSin * 400,
           owner: p.idx, age: 0, zapTimer: 0, pierceLeft: 2,
           homing: 0, zap: 0, zapRate: 0, slow: 0, drain: 0, explode: 0, burn: 0,
+          stun: 0, clsKey: p.clsKey,
         });
         sfx(SfxName.Hit);
       }, i * 30);

@@ -84,6 +84,7 @@ export interface SpellDef {
   homing: number;
   zap: number;
   zapRate: number;
+  pierce: number;
   range: number;
   width: number;
   angle: number;
@@ -331,6 +332,8 @@ export interface Spell {
   drain: number;
   explode: number;
   burn: number;
+  stun: number;
+  clsKey: string;
 }
 
 export interface Particle {

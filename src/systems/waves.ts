@@ -110,6 +110,7 @@ export function updateSpells(state: GameState, dt: number): void {
       if (dist(s.x, s.y, e.x, e.y) < ENEMIES[e.type].size + s.radius) {
         damageEnemy(state, e, s.dmg, s.owner);
         if (s.slow) e.slowTimer = (e.slowTimer || 0) + s.slow;
+        if (s.stun) e.stunTimer = (e.stunTimer || 0) + s.stun;
         if (s.drain) {
           const p = state.players[s.owner];
           if (p) {

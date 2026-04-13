@@ -122,7 +122,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     desc: 'Death magic. Drains life.',
     passive: { name: 'Soul Harvest', desc: 'Kills heal 1 HP' },
     spells: [
-      { name: 'Soul Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 360, radius: 9, mana: 8, cd: 0.35, life: 1.2, color: '#55cc55', trail: '#228822' },
+      { name: 'Soul Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 360, radius: 9, mana: 8, cd: 0.35, life: 1.2, color: '#55cc55', trail: '#228822', drain: 1 },
       { name: 'Death Wave', key: 'RMB', type: SpellType.Nova, dmg: 2, range: 90, mana: 28, cd: 4, drain: 1, color: '#44aa44' },
       { name: 'Plague', key: 'Q', type: SpellType.Zone, dmg: 1, mana: 40, cd: 10, radius: 80, duration: 4, tickRate: 0.8, slow: 0.3, color: '#338833' },
       { name: 'Army of Dead', key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#228822', mana: 0, cd: 0 },
@@ -133,7 +133,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     desc: 'Time magic. Haste & slow.',
     passive: { name: 'Haste Aura', desc: '+10% move speed for nearby ally' },
     spells: [
-      { name: 'Time Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 480, radius: 8, mana: 6, cd: 0.25, life: 1, slow: 1, color: '#ffcc44', trail: '#cc9922' },
+      { name: 'Time Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 480, radius: 8, mana: 6, cd: 0.25, life: 1, stun: 0.15, color: '#ffcc44', trail: '#cc9922' },
       { name: 'Time Warp', key: 'RMB', type: SpellType.Nova, dmg: 1, range: 110, mana: 22, cd: 4, slow: 2.5, stun: 0.5, color: '#ffdd66' },
       { name: 'Rewind', key: 'Q', type: SpellType.Rewind, mana: 45, cd: 12, color: '#ffcc44' },
       { name: 'Time Stop', key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#ffdd66', mana: 0, cd: 0 },
@@ -144,7 +144,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     desc: 'Tank. Absorbs damage, protects ally.',
     passive: { name: 'Bulwark', desc: 'Take 25% less damage' },
     spells: [
-      { name: 'Shield Throw', key: 'LMB', type: SpellType.Projectile, dmg: 2, speed: 350, radius: 10, mana: 4, cd: 0.4, life: 0.8, color: '#ccddee', trail: '#8899aa' },
+      { name: 'Shield Throw', key: 'LMB', type: SpellType.Projectile, dmg: 2, speed: 350, radius: 10, mana: 4, cd: 0.4, life: 0.8, color: '#ccddee', trail: '#8899aa', pierce: 1 },
       { name: 'Shield Bash', key: 'RMB', type: SpellType.Nova, dmg: 3, range: 60, mana: 15, cd: 2, stun: 1.5, color: '#8899aa' },
       { name: 'Charge', key: 'Q', type: SpellType.Blink, range: 200, mana: 20, cd: 3.5, color: '#aabbcc' },
       { name: 'Shield Wall', key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#ccddee', mana: 0, cd: 0 },
@@ -166,7 +166,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     desc: 'Support. Heals ally, smites undead.',
     passive: { name: 'Aura of Light', desc: 'Nearby ally regens 2 HP/s' },
     spells: [
-      { name: 'Smite', key: 'LMB', type: SpellType.Projectile, dmg: 2, speed: 380, radius: 9, mana: 7, cd: 0.35, life: 1.2, color: '#ffddaa', trail: '#ccaa66' },
+      { name: 'Smite', key: 'LMB', type: SpellType.Projectile, dmg: 2, speed: 380, radius: 9, mana: 7, cd: 0.35, life: 1.2, color: '#ffddaa', trail: '#ccaa66', explode: 25 },
       { name: 'Holy Shield', key: 'RMB', type: SpellType.AllyShield, mana: 25, cd: 5, duration: 3, color: '#ffffcc' },
       { name: 'Consecrate', key: 'Q', type: SpellType.Zone, dmg: 2, mana: 30, cd: 7, radius: 80, duration: 3, tickRate: 0.6, slow: 0.3, color: '#ffeeaa', heal: 1 },
       { name: 'Holy Light', key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#ffffcc', mana: 0, cd: 0 },
@@ -177,7 +177,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     desc: 'Ranged DPS. Fast attacks, high mobility.',
     passive: { name: 'Eagle Eye', desc: 'Primary range +30%, crits at max range' },
     spells: [
-      { name: 'Arrow', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 600, radius: 5, mana: 4, cd: 0.18, life: 1.4, color: '#88cc44', trail: '#668833' },
+      { name: 'Arrow', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 600, radius: 5, mana: 4, cd: 0.18, life: 1.4, color: '#88cc44', trail: '#668833', pierce: 1 },
       { name: 'Volley', key: 'RMB', type: SpellType.Barrage, dmg: 1, speed: 500, radius: 5, mana: 18, cd: 2.5, count: 5, spread: 0.6, life: 1, color: '#88cc44', trail: '#556622' },
       { name: 'Trap', key: 'Q', type: SpellType.Trap, mana: 15, cd: 4, dmg: 3, radius: 50, slow: 2, color: '#aadd55' },
       { name: 'Arrow Rain', key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#88cc44', mana: 0, cd: 0 },
@@ -188,7 +188,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     desc: 'Nature magic. Summons + heals.',
     passive: { name: 'Regrowth', desc: 'Regen 1 HP every 10 seconds' },
     spells: [
-      { name: 'Thorn Shot', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 380, radius: 7, mana: 6, cd: 0.32, life: 1.2, burn: 3, color: '#44aa33', trail: '#337722' },
+      { name: 'Thorn Shot', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 380, radius: 7, mana: 6, cd: 0.32, life: 1.2, burn: 3, slow: 0.4, color: '#44aa33', trail: '#337722' },
       { name: 'Entangle', key: 'RMB', type: SpellType.Zone, dmg: 0, mana: 20, cd: 5, radius: 60, duration: 2, tickRate: 0.5, stun: 2, color: '#66bb44' },
       { name: 'Spirit Wolf', key: 'Q', type: SpellType.Ultimate, ultCharge: 0, mana: 30, cd: 10, color: '#88aa55' },
       { name: "Nature's Wrath", key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#33aa22', mana: 0, cd: 0 },
@@ -221,7 +221,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     desc: 'Builds turrets and gadgets.',
     passive: { name: 'Overclock', desc: 'Turrets fire 20% faster' },
     spells: [
-      { name: 'Wrench Throw', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 350, radius: 7, mana: 5, cd: 0.3, life: 1.0, color: '#dd8833', trail: '#aa6622' },
+      { name: 'Wrench Throw', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 350, radius: 7, mana: 5, cd: 0.3, life: 1.0, color: '#dd8833', trail: '#aa6622', homing: 1.0 },
       { name: 'Deploy Turret', key: 'RMB', type: SpellType.Zone, dmg: 1, mana: 25, cd: 6, radius: 120, duration: 15, tickRate: 0.8, color: '#cc7722' },
       { name: 'Mine Field', key: 'Q', type: SpellType.Trap, mana: 20, cd: 5, dmg: 4, radius: 45, count: 3, spread: 0.8, color: '#ffaa33' },
       { name: 'Mega Turret', key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#dd8833', mana: 0, cd: 0 },
