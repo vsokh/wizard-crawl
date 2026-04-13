@@ -1,0 +1,38 @@
+[
+  {
+    "version": "v0.1.0",
+    "date": "2026-04-12",
+    "commitRef": "c1f5999aa6fdc0c21b1527c1a1f212b7fb2f3eae",
+    "stabilityScore": 0,
+    "commitCount": 10,
+    "description": "Initial game foundation with co-op multiplayer and wave survival",
+    "breakdown": { "feat": 5, "fix": 4, "chore": 1 }
+  },
+  {
+    "version": "v0.2.0",
+    "date": "2026-04-13",
+    "commitRef": "18a3a0a7473d8905e6859ad640f5537f0e88f229",
+    "stabilityScore": 0,
+    "commitCount": 17,
+    "description": "TypeScript migration, 14 classes, visual overhaul, roguelike core",
+    "breakdown": { "feat": 6, "fix": 2, "refactor": 3, "style": 2, "chore": 4 }
+  },
+  {
+    "version": "v0.3.0",
+    "date": "2026-04-13",
+    "commitRef": "a3db1e478969cf45b2848a868872a19e7b3e46e2",
+    "stabilityScore": 0,
+    "commitCount": 20,
+    "description": "Spell differentiation, balance systems, 20-wave run arc",
+    "breakdown": { "feat": 14, "fix": 3, "perf": 1, "docs": 1, "chore": 1 }
+  },
+  {
+    "version": "v0.4.0",
+    "date": "2026-04-13",
+    "commitRef": "c999a254b90815a7d5bfd2f2b310078ae25b0e99",
+    "stabilityScore": 0,
+    "commitCount": 15,
+    "description": "Animation polish, VFX, economy rebalance, shop system",
+    "breakdown": { "feat": 10, "fix": 4, "chore": 1 }
+  }
+]
