@@ -5,7 +5,7 @@ import {
   ROOM_WIDTH,
   ROOM_HEIGHT,
   DEFAULT_MOVE_SPEED,
-  XP_THRESHOLD_GROWTH,
+  getXpStep,
 } from '../constants';
 import { Enemy, PickupType, SfxName } from '../types';
 import { sfx } from '../audio';
@@ -266,7 +266,7 @@ export function updatePlayers(state: GameState, dt: number): void {
           if (p.xp >= p.xpToNext) {
             p.xp = 0;
             p.level++;
-            p.xpToNext = Math.ceil(p.xpToNext * XP_THRESHOLD_GROWTH);
+            p.xpToNext = p.xpToNext + getXpStep(p.level);
             if (onChestPickup) onChestPickup(state);
           }
         }

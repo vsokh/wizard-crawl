@@ -62,7 +62,19 @@ export const HEALTH_DROP_CHANCE = 0.15;
 
 /** XP system constants */
 export const XP_BASE_THRESHOLD = 20;
-export const XP_THRESHOLD_GROWTH = 1.25;
+/** XP stepped-linear tier config: [maxLevel, xpIncrement] */
+export const XP_STEPS: [number, number][] = [
+  [5, 15],   // levels 1-5: +15 per level
+  [10, 20],  // levels 6-10: +20 per level
+  [Infinity, 30], // levels 11+: +30 per level
+];
+/** Get the XP increment for a given level (stepped linear) */
+export function getXpStep(level: number): number {
+  for (const [maxLvl, step] of XP_STEPS) {
+    if (level <= maxLvl) return step;
+  }
+  return XP_STEPS[XP_STEPS.length - 1][1];
+}
 export const XP_GEM_COUNT = 5;
 
 /** Minimap cell size */
