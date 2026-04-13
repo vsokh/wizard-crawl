@@ -68,15 +68,40 @@ export function updateFx(state: GameState, dt: number): void {
 
 export function drawBeams(ctx: CanvasRenderingContext2D, state: GameState): void {
   for (const b of state.beams) {
-    ctx.globalAlpha = b.life / 0.15;
+    const life = b.life / 0.15;
+    const ex = b.x + Math.cos(b.angle) * b.range;
+    const ey = b.y + Math.sin(b.angle) * b.range;
+
+    // Layer 1: outer glow
+    ctx.globalAlpha = life * 0.3;
     ctx.strokeStyle = b.color;
-    ctx.lineWidth = b.width + 2;
+    ctx.lineWidth = b.width + 8;
     ctx.shadowColor = b.color;
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+
+    // Layer 2: mid beam
+    ctx.globalAlpha = life * 0.6;
+    ctx.lineWidth = b.width + 3;
     ctx.shadowBlur = 8;
     ctx.beginPath();
     ctx.moveTo(b.x, b.y);
-    ctx.lineTo(b.x + Math.cos(b.angle) * b.range, b.y + Math.sin(b.angle) * b.range);
+    ctx.lineTo(ex, ey);
     ctx.stroke();
+
+    // Layer 3: bright core
+    ctx.globalAlpha = life * 0.8;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = b.width * 0.5;
+    ctx.shadowBlur = 4;
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+
     ctx.shadowBlur = 0;
   }
   ctx.globalAlpha = 1;
@@ -240,33 +265,48 @@ export function drawAoe(ctx: CanvasRenderingContext2D, state: GameState): void {
 export function drawFx(ctx: CanvasRenderingContext2D, state: GameState): void {
   // Trails
   for (const t of state.trails) {
-    ctx.globalAlpha = t.life * 0.5;
+    const alpha = t.life * t.life * 0.6;
+    ctx.globalAlpha = alpha;
     ctx.fillStyle = t.color;
+    ctx.shadowColor = t.color;
+    ctx.shadowBlur = 4 * t.life;
     ctx.beginPath();
     ctx.arc(t.x, t.y, t.r * t.life, 0, Math.PI * 2);
     ctx.fill();
   }
+  ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
 
   // Particles
   for (const p of state.particles) {
     ctx.globalAlpha = p.life;
     ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 6 * p.life;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
     ctx.fill();
   }
+  ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
 
   // Shockwaves
   for (const s of state.shockwaves) {
+    ctx.shadowColor = s.color;
+    ctx.shadowBlur = 10 * s.life;
     ctx.globalAlpha = s.life * 0.4;
     ctx.strokeStyle = s.color;
-    ctx.lineWidth = 2 * s.life;
+    ctx.lineWidth = 3 * s.life;
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
     ctx.stroke();
+    // Inner ring for layered look
+    ctx.globalAlpha = s.life * 0.2;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.radius * 0.7, 0, Math.PI * 2);
+    ctx.stroke();
   }
+  ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
 
   // Floating text with damage-scaled sizing
@@ -284,6 +324,9 @@ export function drawFx(ctx: CanvasRenderingContext2D, state: GameState): void {
     }
     ctx.font = `bold ${fontSize}px Courier New`;
     ctx.textAlign = 'center';
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 2;
+    ctx.strokeText(t.text, t.x, t.y);
     ctx.fillText(t.text, t.x, t.y);
   }
   ctx.globalAlpha = 1;

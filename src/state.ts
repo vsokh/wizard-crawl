@@ -50,6 +50,7 @@ export interface GameState {
   shakeX: number;
   shakeY: number;
   screenFlash: number;
+  screenFlashColor: string;
 
   // Camera
   camX: number;
@@ -124,6 +125,7 @@ export function createInitialState(): GameState {
     shakeX: 0,
     shakeY: 0,
     screenFlash: 0,
+    screenFlashColor: '255,255,255',
     camX: 0,
     camY: 0,
     wave: 1,
@@ -417,4 +419,10 @@ export function spawnShockwave(
 
 export function shake(state: GameState, intensity: number): void {
   state.shakeIntensity = Math.max(state.shakeIntensity, intensity);
+}
+
+export function flashScreen(state: GameState, intensity: number, color?: string): void {
+  state.screenFlash = intensity;
+  if (color) state.screenFlashColor = color;
+  else state.screenFlashColor = '255,255,255';
 }

@@ -9,6 +9,7 @@ import {
   spawnText,
   spawnShockwave,
   shake,
+  flashScreen,
 } from '../state';
 import {
   Player,
@@ -285,7 +286,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
     if (et.boss) {
       shake(state, 10);
       spawnText(state, e.x, e.y - 20, 'BOSS SLAIN!', '#ffcc44');
-      state.screenFlash = 0.2;
+      flashScreen(state, 0.2, '255,220,100');
     }
 
     // Chain hit: damage jumps to nearby enemy
@@ -389,7 +390,7 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
     spawnShockwave(state, p.x, p.y, 70, 'rgba(255,100,50,.5)');
     sfx(SfxName.Boom);
     shake(state, 10);
-    state.screenFlash = 0.3;
+    flashScreen(state, 0.3, '255,100,50');
 
     if (state.players.every(pl => !pl.alive)) {
       state.gamePhase = GamePhase.GameOver;
@@ -655,6 +656,8 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     };
     spell.dmg = Math.round(spell.dmg * echoDmgMul);
     state.spells.push(spell);
+    // Muzzle flash
+    spawnParticles(state, p.x + cos * 15, p.y + sin * 15, spell.color, 3, 0.3);
     // Barrage Mode: fire 2 extra burst shots for primary
     if (idx === 0 && p.burstFire) {
       for (const bOff of [-0.12, 0.12]) {
@@ -751,6 +754,8 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     p.iframes = 0.3;
     sfx(SfxName.Blink);
   } else if (def.type === SpellType.Barrage) {
+    // Muzzle flash for barrage
+    spawnParticles(state, p.x + cos * 15, p.y + sin * 15, def.color, 3, 0.3);
     for (let i = 0; i < def.count; i++) {
       const sa = angle + (i - def.count / 2) * def.spread / def.count + rand(-0.05, 0.05);
       // Stagger barrage shots
@@ -787,7 +792,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       spawnText(state, p.x, p.y - 25, 'REWIND', '#ffcc44');
       sfx(SfxName.Blink);
       shake(state, 3);
-      state.screenFlash = 0.15;
+      flashScreen(state, 0.15, '255,200,60');
     } else {
       // Refund if no snapshot
       spawnText(state, p.x, p.y - 20, 'NO SNAPSHOT', '#886644');
@@ -880,7 +885,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
   p.ultReady = false;
   sfx(SfxName.Boom);
   shake(state, 12);
-  state.screenFlash = 0.3;
+  flashScreen(state, 0.3);
   spawnParticles(state, p.x, p.y, p.cls.color, 30, 1.5);
   spawnShockwave(state, p.x, p.y, 120, p.cls.color);
   spawnText(state, p.x, p.y - 35, 'ULTIMATE!', p.cls.color);

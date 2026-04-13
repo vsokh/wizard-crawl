@@ -224,7 +224,7 @@ function loop(now: number): void {
 
   // Screen flash overlay
   if (state.screenFlash > 0) {
-    ctx.fillStyle = `rgba(255,255,255,${state.screenFlash * 0.25})`;
+    ctx.fillStyle = `rgba(${state.screenFlashColor},${state.screenFlash * 0.25})`;
     ctx.fillRect(0, 0, state.width, state.height);
   }
 

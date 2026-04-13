@@ -1,4 +1,4 @@
-import { GameState, dist, rand, wrapAngle, spawnParticles, spawnShockwave, spawnText, shake } from '../state';
+import { GameState, dist, rand, wrapAngle, spawnParticles, spawnShockwave, spawnText, shake, flashScreen } from '../state';
 import { ENEMIES, ROOM_WIDTH, ROOM_HEIGHT } from '../constants';
 import { SfxName } from '../types';
 import { sfx } from '../audio';
@@ -156,6 +156,54 @@ export function updateSpells(state: GameState, dt: number): void {
         spawnShockwave(state, s.x, s.y, s.explode, s.color);
         sfx(SfxName.Boom);
         shake(state, 3);
+
+        // Element-specific impact effects based on spell color
+        const c = s.color;
+        if (c.includes('ff66') || c.includes('ff44') || c.includes('ff22')) {
+          // Fire: upward-drifting embers + second orange shockwave
+          for (let ei = 0; ei < 5; ei++) {
+            const a = Math.random() * Math.PI * 2;
+            const spd = 30 + Math.random() * 60;
+            state.particles.push({
+              x: s.x, y: s.y,
+              vx: Math.cos(a) * spd,
+              vy: -40 - Math.random() * 80,
+              life: 1, r: 1 + Math.random() * 2, color: '#ff8833',
+            });
+          }
+          spawnShockwave(state, s.x, s.y, s.explode * 0.7, '#ff8833');
+        } else if (c.includes('22cc') || c.includes('88cc') || c.includes('44aa')) {
+          // Ice: extra large particles + brief screen flash
+          spawnParticles(state, s.x, s.y, s.color, 8, 1.2);
+          flashScreen(state, 0.05, '136,204,255');
+        } else if (c.includes('ffcc') || c.includes('ffee') || c.includes('bb88')) {
+          // Lightning: quick random beams + bigger shake
+          for (let li = 0; li < 3; li++) {
+            const la = Math.random() * Math.PI * 2;
+            state.beams.push({
+              x: s.x, y: s.y,
+              angle: la,
+              range: 40 + Math.random() * 20,
+              width: 1, color: '#ffee88', life: 0.08,
+            });
+          }
+          shake(state, 5);
+        } else if (c.includes('8844') || c.includes('aa44') || c.includes('6622')) {
+          // Dark/Necro: converging particles + dark shockwave
+          for (let di = 0; di < 8; di++) {
+            const a = Math.random() * Math.PI * 2;
+            const d = 30 + Math.random() * 40;
+            state.particles.push({
+              x: s.x + Math.cos(a) * d,
+              y: s.y + Math.sin(a) * d,
+              vx: -Math.cos(a) * 60,
+              vy: -Math.sin(a) * 60,
+              life: 1, r: 1.5 + Math.random() * 2, color: s.color,
+            });
+          }
+          spawnShockwave(state, s.x, s.y, s.explode * 0.8, '#6622aa');
+        }
+
         for (const e of state.enemies) {
           if (!e.alive) continue;
           if (dist(s.x, s.y, e.x, e.y) < s.explode) {
@@ -163,7 +211,8 @@ export function updateSpells(state: GameState, dt: number): void {
           }
         }
       } else if (hitP || hitE) {
-        spawnParticles(state, s.x, s.y, s.color, 4, 0.3);
+        spawnParticles(state, s.x, s.y, s.color, 6, 0.3);
+        shake(state, 1);
       } else if (!hitP && !hitE && state.players[s.owner]?.volatile) {
         // Volatile: explode on expiry
         spawnParticles(state, s.x, s.y, s.color, 12, 0.6);
@@ -193,7 +242,7 @@ export function updateAoe(state: GameState, dt: number): void {
       spawnShockwave(state, m.x, m.y, m.radius, m.color);
       sfx(SfxName.Boom);
       shake(state, 6);
-      state.screenFlash = 0.1;
+      flashScreen(state, 0.1);
       for (const e of state.enemies) {
         if (!e.alive) continue;
         if (dist(m.x, m.y, e.x, e.y) < m.radius + ENEMIES[e.type].size) {

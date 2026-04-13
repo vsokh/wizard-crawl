@@ -1,4 +1,4 @@
-import { GameState, dist, rand, spawnParticles, spawnText, shake } from '../state';
+import { GameState, dist, rand, spawnParticles, spawnText, shake, flashScreen } from '../state';
 import { GamePhase, PickupType, Enemy, SfxName } from '../types';
 import {
   ROOM_WIDTH,
@@ -147,7 +147,7 @@ export function startWave(state: GameState): void {
     spawnText(state, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 50, 'FINAL WAVE!', '#ff4444');
     sfx(SfxName.Boom);
     shake(state, 10);
-    state.screenFlash = 0.3;
+    flashScreen(state, 0.3);
 
     state.waveEnemiesTotal = state.enemies.filter(e => e.alive && !e._friendly).length;
     sfx(SfxName.Door);
