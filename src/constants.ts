@@ -506,12 +506,12 @@ export function flatScaling(baseValue: number, stacks: number): number {
 
 /** Hyperbolic soft cap for total flat bonus damage.
  *  First THRESHOLD points uncapped; beyond that, diminishing returns.
- *  Example: +15 raw → ~9.7 effective, +30 raw → ~14.2 effective. */
+ *  Example: +15 raw → ~9.6 effective, +30 raw → ~10.8 effective. */
 export function softCapBonusDmg(rawBonus: number): number {
   if (rawBonus <= COMBAT.BONUS_DMG_SOFT_CAP_THRESHOLD) return rawBonus;
   const excess = rawBonus - COMBAT.BONUS_DMG_SOFT_CAP_THRESHOLD;
   const knee = COMBAT.BONUS_DMG_SOFT_CAP_KNEE;
-  return COMBAT.BONUS_DMG_SOFT_CAP_THRESHOLD + excess * (1 - 1 / (1 + excess / knee));
+  return COMBAT.BONUS_DMG_SOFT_CAP_THRESHOLD + excess / (1 + excess / knee);
 }
 
 export const UPGRADE_POOL: UpgradeDef[] = [
