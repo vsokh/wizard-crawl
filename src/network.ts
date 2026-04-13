@@ -5,6 +5,7 @@ import {
   NetworkMode,
   NetMessage,
   NetStateMessage,
+  NetDeltaMessage,
   PickupType,
   Enemy,
   PlayerInput,
@@ -17,7 +18,7 @@ import { showUpgradeFromHost, checkBothPicked, finishUpgrade } from './systems/u
 //       MESSAGE VALIDATION
 // ═══════════════════════════════════
 
-const VALID_MSG_TYPES = new Set(['input', 'cls', 'go', 'upgrade', 'host_picked', 'guest_picked', 'resume', 'state']);
+const VALID_MSG_TYPES = new Set(['input', 'cls', 'go', 'upgrade', 'host_picked', 'guest_picked', 'resume', 'state', 'delta']);
 
 function isNetMessage(msg: unknown): msg is NetMessage {
   return typeof msg === 'object' && msg !== null && 'type' in msg &&
@@ -60,6 +61,11 @@ let adaptiveInterval = NET_SEND_INTERVAL;
 export function getAdaptiveInterval(): number {
   return adaptiveInterval;
 }
+
+// Delta state tracking
+const lastSentJson = new Map<string, string>();
+let sendSeq = 0;
+const KEYFRAME_INTERVAL = 20; // Full state every 20 frames (~1 second at 50ms)
 
 // Callbacks set by main.ts to break circular deps
 let onShowSelect: (() => void) | null = null;
@@ -126,6 +132,7 @@ export function hostGame(state: GameState): void {
   peer.on('connection', (c: DataConnection) => {
     conn = c;
     conn.on('open', () => {
+      resetDeltaState();
       state.mode = NetworkMode.Host;
       state.localIdx = 0;
       if (hostStatus) hostStatus.textContent = 'connected!';
@@ -172,6 +179,7 @@ export function hostGame(state: GameState): void {
     conn.on('close', () => {
       if (errorMsg) errorMsg.textContent = 'Partner disconnected';
       resetInputDedup();
+      resetDeltaState();
     });
   });
 
@@ -217,8 +225,8 @@ export function joinGame(state: GameState): void {
 
     conn.on('data', (msg: unknown) => {
       if (!isNetMessage(msg)) return;
-      if (msg.type === 'state') {
-        applyState(state, msg);
+      if (msg.type === 'state' || msg.type === 'delta') {
+        applyState(state, msg as NetStateMessage);
       }
       if (msg.type === 'go') {
         if (!(msg.h in CLASSES) || !(msg.g in CLASSES)) return;
@@ -265,8 +273,8 @@ export function joinGame(state: GameState): void {
 export function sendState(state: GameState): void {
   if (!conn || !conn.open || state.mode !== NetworkMode.Host) return;
 
-  const msg: NetStateMessage = {
-    type: 'state',
+  // Build all field values (same mapping/rounding as before)
+  const fields = {
     p: state.players.map(p => ({
       x: ~~p.x, y: ~~p.y, a: Math.round(p.angle * 100) / 100, vx: ~~p.vx, vy: ~~p.vy,
       hp: p.hp, mhp: p.maxHp, mn: ~~p.mana, mmn: p.maxMana,
@@ -308,14 +316,80 @@ export function sendState(state: GameState): void {
     sk: state.shakeIntensity > 0 ? Math.round(state.shakeIntensity * 10) / 10 : 0,
     lv: state.lives,
     mlv: state.maxLives,
-    fx: state.pendingFx.length > 0 ? state.pendingFx.slice() : undefined,
   };
 
-  // Clear the fx queue after copying into the message
+  const fx = state.pendingFx.length > 0 ? state.pendingFx.slice() : undefined;
+
+  // Always clear the fx queue after copying
   state.pendingFx.length = 0;
 
+  sendSeq++;
+
+  // Keyframe: send full state (first send or every KEYFRAME_INTERVAL frames)
+  if (lastSentJson.size === 0 || sendSeq % KEYFRAME_INTERVAL === 0) {
+    const msg: NetStateMessage = { type: 'state', ...fields, fx };
+
+    // Cache JSON of each field for future delta comparisons
+    const arrayKeys = ['p', 'e', 'sp', 'ep', 'zn', 'aoe', 'pk', 'pl'] as const;
+    for (const k of arrayKeys) {
+      lastSentJson.set(k, JSON.stringify(fields[k]));
+    }
+    const scalarKeys = ['w', 'wA', 'wBr', 'g', 'tk', 'gp', 'ct', 'sc', 'sk', 'lv', 'mlv'] as const;
+    for (const k of scalarKeys) {
+      lastSentJson.set(k, JSON.stringify(fields[k]));
+    }
+    // Don't cache fx — it's one-shot
+
+    try {
+      conn.send(msg);
+      sendFailCount = 0;
+    } catch (e) {
+      console.warn('sendState failed:', e);
+      sendFailCount++;
+      if (sendFailCount >= 3) {
+        const errorMsg = document.getElementById('error-msg');
+        if (errorMsg) errorMsg.textContent = 'Connection unstable — messages failing to send';
+        sendFailCount = 0;
+      }
+    }
+    return;
+  }
+
+  // Delta frame: only send changed fields
+  const delta: Record<string, unknown> = { type: 'delta' };
+  let hasChanges = false;
+
+  const arrayKeys = ['p', 'e', 'sp', 'ep', 'zn', 'aoe', 'pk', 'pl'] as const;
+  for (const k of arrayKeys) {
+    const json = JSON.stringify(fields[k]);
+    if (json !== lastSentJson.get(k)) {
+      delta[k] = fields[k];
+      lastSentJson.set(k, json);
+      hasChanges = true;
+    }
+  }
+
+  const scalarKeys = ['w', 'wA', 'wBr', 'g', 'tk', 'gp', 'ct', 'sc', 'sk', 'lv', 'mlv'] as const;
+  for (const k of scalarKeys) {
+    const json = JSON.stringify(fields[k]);
+    if (json !== lastSentJson.get(k)) {
+      delta[k] = fields[k];
+      lastSentJson.set(k, json);
+      hasChanges = true;
+    }
+  }
+
+  // FX is one-shot: always include if present, never cache
+  if (fx) {
+    delta.fx = fx;
+    hasChanges = true;
+  }
+
+  // Skip send entirely if nothing changed
+  if (!hasChanges) return;
+
   try {
-    conn.send(msg);
+    conn.send(delta);
     sendFailCount = 0;
     adaptiveInterval = Math.max(NET_SEND_INTERVAL, adaptiveInterval * 0.9);
   } catch (e) {
@@ -328,6 +402,11 @@ export function sendState(state: GameState): void {
       sendFailCount = 0;
     }
   }
+}
+
+export function resetDeltaState(): void {
+  lastSentJson.clear();
+  sendSeq = 0;
 }
 
 // ═══════════════════════════════════

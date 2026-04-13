@@ -706,6 +706,30 @@ export interface NetStateMessage {
   fx?: NetFxEvent[];  // visual effect events for guest replay
 }
 
+export interface NetDeltaMessage {
+  type: 'delta';
+  p?: NetStatePlayerData[];
+  e?: NetStateEnemyData[];
+  sp?: NetStateSpellData[];
+  ep?: NetStateEProjData[];
+  zn?: NetStateZoneData[];
+  aoe?: NetStateAoeData[];
+  pk?: NetStatePickupData[];
+  pl?: NetStatePillarData[];
+  w?: number;
+  wA?: boolean;
+  wBr?: number;
+  g?: number;
+  tk?: number;
+  gp?: GamePhase;
+  ct?: number;
+  sc?: number;
+  sk?: number;
+  lv?: number;
+  mlv?: number;
+  fx?: NetFxEvent[];
+}
+
 export type NetMessage =
   | NetInputMessage
   | NetClassMessage
@@ -714,4 +738,5 @@ export type NetMessage =
   | NetHostPickedMessage
   | NetGuestPickedMessage
   | NetResumeMessage
-  | NetStateMessage;
+  | NetStateMessage
+  | NetDeltaMessage;
