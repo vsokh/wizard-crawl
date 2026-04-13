@@ -239,6 +239,7 @@ export interface Player {
   chainLightning: number;
   overcharge: boolean;
   stormShield: boolean;
+  _stormTimer: number;
   blinkExplode: boolean;
   spellMirror: number;
   raiseDead: number;

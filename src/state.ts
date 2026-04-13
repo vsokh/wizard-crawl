@@ -298,6 +298,7 @@ export function createPlayer(idx: number, clsKey: string): Player {
     chainLightning: 0,
     overcharge: false,
     stormShield: false,
+    _stormTimer: 0,
     blinkExplode: false,
     spellMirror: 0,
     raiseDead: 0,

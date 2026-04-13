@@ -7,9 +7,9 @@ import {
   DEFAULT_MOVE_SPEED,
   XP_THRESHOLD_GROWTH,
 } from '../constants';
-import { PickupType, SfxName } from '../types';
+import { Enemy, PickupType, SfxName } from '../types';
 import { sfx } from '../audio';
-import { castSpell, castSpellSilent, castUltimate } from './combat';
+import { castSpell, castSpellSilent, castUltimate, damageEnemy } from './combat';
 
 /** Callback set by main.ts to break circular dep with upgrades module */
 export let onChestPickup: ((state: GameState) => void) | null = null;
@@ -62,6 +62,33 @@ export function updatePlayers(state: GameState, dt: number): void {
     // Cooldowns
     for (let i = 0; i < 4; i++) { if (p.cd[i] > 0) p.cd[i] -= dt; }
     if (p.iframes > 0) p.iframes -= dt;
+
+    // Storm Shield: lightning strikes random nearby enemy every 1s
+    if (p.stormShield) {
+      p._stormTimer = (p._stormTimer || 0) + dt;
+      if (p._stormTimer >= 1.0) {
+        p._stormTimer = 0;
+        // Find all enemies within 120px
+        const nearby: Enemy[] = [];
+        for (const e of state.enemies) {
+          if (!e.alive) continue;
+          if (dist(p.x, p.y, e.x, e.y) <= 120) nearby.push(e);
+        }
+        if (nearby.length > 0) {
+          const target = nearby[Math.floor(Math.random() * nearby.length)];
+          damageEnemy(state, target, 1, p.idx);
+          // Visual lightning bolt from player to target
+          state.beams.push({
+            x: p.x, y: p.y,
+            angle: Math.atan2(target.y - p.y, target.x - p.x),
+            range: dist(p.x, p.y, target.x, target.y),
+            width: 2,
+            color: '#bb66ff',
+            life: 0.15,
+          });
+        }
+      }
+    }
 
     // Rewind snapshot (save every 3s)
     p._snapTimer = (p._snapTimer || 0) + dt;
