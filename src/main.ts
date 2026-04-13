@@ -15,6 +15,7 @@ import {
   COUNTDOWN_DURATION,
   NET_SEND_INTERVAL,
   MAX_WAVES,
+  WAVE_PHYSICS,
 } from './constants';
 import { sfx } from './audio';
 import { SfxName } from './types';
@@ -215,6 +216,17 @@ function loop(now: number): void {
   if (state.mode === NetworkMode.Guest) {
     const inp = getInput(state, state.localIdx);
     sendInput(state, inp);
+
+    // Guest: generate spell trails locally for visual parity
+    for (const s of state.spells) {
+      state.trails.push({
+        x: s.x + (Math.random() - 0.5) * 6,
+        y: s.y + (Math.random() - 0.5) * 6,
+        life: 1,
+        r: s.radius * WAVE_PHYSICS.TRAIL_PARTICLE_SCALE,
+        color: s.trail,
+      });
+    }
   }
 
   // Shared: camera, effects, HUD

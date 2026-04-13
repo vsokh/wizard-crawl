@@ -589,6 +589,19 @@ export interface NetStateSpellData {
   r: number;
   c: string;
   o: number;
+  // Rendering-critical fields
+  k: string;   // clsKey
+  t: string;   // type
+  tr: string;  // trail color
+  ex: number;  // explode
+  sl: number;  // slow
+  ho: number;  // homing
+  z: number;   // zap
+  dr: number;  // drain
+  bn: number;  // burn
+  st: number;  // stun
+  l: number;   // life
+  ag: number;  // age
 }
 
 export interface NetStateEProjData {

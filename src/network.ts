@@ -229,6 +229,10 @@ export function sendState(state: GameState): void {
     })),
     sp: state.spells.map(s => ({
       x: ~~s.x, y: ~~s.y, vx: ~~s.vx, vy: ~~s.vy, r: s.radius, c: s.color, o: s.owner,
+      k: s.clsKey, t: s.type, tr: s.trail,
+      ex: s.explode, sl: s.slow, ho: s.homing, z: s.zap,
+      dr: s.drain, bn: s.burn, st: s.stun,
+      l: Math.round(s.life * 100) / 100, ag: Math.round(s.age * 100) / 100,
     })),
     ep: state.eProj.map(p => ({
       x: ~~p.x, y: ~~p.y, r: p.radius, c: p.color,
@@ -301,9 +305,12 @@ function applyState(state: GameState, msg: NetStateMessage): void {
     for (const sd of msg.sp) {
       state.spells.push({
         x: sd.x, y: sd.y, vx: sd.vx, vy: sd.vy, radius: sd.r, color: sd.c, owner: sd.o,
-        trail: sd.c, life: 2, age: 0, speed: 0, dmg: 0, type: '',
-        homing: 0, zap: 0, zapRate: 0, slow: 0, drain: 0, explode: 0, burn: 0,
-        zapTimer: 0, pierceLeft: 0, stun: 0, clsKey: '', _reversed: false, _bounces: 0,
+        clsKey: sd.k || '', type: sd.t || '', trail: sd.tr || sd.c,
+        life: sd.l || 2, age: sd.ag || 0, speed: 0, dmg: 0,
+        homing: sd.ho || 0, zap: sd.z || 0, zapRate: 0, slow: sd.sl || 0,
+        drain: sd.dr || 0, explode: sd.ex || 0, burn: sd.bn || 0,
+        zapTimer: 0, pierceLeft: 0, stun: sd.st || 0,
+        _reversed: false, _bounces: 0,
       });
     }
   }
