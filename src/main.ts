@@ -20,6 +20,7 @@ import {
   DEFAULT_LIVES,
   WIZARD_SIZE,
   DEFAULT_MOVE_SPEED,
+  WALL_THICKNESS,
 } from './constants';
 import { sfx } from './audio';
 import { SfxName } from './types';
@@ -257,13 +258,23 @@ function loop(now: number): void {
     // Interpolate all players except local (local uses prediction above)
     for (let i = 0; i < state.players.length; i++) {
       if (i === state.localIdx) {
-        // Local player: gently correct toward host authoritative position
+        // Local player: error-threshold correction for client prediction
         const p = state.players[i];
         if (p._targetX !== undefined && p._targetY !== undefined) {
-          p._lerpT = Math.min(1, (p._lerpT || 0) + dt * lerpSpeed * 0.5);
-          // Blend predicted position toward authoritative with soft correction
-          p.x = lerp(p.x, p._targetX, 0.15);
-          p.y = lerp(p.y, p._targetY, 0.15);
+          const errX = p._targetX - p.x;
+          const errY = p._targetY - p.y;
+          const errDist = Math.sqrt(errX * errX + errY * errY);
+          if (errDist > 50) {
+            // Large divergence: snap to authoritative
+            p.x = p._targetX;
+            p.y = p._targetY;
+          } else if (errDist > 4) {
+            // Moderate error: gentle frame-rate-independent correction
+            const t = Math.min(1, 3 * dt);
+            p.x += errX * t;
+            p.y += errY * t;
+          }
+          // Small error (<= 4px): trust prediction, no correction
         }
         continue;
       }
@@ -288,10 +299,19 @@ function loop(now: number): void {
       if (e._atkAnim > 0) e._atkAnim -= dt;
     }
 
-    // Extrapolate spell positions using velocity between network updates
+    // Extrapolate spell positions with wall bounce (matches host logic)
     for (const s of state.spells) {
       s.x += s.vx * dt;
       s.y += s.vy * dt;
+      // Wall bounce — mirror host logic from waves.ts
+      const wL = WALL_THICKNESS;
+      const wR = ROOM_WIDTH - WALL_THICKNESS;
+      const wT = WALL_THICKNESS;
+      const wB = ROOM_HEIGHT - WALL_THICKNESS;
+      if (s.x < wL) { s.x = wL + (wL - s.x); s.vx = Math.abs(s.vx); }
+      if (s.x > wR) { s.x = wR - (s.x - wR); s.vx = -Math.abs(s.vx); }
+      if (s.y < wT) { s.y = wT + (wT - s.y); s.vy = Math.abs(s.vy); }
+      if (s.y > wB) { s.y = wB - (s.y - wB); s.vy = -Math.abs(s.vy); }
     }
 
     // Guest: generate spell trails locally for visual parity
