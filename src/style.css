@@ -305,6 +305,15 @@ input[type=text]:focus {
   background: rgba(0, 0, 0, 0.55);
   border-radius: 0 0 2px 2px;
 }
+.sp-icon .cd-txt {
+  position: absolute;
+  z-index: 1;
+  font-size: 8px;
+  font-weight: 700;
+  color: #ccbbee;
+  text-shadow: 0 0 3px rgba(0,0,0,0.9);
+  pointer-events: none;
+}
 
 #floor-display {
   position: fixed; top: 10px; left: 50%;

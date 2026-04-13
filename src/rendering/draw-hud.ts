@@ -16,14 +16,14 @@ export function updateHUD(state: GameState): void {
     if (sd.type === 'ultimate') {
       const ultOk = p.ultCharge >= 100;
       spH += `<div class="sp-icon" style="border-color:${ultOk ? '#ffcc44' : 'rgba(60,40,80,.3)'}">` +
-        `<span style="color:${ultOk ? '#ffcc44' : '#332244'}">R</span>` +
+        `${ultOk ? `<span style="color:#ffcc44">R</span>` : `<span class="cd-txt">${Math.round(p.ultCharge)}%</span>`}` +
         `${!ultOk ? `<div class="cd-ov" style="height:${100 - p.ultCharge}%"></div>` : ''}` +
         `</div>`;
     } else {
       const ok = p.cd[i] <= 0 && p.mana >= sd.mana;
       const cdP = p.cd[i] > 0 ? Math.round((p.cd[i] / sd.cd) * 100) : 0;
       spH += `<div class="sp-icon" style="border-color:${ok ? p.cls.color : 'rgba(60,40,80,.3)'}">` +
-        `<span style="color:${ok ? p.cls.color : '#332244'}">${sd.key}</span>` +
+        `${p.cd[i] > 0 ? `<span class="cd-txt">${Math.ceil(p.cd[i])}</span>` : `<span style="color:${ok ? p.cls.color : '#332244'}">${sd.key}</span>`}` +
         `${cdP > 0 ? `<div class="cd-ov" style="height:${cdP}%"></div>` : ''}` +
         `</div>`;
     }
