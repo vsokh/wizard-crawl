@@ -61,6 +61,8 @@ export function purchaseItem(state: GameState, index: number): boolean {
 
 /** Open shop UI */
 export function openShop(state: GameState): void {
+  document.body.classList.remove('in-game');
+  if (document.pointerLockElement) document.exitPointerLock();
   state.shopOpen = true;
   renderShop(state);
   const el = document.getElementById('shop-screen');
@@ -70,6 +72,7 @@ export function openShop(state: GameState): void {
 /** Close shop UI */
 export function closeShop(state: GameState): void {
   state.shopOpen = false;
+  document.body.classList.add('in-game');
   state.waveBreakTimer = 2; // resume 2-second countdown
   const el = document.getElementById('shop-screen');
   if (el) el.style.display = 'none';
