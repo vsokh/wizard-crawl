@@ -128,14 +128,14 @@ export function updateEnemies(state: GameState, dt: number): void {
     if (e.atkTimer <= 0 && d < et.atkR) {
       e.atkTimer = et.atkCd;
       if (et.ai === EnemyAI.Chase) {
-        if (target.iframes <= 0) damagePlayer(state, target, et.dmg, e);
+        if (target.iframes <= 0) damagePlayer(state, target, Math.ceil(et.dmg * (e._dmgMul || 1)), e);
       } else if (et.projSpd) {
         const a = Math.atan2(dy, dx);
         state.eProj.push({
           x: e.x, y: e.y,
           vx: Math.cos(a) * et.projSpd,
           vy: Math.sin(a) * et.projSpd,
-          dmg: et.dmg, life: 2, radius: 5,
+          dmg: Math.ceil(et.dmg * (e._dmgMul || 1)), life: 2, radius: 5,
           color: et.projCol || '#cc8866',
         });
       }

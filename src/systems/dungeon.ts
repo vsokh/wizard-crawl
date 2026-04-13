@@ -60,7 +60,7 @@ export function pickWaveEnemy(wave: number): string {
 }
 
 /** Spawn a single enemy from a random edge of the arena */
-export function spawnEnemy(state: GameState, type: string, hpScale: number, spdScale: number): void {
+export function spawnEnemy(state: GameState, type: string, hpScale: number, spdScale: number, timeMul: number = 1): void {
   const et = ENEMIES[type];
   let ex: number, ey: number;
   const side = Math.floor(Math.random() * 4);
@@ -69,7 +69,7 @@ export function spawnEnemy(state: GameState, type: string, hpScale: number, spdS
   else if (side === 2) { ex = rand(30, ROOM_WIDTH - 30); ey = ROOM_HEIGHT + 20; }
   else { ex = -20; ey = rand(30, ROOM_HEIGHT - 30); }
 
-  const hp = et.hp + hpScale - 1;
+  const hp = Math.ceil((et.hp + hpScale - 1) * timeMul);
   state.enemies.push({
     type,
     x: ex,
@@ -91,6 +91,7 @@ export function spawnEnemy(state: GameState, type: string, hpScale: number, spdS
     _owner: 0,
     _lifespan: 0,
     _spdMul: spdScale,
+    _dmgMul: timeMul,
   });
 }
 
@@ -101,12 +102,13 @@ export function startWave(state: GameState): void {
   const isBoss = wave % 5 === 0;
   const hpScale = 1 + Math.floor(wave / 4);
   const spdScale = 1 + wave * 0.02;
+  const timeMul = 1 + (state.time / 60) * 0.05;
 
   if (isBoss) {
     // Boss wave
     const bossType = wave % 10 === 0 ? 'demon' : 'golem';
     const et = ENEMIES[bossType];
-    const bossHp = et.hp + wave * 4;
+    const bossHp = Math.ceil((et.hp + wave * 4) * timeMul);
     state.enemies.push({
       type: bossType,
       x: ROOM_WIDTH / 2,
@@ -128,11 +130,12 @@ export function startWave(state: GameState): void {
       _owner: 0,
       _lifespan: 0,
       _spdMul: 1,
+      _dmgMul: timeMul,
     });
     // Minions scale with wave
     const minionCount = 2 + Math.floor(wave / 3);
     for (let i = 0; i < minionCount; i++) {
-      spawnEnemy(state, pickWaveEnemy(wave), hpScale, spdScale);
+      spawnEnemy(state, pickWaveEnemy(wave), hpScale, spdScale, timeMul);
     }
     spawnText(state, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 60, `BOSS WAVE ${wave}!`, '#ff4444');
     sfx(SfxName.Boom);
@@ -142,7 +145,7 @@ export function startWave(state: GameState): void {
     const count = 5 + wave * 3;
     const immediateCount = Math.ceil(count * 0.6);
     for (let i = 0; i < immediateCount; i++) {
-      spawnEnemy(state, pickWaveEnemy(wave), hpScale, spdScale);
+      spawnEnemy(state, pickWaveEnemy(wave), hpScale, spdScale, timeMul);
     }
     // Queue remainder for trickle spawning
     state.waveSpawnQueue = count - immediateCount;
@@ -154,7 +157,7 @@ export function startWave(state: GameState): void {
       const hordeTypes = ['swarm_bat', 'slime'];
       for (let i = 0; i < 12; i++) {
         const ht = hordeTypes[Math.floor(Math.random() * hordeTypes.length)];
-        spawnEnemy(state, ht, hpScale, spdScale);
+        spawnEnemy(state, ht, hpScale, spdScale, timeMul);
       }
       spawnText(state, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 30, 'HORDE!', '#ff4444');
       shake(state, 4);
@@ -224,9 +227,10 @@ export function updateWaves(state: GameState, dt: number): void {
       if (state.waveSpawnTimer <= 0) {
         const hpScale = 1 + Math.floor(state.wave / 4);
         const spdScale = 1 + state.wave * 0.02;
+        const timeMul = 1 + (state.time / 60) * 0.05;
         const batch = Math.min(2 + Math.floor(Math.random() * 2), state.waveSpawnQueue); // 2-3
         for (let i = 0; i < batch; i++) {
-          spawnEnemy(state, pickWaveEnemy(state.wave), hpScale, spdScale);
+          spawnEnemy(state, pickWaveEnemy(state.wave), hpScale, spdScale, timeMul);
         }
         state.waveSpawnQueue -= batch;
         state.waveSpawnTimer = 1.5;
@@ -269,5 +273,6 @@ export function createFriendlyEnemy(x: number, y: number, ownerIdx: number): Ene
     _owner: ownerIdx,
     _lifespan: 8,
     _spdMul: 1,
+    _dmgMul: 1,
   };
 }

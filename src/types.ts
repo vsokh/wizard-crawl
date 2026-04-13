@@ -306,6 +306,8 @@ export interface Enemy {
 
   // Wave speed multiplier
   _spdMul: number;
+  // Wave damage multiplier
+  _dmgMul: number;
 }
 
 export interface Spell {
