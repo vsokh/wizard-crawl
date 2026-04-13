@@ -2,6 +2,7 @@ import { GameState } from '../state';
 import { NetworkMode, SpellDefInput } from '../types';
 import { CLASSES, CLASS_ORDER } from '../constants';
 import { sendMessage } from '../network';
+import { getSynergy } from '../systems/synergy';
 
 // ═══════════════════════════════════
 //       CLASS SELECTION SCREEN
@@ -83,9 +84,24 @@ function updateDetailPanel(state: GameState): void {
     </div>`;
   }).join('');
 
+  // Check for synergy with ally's class
+  let synergyHtml = '';
+  const allyKey = state.mode === NetworkMode.Guest ? state.hostClassKey
+    : state.mode === NetworkMode.Host ? state.guestClassKey
+    : null;
+  if (allyKey) {
+    const syn = getSynergy(key, allyKey);
+    if (syn) {
+      synergyHtml = `<div class="cd-synergy-tag" style="color:${syn.color};border-color:${syn.color}">` +
+        `SYNERGY: ${syn.name}</div>` +
+        `<div class="cd-synergy-desc" style="color:${syn.color}">${syn.desc}</div>`;
+    }
+  }
+
   panel.innerHTML =
     `<div class="cd-header" style="color:${cls.color}">${cls.name}</div>` +
     `<div class="cd-desc">${cls.desc}</div>` +
+    synergyHtml +
     `<div class="cd-section-label">Passive</div>` +
     `<div class="cd-passive">` +
       `<div class="cd-passive-name">${cls.passive.name}</div>` +
@@ -118,10 +134,23 @@ function buildGrid(state: GameState): void {
       `<span style="color:${s.color || c.color}">${s.key}</span> ${s.name}`
     ).join(' &middot; ');
 
+    // Check synergy with ally's picked class
+    const allyKey = state.mode === NetworkMode.Guest ? state.hostClassKey
+      : state.mode === NetworkMode.Host ? state.guestClassKey
+      : null;
+    let synTag = '';
+    if (allyKey) {
+      const syn = getSynergy(k, allyKey);
+      if (syn) {
+        synTag = `<div class="cdesc" style="margin-top:3px;font-size:9px;color:${syn.color};font-weight:bold">SYNERGY: ${syn.name}</div>`;
+      }
+    }
+
     card.innerHTML = `<div class="cname" style="color:${c.color}">${c.name}</div>` +
       `<div class="cdesc">${c.desc}</div>` +
       `<div class="cdesc" style="margin-top:3px;color:#554466;font-size:9px">Passive: ${c.passive.desc}</div>` +
-      `<div class="cdesc" style="font-size:9px;margin-top:2px">${spList}</div>`;
+      `<div class="cdesc" style="font-size:9px;margin-top:2px">${spList}</div>` +
+      synTag;
 
     card.onclick = () => {
       state.selectedClassIndex = i;

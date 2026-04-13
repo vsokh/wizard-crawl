@@ -117,6 +117,10 @@ export interface GameState {
   shopPurchases: Record<string, number>; // tracks how many times each item was bought
   shopTempDmg: number; // temporary damage boost from Power Shard
   shopShieldHits: number; // remaining shield hits from Ward Stone
+
+  // Synergy
+  activeSynergy: { name: string; desc: string; color: string } | null;
+  synergyBannerTimer: number;
 }
 
 export function createInitialState(): GameState {
@@ -176,6 +180,8 @@ export function createInitialState(): GameState {
     shopPurchases: {},
     shopTempDmg: 0,
     shopShieldHits: 0,
+    activeSynergy: null,
+    synergyBannerTimer: 0,
   };
 }
 

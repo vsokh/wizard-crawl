@@ -482,3 +482,63 @@ export function drawCountdown(ctx: CanvasRenderingContext2D, state: GameState): 
   ctx.textBaseline = 'middle';
   ctx.fillText(n <= 0 ? 'GO!' : String(n), ROOM_WIDTH / 2, ROOM_HEIGHT / 2);
 }
+
+/** Draw synergy banner at top center for the duration of the banner timer */
+export function drawSynergyBanner(ctx: CanvasRenderingContext2D, state: GameState): void {
+  if (!state.activeSynergy) return;
+  if (state.synergyBannerTimer <= 0) return;
+
+  const syn = state.activeSynergy;
+  const t = state.synergyBannerTimer; // counts down from 4
+
+  // Fade-in during first 0.3s (timer 4.0 -> 3.7), fade-out during last 1s (timer 1.0 -> 0)
+  let alpha: number;
+  if (t > 3.7) {
+    alpha = (4 - t) / 0.3;
+  } else if (t < 1) {
+    alpha = t;
+  } else {
+    alpha = 1;
+  }
+  alpha = Math.max(0, Math.min(1, alpha));
+  if (alpha <= 0) return;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  const cx = state.width / 2;
+  const bannerY = 40;
+  const bannerW = 380;
+  const bannerH = 70;
+
+  // Dark background with synergy color border glow
+  ctx.fillStyle = 'rgba(10, 6, 20, 0.85)';
+  ctx.strokeStyle = syn.color;
+  ctx.lineWidth = 2;
+  ctx.shadowColor = syn.color;
+  ctx.shadowBlur = 16;
+  ctx.beginPath();
+  ctx.roundRect(cx - bannerW / 2, bannerY, bannerW, bannerH, 8);
+  ctx.fill();
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // "SYNERGY ACTIVE" header
+  ctx.fillStyle = syn.color;
+  ctx.font = 'bold 11px Courier New';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('SYNERGY ACTIVE', cx, bannerY + 10);
+
+  // Synergy name
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 16px Courier New';
+  ctx.fillText(syn.name, cx, bannerY + 25);
+
+  // Description
+  ctx.fillStyle = 'rgba(200, 190, 220, 0.9)';
+  ctx.font = '10px Courier New';
+  ctx.fillText(syn.desc, cx, bannerY + 48);
+
+  ctx.restore();
+}

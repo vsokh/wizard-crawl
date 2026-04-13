@@ -28,9 +28,10 @@ import { updateSpells, updateAoe, updateZones } from './systems/waves';
 import { generateArena, updateWaves } from './systems/dungeon';
 import { showUpgradeScreen } from './systems/upgrades';
 import { initShop, openShop } from './systems/shop';
+import { applySynergies } from './systems/synergy';
 
 import { updateCamera } from './rendering/renderer';
-import { updateFx, drawBeams, drawZones, drawAoe, drawFx, drawCrosshair, drawCountdown } from './rendering/draw-effects';
+import { updateFx, drawBeams, drawZones, drawAoe, drawFx, drawCrosshair, drawCountdown, drawSynergyBanner } from './rendering/draw-effects';
 import { drawRoom, drawPillars } from './rendering/draw-room';
 import { drawWizard, drawEnemies, drawSpells, drawEProj, drawPickups } from './rendering/draw-entities';
 import { updateHUD } from './rendering/draw-hud';
@@ -109,6 +110,8 @@ function beginGame(c1: string, c2: string): void {
   state.shopPurchases = {};
   state.shopTempDmg = 0;
   state.shopShieldHits = 0;
+  state.activeSynergy = null;
+  state.synergyBannerTimer = 0;
 
   // Spawn players
   state.players = [];
@@ -117,6 +120,9 @@ function beginGame(c1: string, c2: string): void {
   for (let i = 0; i < playerCount; i++) {
     state.players.push(createPlayer(i, clsKeys[i]));
   }
+
+  // Apply class synergies for multiplayer teams
+  applySynergies(state);
 
   if (state.mode !== NetworkMode.Guest) {
     // Host/local: generate arena and set up first wave timer
@@ -180,6 +186,9 @@ function loop(now: number): void {
     state.countdownTimer -= dt;
     if (state.countdownTimer <= 0) state.gamePhase = GamePhase.Playing;
   }
+
+  // Synergy banner timer
+  if (state.synergyBannerTimer > 0) state.synergyBannerTimer -= dt;
 
   // Game logic (host/local only)
   if (state.mode !== NetworkMode.Guest) {
@@ -262,6 +271,9 @@ function loop(now: number): void {
     ctx.fillStyle = `rgba(${state.screenFlashColor},${state.screenFlash * 0.25})`;
     ctx.fillRect(0, 0, state.width, state.height);
   }
+
+  // Synergy banner (screen-space, drawn after restore)
+  drawSynergyBanner(ctx, state);
 
   requestAnimationFrame(loop);
 }
