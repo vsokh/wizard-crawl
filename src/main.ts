@@ -80,6 +80,11 @@ function beginGame(c1: string, c2: string): void {
   state.waveEnemiesTotal = 0;
   state.totalKills = 0;
   state.gold = 0;
+  state.waveSpawnQueue = 0;
+  state.waveSpawnTimer = 0;
+  state.comboCount = 0;
+  state.comboTimer = 0;
+  state.hitStop = 0;
 
   // Spawn players
   state.players = [];
@@ -153,13 +158,28 @@ function loop(now: number): void {
 
   // Game logic (host/local only)
   if (state.mode !== NetworkMode.Guest) {
-    updatePlayers(state, dt);
-    updateSpells(state, dt);
-    updateAoe(state, dt);
-    updateZones(state, dt);
-    updateEnemies(state, dt);
-    updateEProj(state, dt);
-    updateWaves(state, dt);
+    // Hitstop: near-freeze on kills for game feel
+    let gameDt = dt;
+    if (state.hitStop > 0) {
+      gameDt = dt * 0.05;
+      state.hitStop -= dt;
+      if (state.hitStop < 0) state.hitStop = 0;
+    }
+
+    updatePlayers(state, gameDt);
+    updateSpells(state, gameDt);
+    updateAoe(state, gameDt);
+    updateZones(state, gameDt);
+    updateEnemies(state, gameDt);
+    updateEProj(state, gameDt);
+    updateWaves(state, gameDt);
+
+    // Combo timer decay
+    if (state.comboTimer > 0) {
+      state.comboTimer -= dt;
+      if (state.comboTimer <= 0) state.comboCount = 0;
+    }
+
     state.netTimer -= dt;
     if (state.netTimer <= 0) {
       state.netTimer = NET_SEND_INTERVAL;

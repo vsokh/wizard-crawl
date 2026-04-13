@@ -86,6 +86,15 @@ export interface GameState {
   pillars: Pillar[];
   pickups: Pickup[];
 
+  // Wave trickle spawn
+  waveSpawnQueue: number;
+  waveSpawnTimer: number;
+
+  // Combo & hitstop
+  comboCount: number;
+  comboTimer: number;
+  hitStop: number;
+
   // Network remote input
   remoteInput: PlayerInput;
 
@@ -124,6 +133,11 @@ export function createInitialState(): GameState {
     totalKills: 0,
     gold: 0,
     countdownTimer: 0,
+    waveSpawnQueue: 0,
+    waveSpawnTimer: 0,
+    comboCount: 0,
+    comboTimer: 0,
+    hitStop: 0,
     keys: {},
     mouseX: window.innerWidth / 2,
     mouseY: window.innerHeight / 2,
@@ -228,6 +242,9 @@ export function createPlayer(idx: number, clsKey: string): Player {
     ultReady: false,
     hitCounter: 0,
     killCount: 0,
+    xp: 0,
+    xpToNext: 20,
+    level: 0,
     takenUpgrades: new Set<number>(),
     vampirism: 0,
     vampKillReq: 5,

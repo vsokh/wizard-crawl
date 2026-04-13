@@ -44,6 +44,7 @@ export enum PickupType {
   Chest = 'chest',
   Health = 'health',
   Gold = 'gold',
+  Xp = 'xp',
   Trap = 'trap',
 }
 
@@ -174,6 +175,9 @@ export interface Player {
   ultReady: boolean;
   hitCounter: number;
   killCount: number;
+  xp: number;
+  xpToNext: number;
+  level: number;
   takenUpgrades: Set<number>;
 
   // Upgrade-applied properties

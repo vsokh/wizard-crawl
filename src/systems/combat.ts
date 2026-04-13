@@ -28,6 +28,7 @@ import {
   GAME_OVER_DELAY_MS,
   RESPAWN_DELAY_MS,
   HEALTH_DROP_CHANCE,
+  XP_GEM_COUNT,
 } from '../constants';
 import { sfx } from '../audio';
 import { createFriendlyEnemy } from './dungeon';
@@ -110,8 +111,51 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
     e.alive = false;
     state.totalKills++;
     const et = ENEMIES[e.type];
+
+    // ── Combo system ──
+    state.comboCount++;
+    state.comboTimer = 2;
+    if (state.comboCount === 5) spawnText(state, e.x, e.y - 35, '5x COMBO!', '#ffcc44');
+    else if (state.comboCount === 10) spawnText(state, e.x, e.y - 35, 'MASSACRE!', '#ff8833');
+    else if (state.comboCount === 20) spawnText(state, e.x, e.y - 35, 'UNSTOPPABLE!', '#ff4444');
+    else if (state.comboCount === 50) spawnText(state, e.x, e.y - 40, 'GODLIKE!', '#ffdd44');
+
+    // ── Hitstop ──
+    state.hitStop = et.boss ? 0.1 : 0.03;
+
+    // ── Spawn XP gems ──
+    const isBoss = !!et.boss;
+    if (isBoss) {
+      // Boss: single large gem worth 3x
+      state.pickups.push({
+        x: e.x, y: e.y, type: PickupType.Xp, collected: false,
+        value: et.xp * 3, _owner: 0, _dmg: 0, _radius: 0, _slow: 0, _color: '',
+      });
+    } else {
+      const gemCount = 3 + Math.floor(Math.random() * 4); // 3-6 gems
+      const xpPerGem = Math.max(1, Math.ceil(et.xp / gemCount * XP_GEM_COUNT));
+      for (let i = 0; i < gemCount; i++) {
+        state.pickups.push({
+          x: e.x + rand(-15, 15), y: e.y + rand(-15, 15),
+          type: PickupType.Xp, collected: false,
+          value: xpPerGem, _owner: 0, _dmg: 0, _radius: 0, _slow: 0, _color: '',
+        });
+      }
+    }
+
+    // ── Spawn gold as physical pickups ──
     const goldDrop = et.gold * (p ? p.goldMul : 1);
-    state.gold += goldDrop;
+    if (goldDrop > 0) {
+      const goldGemCount = 2 + Math.floor(Math.random() * 2); // 2-3 coins
+      const goldPerGem = Math.max(1, Math.ceil(goldDrop / goldGemCount));
+      for (let i = 0; i < goldGemCount; i++) {
+        state.pickups.push({
+          x: e.x + rand(-12, 12), y: e.y + rand(-12, 12),
+          type: PickupType.Gold, collected: false,
+          value: goldPerGem, _owner: 0, _dmg: 0, _radius: 0, _slow: 0, _color: '',
+        });
+      }
+    }
 
     if (p) {
       p.killCount++;
@@ -140,8 +184,12 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
       if (p.killResetCD) p.cd[0] = 0;
     }
 
-    spawnParticles(state, e.x, e.y, et.color, 18, 1);
-    spawnShockwave(state, e.x, e.y, 25);
+    // Scale particles with combo
+    const particleCount = 18 + Math.min(state.comboCount, 30);
+    spawnParticles(state, e.x, e.y, et.color, particleCount, 1);
+    // Scale shockwave radius with combo
+    const shockR = 25 + Math.min(state.comboCount * 0.5, 20);
+    spawnShockwave(state, e.x, e.y, shockR);
     sfx(SfxName.Kill);
 
     if (et.boss) {

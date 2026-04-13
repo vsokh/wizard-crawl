@@ -13,7 +13,6 @@ import {
   PILLAR_SPAWN_TRIES,
 } from '../constants';
 import { sfx } from '../audio';
-import { showUpgradeScreen } from './upgrades';
 
 // ═══════════════════════════════════
 //       ARENA GENERATION
@@ -139,13 +138,27 @@ export function startWave(state: GameState): void {
     sfx(SfxName.Boom);
     shake(state, 6);
   } else {
-    // Normal wave — enemy count and variety scales up
-    const baseCount = 4 + wave * 2;
-    const count = Math.min(baseCount, 30);
-    for (let i = 0; i < count; i++) {
+    // Normal wave — enemy count scales up, no cap
+    const count = 5 + wave * 3;
+    const immediateCount = Math.ceil(count * 0.6);
+    for (let i = 0; i < immediateCount; i++) {
       spawnEnemy(state, pickWaveEnemy(wave), hpScale, spdScale);
     }
+    // Queue remainder for trickle spawning
+    state.waveSpawnQueue = count - immediateCount;
+    state.waveSpawnTimer = 1.5;
     spawnText(state, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 60, `WAVE ${wave}`, '#bbaa44');
+
+    // Horde event: 15% chance starting wave 5
+    if (wave >= 5 && Math.random() < 0.15) {
+      const hordeTypes = ['swarm_bat', 'slime'];
+      for (let i = 0; i < 12; i++) {
+        const ht = hordeTypes[Math.floor(Math.random() * hordeTypes.length)];
+        spawnEnemy(state, ht, hpScale, spdScale);
+      }
+      spawnText(state, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 30, 'HORDE!', '#ff4444');
+      shake(state, 4);
+    }
   }
 
   state.waveEnemiesTotal = state.enemies.filter(e => e.alive && !e._friendly).length;
@@ -158,6 +171,7 @@ export function startWave(state: GameState): void {
 /** Check if the current wave is complete (all non-friendly enemies dead) */
 export function checkWaveComplete(state: GameState): void {
   if (!state.waveActive) return;
+  if (state.waveSpawnQueue > 0) return; // still trickle spawning
   const alive = state.enemies.filter(e => e.alive && !e._friendly).length;
   if (alive <= 0) {
     state.waveActive = false;
@@ -196,15 +210,28 @@ export function checkWaveComplete(state: GameState): void {
       }
     }
 
-    // Show upgrade every wave
-    showUpgradeScreen(state);
+    // Upgrades are now XP-driven (level-ups), not wave-driven
   }
 }
 
-/** Tick wave system: count down break timer, start next wave */
+/** Tick wave system: count down break timer, start next wave, trickle spawn */
 export function updateWaves(state: GameState, dt: number): void {
   if (state.gamePhase !== GamePhase.Playing) return;
   if (state.waveActive) {
+    // Trickle spawn queued enemies
+    if (state.waveSpawnQueue > 0) {
+      state.waveSpawnTimer -= dt;
+      if (state.waveSpawnTimer <= 0) {
+        const hpScale = 1 + Math.floor(state.wave / 4);
+        const spdScale = 1 + state.wave * 0.02;
+        const batch = Math.min(2 + Math.floor(Math.random() * 2), state.waveSpawnQueue); // 2-3
+        for (let i = 0; i < batch; i++) {
+          spawnEnemy(state, pickWaveEnemy(state.wave), hpScale, spdScale);
+        }
+        state.waveSpawnQueue -= batch;
+        state.waveSpawnTimer = 1.5;
+      }
+    }
     checkWaveComplete(state);
     return;
   }

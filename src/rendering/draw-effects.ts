@@ -269,15 +269,42 @@ export function drawFx(ctx: CanvasRenderingContext2D, state: GameState): void {
   }
   ctx.globalAlpha = 1;
 
-  // Floating text
+  // Floating text with damage-scaled sizing
   for (const t of state.texts) {
     ctx.globalAlpha = Math.min(1, t.life);
     ctx.fillStyle = t.color;
-    ctx.font = 'bold 12px Courier New';
+    // Scale font for damage numbers
+    let fontSize = 12;
+    const numMatch = t.text.match(/^-?(\d+)$/);
+    if (numMatch) {
+      const val = parseInt(numMatch[1]);
+      if (val >= 12) { fontSize = 22; ctx.fillStyle = '#ffdd44'; }
+      else if (val >= 8) fontSize = 18;
+      else if (val >= 5) fontSize = 16;
+    }
+    ctx.font = `bold ${fontSize}px Courier New`;
     ctx.textAlign = 'center';
     ctx.fillText(t.text, t.x, t.y);
   }
   ctx.globalAlpha = 1;
+
+  // Combo counter display
+  if (state.comboCount >= 3) {
+    const comboSize = 16 + Math.min(state.comboCount, 20);
+    const comboPulse = 0.7 + 0.3 * Math.sin(state.time * 6);
+    // Color shifts: white -> yellow -> orange -> red
+    let comboColor: string;
+    if (state.comboCount >= 50) comboColor = '#ffdd44';
+    else if (state.comboCount >= 20) comboColor = '#ff4444';
+    else if (state.comboCount >= 10) comboColor = '#ff8833';
+    else comboColor = '#ffcc44';
+    ctx.globalAlpha = comboPulse;
+    ctx.fillStyle = comboColor;
+    ctx.font = `bold ${comboSize}px Courier New`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${state.comboCount}x COMBO`, ROOM_WIDTH / 2, 40);
+    ctx.globalAlpha = 1;
+  }
 }
 
 export function drawCrosshair(ctx: CanvasRenderingContext2D, state: GameState): void {

@@ -2249,6 +2249,54 @@ export function drawPickups(ctx: CanvasRenderingContext2D, state: GameState): vo
       ctx.font = 'bold 12px Courier New';
       ctx.textAlign = 'center';
       ctx.fillText('+', pk.x, pk.y + 5);
+    } else if (pk.type === PickupType.Xp) {
+      // XP gem: glowing blue-white diamond, bobbing, size based on value
+      const bob = Math.sin(state.time * 4) * 3;
+      const gemSize = Math.min(4 + pk.value * 0.5, 10);
+      const gx = ctx.createRadialGradient(pk.x, pk.y + bob, 1, pk.x, pk.y + bob, gemSize + 4);
+      gx.addColorStop(0, 'rgba(140,200,255,.5)');
+      gx.addColorStop(1, 'transparent');
+      ctx.fillStyle = gx;
+      ctx.beginPath();
+      ctx.arc(pk.x, pk.y + bob, gemSize + 4, 0, Math.PI * 2);
+      ctx.fill();
+      // Diamond shape
+      ctx.fillStyle = `rgba(180,220,255,${0.7 + pulse * 0.3})`;
+      ctx.beginPath();
+      ctx.moveTo(pk.x, pk.y + bob - gemSize);
+      ctx.lineTo(pk.x + gemSize * 0.6, pk.y + bob);
+      ctx.lineTo(pk.x, pk.y + bob + gemSize);
+      ctx.lineTo(pk.x - gemSize * 0.6, pk.y + bob);
+      ctx.closePath();
+      ctx.fill();
+      // White highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.beginPath();
+      ctx.arc(pk.x, pk.y + bob - gemSize * 0.3, gemSize * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (pk.type === PickupType.Gold) {
+      // Gold coin: small rotating gold circle with white highlight
+      const bob = Math.sin(state.time * 3 + pk.x) * 2;
+      const coinR = 5;
+      const scaleX = Math.abs(Math.cos(state.time * 4 + pk.y)); // rotation effect
+      ctx.save();
+      ctx.translate(pk.x, pk.y + bob);
+      ctx.scale(Math.max(0.3, scaleX), 1);
+      // Coin body
+      ctx.fillStyle = '#ddcc44';
+      ctx.beginPath();
+      ctx.arc(0, 0, coinR, 0, Math.PI * 2);
+      ctx.fill();
+      // Dark edge
+      ctx.strokeStyle = '#aa9933';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      // Highlight
+      ctx.fillStyle = 'rgba(255,255,220,0.6)';
+      ctx.beginPath();
+      ctx.arc(-1, -1, coinR * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     } else if (pk.type === PickupType.Trap) {
       ctx.strokeStyle = `rgba(170,220,85,${0.3 + pulse * 0.2})`;
       ctx.lineWidth = 1;

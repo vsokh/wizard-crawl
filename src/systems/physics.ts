@@ -5,6 +5,7 @@ import {
   ROOM_WIDTH,
   ROOM_HEIGHT,
   DEFAULT_MOVE_SPEED,
+  XP_THRESHOLD_GROWTH,
 } from '../constants';
 import { PickupType, SfxName } from '../types';
 import { sfx } from '../audio';
@@ -197,6 +198,20 @@ export function updatePlayers(state: GameState, dt: number): void {
       if (!dashKey) state.keys[`_dash${p.idx}`] = false;
     }
 
+    // Magnet pass: pull XP and Gold pickups toward player
+    for (const pk of state.pickups) {
+      if (pk.collected) continue;
+      if (pk.type !== PickupType.Xp && pk.type !== PickupType.Gold) continue;
+      const md = dist(p.x, p.y, pk.x, pk.y);
+      if (md < p.magnetRange && md > 1) {
+        const pull = 300 * dt;
+        const nx = (p.x - pk.x) / md;
+        const ny = (p.y - pk.y) / md;
+        pk.x += nx * Math.min(pull, md);
+        pk.y += ny * Math.min(pull, md);
+      }
+    }
+
     // Pickup collection
     for (const pk of state.pickups) {
       if (pk.collected) continue;
@@ -210,7 +225,17 @@ export function updatePlayers(state: GameState, dt: number): void {
           spawnText(state, pk.x, pk.y - 15, '+2 HP', '#44ff88');
         } else if (pk.type === PickupType.Gold) {
           state.gold += pk.value;
-          spawnText(state, pk.x, pk.y - 15, `+${pk.value}g`, '#ddcc44');
+          spawnText(state, pk.x, pk.y - 10, '+' + pk.value + 'g', '#ddcc44');
+        } else if (pk.type === PickupType.Xp) {
+          const xpGain = Math.ceil(pk.value * (1 + p.xpBoost));
+          p.xp += xpGain;
+          spawnText(state, pk.x, pk.y - 10, '+' + xpGain + ' XP', '#88ccff');
+          if (p.xp >= p.xpToNext) {
+            p.xp = 0;
+            p.level++;
+            p.xpToNext = Math.ceil(p.xpToNext * XP_THRESHOLD_GROWTH);
+            if (onChestPickup) onChestPickup(state);
+          }
         }
       }
     }
