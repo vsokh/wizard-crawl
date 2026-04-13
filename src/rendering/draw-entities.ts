@@ -604,17 +604,222 @@ export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): vo
 
 export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): void {
   for (const s of state.spells) {
-    const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.radius * 1.5);
-    g.addColorStop(0, s.color);
-    g.addColorStop(1, 'transparent');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.radius * 1.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.6)';
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.radius * 0.4, 0, Math.PI * 2);
-    ctx.fill();
+    const r = s.radius;
+    const a = Math.atan2(s.vy, s.vx);
+    const t = state.time;
+
+    if (s.explode && s.color.includes('ff66')) {
+      // ── FIREBALL: teardrop flame shape ──
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(a);
+      // Outer flame
+      const fGrad = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r * 1.8);
+      fGrad.addColorStop(0, '#ffcc33');
+      fGrad.addColorStop(0.4, '#ff6600');
+      fGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = fGrad;
+      ctx.beginPath();
+      ctx.moveTo(r * 1.3, 0);
+      ctx.quadraticCurveTo(r * 0.3, -r * 1.0, -r * 1.5, 0);
+      ctx.quadraticCurveTo(r * 0.3, r * 1.0, r * 1.3, 0);
+      ctx.fill();
+      // Hot core
+      ctx.fillStyle = '#ffffaa';
+      ctx.beginPath();
+      ctx.arc(r * 0.2, 0, r * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+    } else if (s.slow > 0) {
+      // ── ICE SHARD: crystalline angular shape ──
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(a);
+      // Crystal body
+      ctx.fillStyle = '#aaeeff';
+      ctx.beginPath();
+      ctx.moveTo(r * 1.5, 0);
+      ctx.lineTo(r * 0.2, -r * 0.6);
+      ctx.lineTo(-r * 1.0, -r * 0.3);
+      ctx.lineTo(-r * 1.0, r * 0.3);
+      ctx.lineTo(r * 0.2, r * 0.6);
+      ctx.closePath();
+      ctx.fill();
+      // Shine
+      ctx.fillStyle = 'rgba(255,255,255,.5)';
+      ctx.beginPath();
+      ctx.moveTo(r * 1.2, 0);
+      ctx.lineTo(r * 0.3, -r * 0.3);
+      ctx.lineTo(-r * 0.3, 0);
+      ctx.closePath();
+      ctx.fill();
+      // Frost particles
+      ctx.fillStyle = 'rgba(180,230,255,.4)';
+      for (let i = 0; i < 3; i++) {
+        const px = Math.sin(t * 8 + i * 2) * r * 0.5;
+        const py = Math.cos(t * 8 + i * 2) * r * 0.5;
+        ctx.beginPath();
+        ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+    } else if (s.homing > 0) {
+      // ── HOMING (arcane bolt): spinning star with trail ──
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      const spinAngle = t * 10;
+      // Outer glow
+      const hGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.8);
+      hGrad.addColorStop(0, s.color);
+      hGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = hGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      // Star shape (4 points, spinning)
+      ctx.fillStyle = '#ffaacc';
+      ctx.beginPath();
+      for (let i = 0; i < 4; i++) {
+        const sa = spinAngle + (i / 4) * Math.PI * 2;
+        const outerR = i % 2 === 0 ? r * 1.2 : r * 0.5;
+        i === 0 ? ctx.moveTo(Math.cos(sa) * outerR, Math.sin(sa) * outerR)
+                : ctx.lineTo(Math.cos(sa) * outerR, Math.sin(sa) * outerR);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+    } else if (s.zap > 0) {
+      // ── BALL LIGHTNING: crackling electric orb ──
+      // Outer electric field
+      ctx.strokeStyle = `rgba(180,120,255,${0.2 + 0.15 * Math.sin(t * 6)})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r * 1.5, 0, Math.PI * 2);
+      ctx.stroke();
+      // Core
+      const bGrad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r);
+      bGrad.addColorStop(0, '#eeccff');
+      bGrad.addColorStop(1, '#7744bb');
+      ctx.fillStyle = bGrad;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+      ctx.fill();
+      // Random lightning arcs
+      ctx.strokeStyle = '#cc99ff';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 4; i++) {
+        const la = Math.sin(t * 12 + i * 3) * Math.PI * 2;
+        const lx = s.x + Math.cos(la) * r;
+        const ly = s.y + Math.sin(la) * r;
+        const ex = s.x + Math.cos(la + 0.2) * r * 1.8;
+        const ey = s.y + Math.sin(la + 0.2) * r * 1.8;
+        ctx.beginPath();
+        ctx.moveTo(lx, ly);
+        ctx.lineTo((lx + ex) / 2 + Math.sin(t * 20 + i) * 3, (ly + ey) / 2);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+      }
+
+    } else if (s.drain > 0) {
+      // ── SOUL BOLT: ghostly wisp with trailing souls ──
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(a);
+      // Ghost body
+      const sGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.3);
+      sGrad.addColorStop(0, '#88ff88');
+      sGrad.addColorStop(0.5, '#44aa44');
+      sGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = sGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 1.3, 0, Math.PI * 2);
+      ctx.fill();
+      // Wispy tail
+      ctx.strokeStyle = 'rgba(80,200,80,.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.3, 0);
+      ctx.quadraticCurveTo(-r * 1.5, Math.sin(t * 8) * r, -r * 2.0, Math.sin(t * 6) * r * 0.5);
+      ctx.stroke();
+      // Eyes
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(r * 0.2, -r * 0.2, 2, 0, Math.PI * 2);
+      ctx.arc(r * 0.2, r * 0.2, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+    } else if (s.color.includes('cc44') || s.color.includes('dd88')) {
+      // ── ARROW / WRENCH: elongated bolt ──
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(a);
+      // Shaft
+      ctx.fillStyle = s.color;
+      ctx.fillRect(-r * 1.2, -r * 0.25, r * 2.4, r * 0.5);
+      // Arrowhead
+      ctx.beginPath();
+      ctx.moveTo(r * 1.8, 0);
+      ctx.lineTo(r * 1.0, -r * 0.5);
+      ctx.lineTo(r * 1.0, r * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      // Fletching
+      ctx.fillStyle = s.trail || s.color;
+      ctx.beginPath();
+      ctx.moveTo(-r * 1.0, -r * 0.4);
+      ctx.lineTo(-r * 1.5, -r * 0.6);
+      ctx.lineTo(-r * 1.0, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-r * 1.0, r * 0.4);
+      ctx.lineTo(-r * 1.5, r * 0.6);
+      ctx.lineTo(-r * 1.0, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+    } else if (s.color.includes('4444') || s.color.includes('6644')) {
+      // ── THROWING AXE / SHADOW BOLT: spinning weapon ──
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(t * 12); // spinning
+      ctx.fillStyle = s.color;
+      // Axe blade
+      ctx.beginPath();
+      ctx.moveTo(0, -r * 1.3);
+      ctx.quadraticCurveTo(r * 1.0, -r * 0.5, r * 0.8, r * 0.3);
+      ctx.lineTo(0, 0);
+      ctx.lineTo(-r * 0.8, r * 0.3);
+      ctx.quadraticCurveTo(-r * 1.0, -r * 0.5, 0, -r * 1.3);
+      ctx.fill();
+      // Handle
+      ctx.strokeStyle = s.trail || '#888';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, r * 1.0);
+      ctx.stroke();
+      ctx.restore();
+
+    } else {
+      // ── DEFAULT: glowing orb (for any unmatched spell) ──
+      const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r * 1.5);
+      g.addColorStop(0, s.color);
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.6)';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }
 

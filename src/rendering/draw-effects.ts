@@ -83,42 +83,156 @@ export function drawBeams(ctx: CanvasRenderingContext2D, state: GameState): void
 }
 
 export function drawZones(ctx: CanvasRenderingContext2D, state: GameState): void {
+  const t = state.time;
   for (const z of state.zones) {
-    ctx.globalAlpha = 0.06 + 0.03 * Math.sin(state.time * 3);
-    ctx.fillStyle = z.color;
-    ctx.beginPath();
-    ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 0.25;
-    ctx.strokeStyle = z.color;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2);
-    ctx.stroke();
+    const isIce = z.color.includes('22') || z.color.includes('bb');
+    const isFire = z.color.includes('ff44') || z.color.includes('ff22') || z.color.includes('7722');
+    const isHeal = z.color.includes('ffcc') || z.color.includes('ffee');
+
+    if (isIce) {
+      // ── ICE ZONE: snowflake pattern + frost ring ──
+      ctx.globalAlpha = 0.08 + 0.04 * Math.sin(t * 2);
+      ctx.fillStyle = '#88ccff';
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2); ctx.fill();
+      // Frost ring
+      ctx.strokeStyle = '#aaeeff';
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.3;
+      ctx.setLineDash([4, 6]);
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      // Ice crystal particles
+      ctx.fillStyle = '#cceeFF';
+      ctx.globalAlpha = 0.5;
+      for (let i = 0; i < 6; i++) {
+        const a = t * 0.5 + (i / 6) * Math.PI * 2;
+        const d = z.radius * (0.3 + 0.2 * Math.sin(t + i));
+        ctx.beginPath();
+        ctx.moveTo(z.x + Math.cos(a) * d, z.y + Math.sin(a) * d - 3);
+        ctx.lineTo(z.x + Math.cos(a) * d + 2, z.y + Math.sin(a) * d + 2);
+        ctx.lineTo(z.x + Math.cos(a) * d - 2, z.y + Math.sin(a) * d + 2);
+        ctx.closePath(); ctx.fill();
+      }
+    } else if (isFire) {
+      // ── FIRE ZONE: flickering embers ──
+      ctx.globalAlpha = 0.06 + 0.04 * Math.sin(t * 4);
+      ctx.fillStyle = '#ff4400';
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#ff6622';
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.25;
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2); ctx.stroke();
+      // Rising embers
+      if (Math.random() < 0.4) {
+        spawnParticles(state, z.x + rand(-z.radius * 0.8, z.radius * 0.8), z.y + rand(-z.radius * 0.8, z.radius * 0.8), '#ff8833', 1, 0.2);
+      }
+    } else if (isHeal) {
+      // ── HEAL ZONE: golden sparkles ──
+      ctx.globalAlpha = 0.05 + 0.03 * Math.sin(t * 3);
+      ctx.fillStyle = '#ffeeaa';
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#ffdd66';
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.2;
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2); ctx.stroke();
+      // Rising + sparkles
+      ctx.fillStyle = '#ffffcc';
+      ctx.globalAlpha = 0.6;
+      for (let i = 0; i < 3; i++) {
+        const sx = z.x + Math.sin(t * 2 + i * 2.1) * z.radius * 0.5;
+        const sy = z.y - (t * 20 + i * 30) % z.radius;
+        ctx.beginPath(); ctx.arc(sx, sy, 1.5, 0, Math.PI * 2); ctx.fill();
+      }
+    } else {
+      // ── DEFAULT ZONE ──
+      ctx.globalAlpha = 0.06 + 0.03 * Math.sin(t * 3);
+      ctx.fillStyle = z.color;
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.25;
+      ctx.strokeStyle = z.color;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2); ctx.stroke();
+    }
     ctx.globalAlpha = 1;
-    // Random particle in zone
-    if (Math.random() < 0.2) {
+
+    if (Math.random() < 0.15) {
       spawnParticles(state, z.x + rand(-z.radius, z.radius), z.y + rand(-z.radius, z.radius), z.color, 1, 0.15);
     }
   }
 }
 
 export function drawAoe(ctx: CanvasRenderingContext2D, state: GameState): void {
+  const t = state.time;
   for (const m of state.aoeMarkers) {
     const pr = m.age / m.delay;
-    ctx.globalAlpha = 0.1 + pr * 0.2;
+    const isFire = m.color.includes('ff22');
+    const isLightning = m.color.includes('ffcc');
+
+    // Warning ring
+    ctx.globalAlpha = 0.15 + pr * 0.25;
     ctx.strokeStyle = m.color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 + pr * 2;
     ctx.setLineDash([5, 4]);
     ctx.beginPath();
     ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
+
+    // Filling danger zone
     ctx.fillStyle = m.color;
-    ctx.globalAlpha *= 0.3;
+    ctx.globalAlpha = pr * 0.15;
     ctx.beginPath();
     ctx.arc(m.x, m.y, m.radius * pr, 0, Math.PI * 2);
     ctx.fill();
+
+    if (isFire) {
+      // Meteor: falling shadow that grows
+      ctx.fillStyle = 'rgba(0,0,0,.15)';
+      ctx.beginPath();
+      ctx.ellipse(m.x, m.y, m.radius * 0.4 * pr, m.radius * 0.25 * pr, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Meteor body approaching
+      if (pr > 0.3) {
+        const mSize = 8 + pr * 10;
+        const mY = m.y - 100 * (1 - pr);
+        ctx.fillStyle = '#ff4400';
+        ctx.beginPath(); ctx.arc(m.x + 2, mY, mSize, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffaa33';
+        ctx.beginPath(); ctx.arc(m.x + 2, mY, mSize * 0.5, 0, Math.PI * 2); ctx.fill();
+        // Fire trail
+        ctx.strokeStyle = '#ff6633';
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.4;
+        ctx.beginPath();
+        ctx.moveTo(m.x + 2, mY - mSize);
+        ctx.lineTo(m.x + 5, mY - mSize * 3);
+        ctx.stroke();
+      }
+    } else if (isLightning) {
+      // Thunder: lightning flicker from sky
+      if (pr > 0.5 && Math.random() < 0.3) {
+        ctx.strokeStyle = '#ffee88';
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.5;
+        const lx = m.x + (Math.random() - 0.5) * m.radius * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(lx, m.y - 80);
+        ctx.lineTo(lx + (Math.random() - 0.5) * 20, m.y - 40);
+        ctx.lineTo(lx + (Math.random() - 0.5) * 15, m.y);
+        ctx.stroke();
+      }
+      // Ground crackle
+      ctx.strokeStyle = `rgba(255,220,100,${pr * 0.3})`;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 4; i++) {
+        const a = t * 3 + (i / 4) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(m.x, m.y);
+        ctx.lineTo(m.x + Math.cos(a) * m.radius * pr * 0.8, m.y + Math.sin(a) * m.radius * pr * 0.8);
+        ctx.stroke();
+      }
+    }
+
     ctx.globalAlpha = 1;
   }
 }
