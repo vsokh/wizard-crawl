@@ -19,14 +19,14 @@ function hash(n: number): number { return ((Math.sin(n * 127.1 + 311.7) * 43758.
 // ═══════════════════════════════════
 
 // ── Size multiplier per class for visual variation ──
-const CLASS_SCALE: Record<string, number> = {
+export const CLASS_SCALE: Record<string, number> = {
   pyromancer: 1.0, cryomancer: 1.0, stormcaller: 0.95, arcanist: 0.9,
   necromancer: 1.0, chronomancer: 0.95, knight: 1.2, berserker: 1.25,
   paladin: 1.15, ranger: 0.85, druid: 0.95, warlock: 1.0, monk: 0.88, engineer: 1.0,
 };
 
 // ── Class-specific silhouette drawing ──
-function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, clsKey: string, color: string, glow: string, time: number, player?: { hp: number; maxHp: number; _furyActive: boolean }): void {
+export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, clsKey: string, color: string, glow: string, time: number, player?: { hp: number; maxHp: number; _furyActive: boolean }): void {
   const scale = CLASS_SCALE[clsKey] || 1.0;
   const S = WIZARD_SIZE * scale;
 
@@ -781,7 +781,7 @@ function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: number, angl
 }
 
 // ── Class-specific weapon/staff drawing ──
-function drawWeapon(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, clsKey: string, color: string, S: number): void {
+export function drawWeapon(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, clsKey: string, color: string, S: number): void {
   const staffStart = S * 0.5;
   const staffEnd = S * 1.8;
 

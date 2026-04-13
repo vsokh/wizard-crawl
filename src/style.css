@@ -438,6 +438,12 @@ input[type=text]:focus {
 }
 .class-card .cname { font-size: 12px; font-weight: 700; margin-bottom: 3px; font-family: 'Cinzel', serif; }
 .class-card .cdesc { font-size: 9px; color: #554466; line-height: 1.4; }
+.class-card .class-char-canvas {
+  display: block;
+  margin: 6px auto 0;
+  width: 100px;
+  height: 80px;
+}
 
 /* ══════════ UPGRADE ══════════ */
 #upgrade-screen {

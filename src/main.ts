@@ -38,7 +38,7 @@ import { drawWizard, drawEnemies, drawSpells, drawEProj, drawPickups } from './r
 import { updateHUD } from './rendering/draw-hud';
 
 import { setupLobby } from './ui/lobby';
-import { showSelect, setupClassSelect } from './ui/class-select';
+import { showSelect, setupClassSelect, stopCardAnimation } from './ui/class-select';
 import { setupGameOver } from './ui/game-over';
 
 // ═══════════════════════════════════
@@ -87,6 +87,7 @@ function beginGame(c1: string, c2: string): void {
   const goldDisplay = document.getElementById('gold-display');
   const skillBar = document.getElementById('skill-bar');
 
+  stopCardAnimation();
   if (selectScreen) selectScreen.style.display = 'none';
   if (hud) hud.style.display = 'flex';
   if (skillBar) skillBar.style.display = 'flex';

@@ -1,9 +1,10 @@
 import { GameState } from '../state';
 import { NetworkMode, SpellDefInput } from '../types';
-import { CLASSES, CLASS_ORDER } from '../constants';
+import { CLASSES, CLASS_ORDER, WIZARD_SIZE } from '../constants';
 import { sendMessage } from '../network';
 import { getSynergy } from '../systems/synergy';
 import { startPreviews, stopPreviews } from './spell-preview';
+import { drawClassBody, drawWeapon, CLASS_SCALE } from '../rendering/draw-entities';
 
 // ═══════════════════════════════════
 //       CLASS SELECTION SCREEN
@@ -206,6 +207,58 @@ function updateDetailPanel(state: GameState): void {
   startPreviews(cls.spells, cls.color, cls.glow);
 }
 
+// ── Card canvas animation state ──
+let cardCanvases: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; clsKey: string; color: string; glow: string }[] = [];
+let cardAnimFrame: number | null = null;
+
+function animateCards(): void {
+  const time = performance.now() / 1000;
+  for (const c of cardCanvases) {
+    const ctx = c.ctx;
+    const w = c.canvas.width;
+    const h = c.canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const scale = 3;
+    const cx = w / 2;
+    const cy = h / 2;
+    const idleBob = Math.sin(time * 2.5) * (2 * scale);
+
+    ctx.save();
+    ctx.scale(scale, scale);
+    const sx = cx / scale;
+    const sy = cy / scale;
+
+    // Aura glow
+    const S = WIZARD_SIZE * (CLASS_SCALE[c.clsKey] || 1);
+    const ag = ctx.createRadialGradient(sx, sy, S * 0.5, sx, sy, S * 2.5);
+    ag.addColorStop(0, c.glow + '22');
+    ag.addColorStop(1, 'transparent');
+    ctx.fillStyle = ag;
+    ctx.beginPath();
+    ctx.arc(sx, sy, S * 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    drawClassBody(ctx, sx, sy + idleBob / scale, 0, c.clsKey, c.color, c.glow, time, undefined);
+    drawWeapon(ctx, sx, sy + idleBob / scale, 0, c.clsKey, c.color, S);
+    ctx.restore();
+  }
+  cardAnimFrame = requestAnimationFrame(animateCards);
+}
+
+function startCardAnimation(): void {
+  if (cardAnimFrame !== null) return;
+  animateCards();
+}
+
+export function stopCardAnimation(): void {
+  if (cardAnimFrame !== null) {
+    cancelAnimationFrame(cardAnimFrame);
+    cardAnimFrame = null;
+  }
+  cardCanvases = [];
+}
+
 export function showSelect(state: GameState): void {
   const lobby = document.getElementById('lobby');
   const selectScreen = document.getElementById('select-screen');
@@ -219,14 +272,13 @@ function buildGrid(state: GameState): void {
   if (!grid) return;
   grid.innerHTML = '';
 
+  // Stop any prior animation before rebuilding
+  stopCardAnimation();
+
   CLASS_ORDER.forEach((k, i) => {
     const c = CLASSES[k];
     const card = document.createElement('div');
     card.className = 'class-card' + (i === state.selectedClassIndex ? ' selected' : '');
-
-    const spList = c.spells.map(s =>
-      `<span style="color:${s.color || c.color}">${s.key}</span> ${s.name}`
-    ).join(' &middot; ');
 
     // Check synergy with ally's picked class
     const allyKey = state.mode === NetworkMode.Guest ? state.hostClassKey
@@ -240,11 +292,25 @@ function buildGrid(state: GameState): void {
       }
     }
 
-    card.innerHTML = `<div class="cname" style="color:${c.color}">${c.name}</div>` +
-      `<div class="cdesc">${c.desc}</div>` +
-      `<div class="cdesc" style="margin-top:3px;color:#554466;font-size:9px">Passive: ${c.passive.desc}</div>` +
-      `<div class="cdesc" style="font-size:9px;margin-top:2px">${spList}</div>` +
-      synTag;
+    // Class name + synergy tag via innerHTML, canvas added programmatically
+    card.innerHTML = `<div class="cname" style="color:${c.color}">${c.name}</div>` + synTag;
+
+    // Create animated character canvas
+    const canvas = document.createElement('canvas');
+    canvas.className = 'class-char-canvas';
+    canvas.width = 200;
+    canvas.height = 160;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      // Insert canvas after the class name (before synergy tag if present)
+      const cname = card.querySelector('.cname');
+      if (cname && cname.nextSibling) {
+        card.insertBefore(canvas, cname.nextSibling);
+      } else {
+        card.appendChild(canvas);
+      }
+      cardCanvases.push({ canvas, ctx, clsKey: k, color: c.color, glow: c.glow });
+    }
 
     card.onclick = () => {
       state.selectedClassIndex = i;
@@ -253,6 +319,7 @@ function buildGrid(state: GameState): void {
     grid.appendChild(card);
   });
 
+  startCardAnimation();
   updateDetailPanel(state);
 }
 
