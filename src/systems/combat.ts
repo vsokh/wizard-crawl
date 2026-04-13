@@ -781,6 +781,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       dmg: def.dmg, color: def.color, owner: p.idx,
       slow: def.slow || 0, tickRate: def.tickRate, tickTimer: 0, age: 0,
       drain: def.drain || 0, heal: def.heal || 0, pull: 0, freezeAfter: 0,
+      _turret: p.clsKey === 'engineer' && def.name.includes('Turret'),
     });
     sfx(SfxName.Ice);
   } else if (def.type === SpellType.Rewind) {

@@ -436,6 +436,7 @@ export interface Zone {
   heal: number;
   pull: number;
   freezeAfter: number;
+  _turret?: boolean;
 }
 
 export interface AoeMarker {

@@ -1,6 +1,7 @@
 import { GameState, rand, toWorld, spawnParticles } from '../state';
 import { GamePhase } from '../types';
 import { ROOM_WIDTH, ROOM_HEIGHT } from '../constants';
+import { drawTurret } from './draw-entities';
 
 // ═══════════════════════════════════
 //       EFFECTS UPDATE
@@ -114,7 +115,22 @@ export function drawZones(ctx: CanvasRenderingContext2D, state: GameState): void
     const isFire = z.color.includes('ff44') || z.color.includes('ff22') || z.color.includes('7722');
     const isHeal = z.color.includes('ffcc') || z.color.includes('ffee');
 
-    if (isIce) {
+    if (z._turret) {
+      // ── TURRET ZONE: turret visual + subtle range indicator ──
+      // Subtle range ring
+      ctx.globalAlpha = 0.06 + 0.03 * Math.sin(t * 2);
+      ctx.fillStyle = '#cc7722';
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#dd8833';
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.15;
+      ctx.setLineDash([6, 8]);
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+      // Draw turret in center
+      drawTurret(ctx, z.x, z.y, 14, t, false, z.age > 0);
+    } else if (isIce) {
       // ── ICE ZONE: snowflake pattern + frost ring ──
       ctx.globalAlpha = 0.08 + 0.04 * Math.sin(t * 2);
       ctx.fillStyle = '#88ccff';

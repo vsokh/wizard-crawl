@@ -1099,7 +1099,7 @@ export function drawWizard(ctx: CanvasRenderingContext2D, state: GameState): voi
 // ═══════════════════════════════════
 
 // ── Draw a Heimer-style turret ──
-function drawTurret(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, time: number, isMega: boolean, zoneActive: boolean): void {
+export function drawTurret(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, time: number, isMega: boolean, zoneActive: boolean): void {
   const s = size;
   const barrelAngle = time * 2;
 
