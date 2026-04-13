@@ -12,9 +12,9 @@
     "noEmit": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "sourceMap": true
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "tools/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

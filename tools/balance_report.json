@@ -1,0 +1,420 @@
+{
+  "timestamp": "2026-04-13T11:02:59.472Z",
+  "config": {
+    "runs": 50,
+    "maxWave": 25
+  },
+  "classTierList": [
+    {
+      "className": "Engineer",
+      "classKey": "engineer",
+      "avgWaveSurvived": 15.9,
+      "avgKills": 352.2,
+      "dps": 18.9,
+      "avgHpAtDeath": 0.6,
+      "wave5WinRate": 100,
+      "wave10WinRate": 54,
+      "wave15WinRate": 52,
+      "wave20WinRate": 10,
+      "runs": 50
+    },
+    {
+      "className": "Necromancer",
+      "classKey": "necromancer",
+      "avgWaveSurvived": 14.6,
+      "avgKills": 291.4,
+      "dps": 10.4,
+      "avgHpAtDeath": 0,
+      "wave5WinRate": 100,
+      "wave10WinRate": 98,
+      "wave15WinRate": 48,
+      "wave20WinRate": 0,
+      "runs": 50
+    },
+    {
+      "className": "Cryomancer",
+      "classKey": "cryomancer",
+      "avgWaveSurvived": 13.8,
+      "avgKills": 286,
+      "dps": 14.1,
+      "avgHpAtDeath": 0.3,
+      "wave5WinRate": 100,
+      "wave10WinRate": 36,
+      "wave15WinRate": 36,
+      "wave20WinRate": 4,
+      "runs": 50
+    },
+    {
+      "className": "Druid",
+      "classKey": "druid",
+      "avgWaveSurvived": 10.5,
+      "avgKills": 175.4,
+      "dps": 20,
+      "avgHpAtDeath": 0,
+      "wave5WinRate": 100,
+      "wave10WinRate": 6,
+      "wave15WinRate": 4,
+      "wave20WinRate": 0,
+      "runs": 50
+    },
+    {
+      "className": "Pyromancer",
+      "classKey": "pyromancer",
+      "avgWaveSurvived": 10.4,
+      "avgKills": 171.9,
+      "dps": 30.5,
+      "avgHpAtDeath": 0,
+      "wave5WinRate": 100,
+      "wave10WinRate": 4,
+      "wave15WinRate": 4,
+      "wave20WinRate": 0,
+      "runs": 50
+    },
+    {
+      "className": "Paladin",
+      "classKey": "paladin",
+      "avgWaveSurvived": 9.8,
+      "avgKills": 153.9,
+      "dps": 14.1,
+      "avgHpAtDeath": 0,
+      "wave5WinRate": 100,
+      "wave10WinRate": 0,
+      "wave15WinRate": 0,
+      "wave20WinRate": 0,
+      "runs": 50
+    },
+    {
+      "className": "Ranger",
+      "classKey": "ranger",
+      "avgWaveSurvived": 9.8,
+      "avgKills": 150.8,
+      "dps": 11.4,
+      "avgHpAtDeath": 0,
+      "wave5WinRate": 100,
+      "wave10WinRate": 2,
+      "wave15WinRate": 0,
+      "wave20WinRate": 0,
+      "runs": 50
+    },
+    {
+      "className": "Chronomancer",
+      "classKey": "chronomancer",
+      "avgWaveSurvived": 8.4,
+      "avgKills": 114.3,
+      "dps": 2.2,
+      "avgHpAtDeath": 0,
+      "wave5WinRate": 100,
+      "wave10WinRate": 0,
+      "wave15WinRate": 0,
+      "wave20WinRate": 0,
+      "runs": 50
+    },
+    {
+      "className": "Warlock",
+      "classKey": "warlock",
+      "avgWaveSurvived": 8,
+      "avgKills": 109,
+      "dps": 17.6,
+      "avgHpAtDeath": 0,
+      "wave5WinRate": 74,
+      "wave10WinRate": 4,
+      "wave15WinRate": 0,
+      "wave20WinRate": 0,
+      "runs": 50
+    },
+    {
+      "className": "Arcanist",
+      "classKey": "arcanist",
+      "avgWaveSurvived": 7.4,
+      "avgKills": 93.7,
+      "dps": 6.7,
+      "avgHpAtDeath": 0,
+      "wave5WinRate": 60,
+      "wave10WinRate": 0,
+      "wave15WinRate": 0,
+      "wave20WinRate": 0,
+      "runs": 50
+    },
+    {
+      "className": "Stormcaller",
+      "classKey": "stormcaller",
+      "avgWaveSurvived": 6.6,
+      "avgKills": 69,
+      "dps": 5.3,
+      "avgHpAtDeath": 0,
+      "wave5WinRate": 62,
+      "wave10WinRate": 0,
+      "wave15WinRate": 0,
+      "wave20WinRate": 0,
+      "runs": 50
+    },
+    {
+      "className": "Berserker",
+      "classKey": "berserker",
+      "avgWaveSurvived": 5.9,
+      "avgKills": 67.6,
+      "dps": 7.2,
+      "avgHpAtDeath": 0,
+      "wave5WinRate": 54,
+      "wave10WinRate": 0,
+      "wave15WinRate": 0,
+      "wave20WinRate": 0,
+      "runs": 50
+    },
+    {
+      "className": "Knight",
+      "classKey": "knight",
+      "avgWaveSurvived": 3,
+      "avgKills": 21.1,
+      "dps": 1.4,
+      "avgHpAtDeath": 0,
+      "wave5WinRate": 0,
+      "wave10WinRate": 0,
+      "wave15WinRate": 0,
+      "wave20WinRate": 0,
+      "runs": 50
+    },
+    {
+      "className": "Monk",
+      "classKey": "monk",
+      "avgWaveSurvived": 3,
+      "avgKills": 21,
+      "dps": 1.2,
+      "avgHpAtDeath": 0,
+      "wave5WinRate": 0,
+      "wave10WinRate": 0,
+      "wave15WinRate": 0,
+      "wave20WinRate": 0,
+      "runs": 50
+    }
+  ],
+  "outliers": [
+    {
+      "className": "Necromancer",
+      "reason": "wave10_too_high",
+      "value": 98
+    },
+    {
+      "className": "Knight",
+      "reason": "wave5_too_low",
+      "value": 0
+    },
+    {
+      "className": "Monk",
+      "reason": "wave5_too_low",
+      "value": 0
+    }
+  ],
+  "upgradeImpact": [
+    {
+      "name": "Friendly Fire",
+      "avgWaveDelta": 8,
+      "sampleSize": 10
+    },
+    {
+      "name": "Primary Boost",
+      "avgWaveDelta": 3,
+      "sampleSize": 10
+    },
+    {
+      "name": "Glass Cannon",
+      "avgWaveDelta": 3,
+      "sampleSize": 10
+    },
+    {
+      "name": "Second Wind",
+      "avgWaveDelta": 3,
+      "sampleSize": 10
+    },
+    {
+      "name": "Critical Strike",
+      "avgWaveDelta": 2,
+      "sampleSize": 10
+    },
+    {
+      "name": "Spell Thief",
+      "avgWaveDelta": 2,
+      "sampleSize": 10
+    },
+    {
+      "name": "Spell Power",
+      "avgWaveDelta": 1,
+      "sampleSize": 10
+    },
+    {
+      "name": "Overkill",
+      "avgWaveDelta": 1,
+      "sampleSize": 10
+    },
+    {
+      "name": "Piercing",
+      "avgWaveDelta": 1,
+      "sampleSize": 10
+    },
+    {
+      "name": "Split Shot",
+      "avgWaveDelta": 1,
+      "sampleSize": 10
+    },
+    {
+      "name": "Homing Bolts",
+      "avgWaveDelta": 1,
+      "sampleSize": 10
+    },
+    {
+      "name": "Trigger Happy",
+      "avgWaveDelta": 1,
+      "sampleSize": 10
+    },
+    {
+      "name": "Thorns",
+      "avgWaveDelta": 1,
+      "sampleSize": 10
+    },
+    {
+      "name": "Momentum",
+      "avgWaveDelta": 1,
+      "sampleSize": 10
+    },
+    {
+      "name": "Lingering",
+      "avgWaveDelta": 1,
+      "sampleSize": 10
+    },
+    {
+      "name": "XP Boost",
+      "avgWaveDelta": 1,
+      "sampleSize": 10
+    },
+    {
+      "name": "Ultimate Power",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Ricochet",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Velocity",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Chain Hit",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Big Spells",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Blast Radius",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Swift Cast",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Rapid Fire",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Double Tap",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Efficiency",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Mana Flow",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Max Mana +30",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Mana on Kill",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Vitality",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Armor",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Vampirism",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Life Steal",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Dodge",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Quick Step",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Dash",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Deep Freeze",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Aftershock",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Chaos Bolts",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Magnet",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    },
+    {
+      "name": "Gold Rush",
+      "avgWaveDelta": 0,
+      "sampleSize": 10
+    }
+  ],
+  "meta": {
+    "meanWave": 9.1,
+    "stddevWave": 3.8,
+    "elapsedMs": 5798
+  }
+}

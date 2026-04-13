@@ -50,9 +50,13 @@ export function generateArena(state: GameState): void {
 export function pickWaveEnemy(wave: number): string {
   if (wave <= 2) return ['slime', 'bat'][Math.floor(Math.random() * 2)];
   if (wave <= 4) return ['slime', 'bat', 'skeleton'][Math.floor(Math.random() * 3)];
-  if (wave <= 7) return ['slime', 'bat', 'skeleton', 'wraith'][Math.floor(Math.random() * 4)];
-  // Late game: weighted toward harder enemies
-  const pool = ['slime', 'bat', 'skeleton', 'skeleton', 'wraith', 'wraith'];
+  if (wave <= 7) return ['slime', 'bat', 'skeleton', 'wraith', 'spider'][Math.floor(Math.random() * 5)];
+  if (wave <= 12) {
+    const pool = ['slime', 'bat', 'skeleton', 'skeleton', 'wraith', 'wraith', 'spider', 'necro', 'shieldbearer'];
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  // Late game: weighted toward harder enemies + assassins
+  const pool = ['skeleton', 'skeleton', 'wraith', 'wraith', 'spider', 'necro', 'shieldbearer', 'assassin', 'assassin'];
   return pool[Math.floor(Math.random() * pool.length)];
 }
 

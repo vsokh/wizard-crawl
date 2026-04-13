@@ -178,11 +178,56 @@ export const CLASSES: Record<string, ClassDefInput> = {
       { name: 'Arrow Rain', key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#88cc44', mana: 0, cd: 0 },
     ],
   },
+  druid: {
+    name: 'Druid', color: '#44aa33', glow: '#337722',
+    desc: 'Nature magic. Summons + heals.',
+    passive: { name: 'Regrowth', desc: 'Regen 1 HP every 10 seconds' },
+    spells: [
+      { name: 'Thorn Shot', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 380, radius: 7, mana: 6, cd: 0.32, life: 1.2, burn: 3, color: '#44aa33', trail: '#337722' },
+      { name: 'Entangle', key: 'RMB', type: SpellType.Zone, dmg: 0, mana: 20, cd: 5, radius: 60, duration: 2, tickRate: 0.5, stun: 2, color: '#66bb44' },
+      { name: 'Spirit Wolf', key: 'Q', type: SpellType.Ultimate, ultCharge: 0, mana: 30, cd: 10, color: '#88aa55' },
+      { name: "Nature's Wrath", key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#33aa22', mana: 0, cd: 0 },
+    ],
+  },
+  warlock: {
+    name: 'Warlock', color: '#8833aa', glow: '#662288',
+    desc: 'Dark magic. High risk, high reward.',
+    passive: { name: 'Dark Pact', desc: 'Spells cost HP instead of 30% mana cost (saves mana)' },
+    spells: [
+      { name: 'Shadow Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 3, speed: 260, radius: 10, mana: 10, cd: 0.5, life: 1.5, color: '#8833aa', trail: '#662288' },
+      { name: 'Drain Life', key: 'RMB', type: SpellType.Beam, dmg: 2, range: 200, mana: 18, cd: 1, width: 4, drain: 2, color: '#aa44cc' },
+      { name: 'Summon Imp', key: 'Q', type: SpellType.Ultimate, ultCharge: 0, mana: 25, cd: 8, color: '#cc4466' },
+      { name: 'Doom', key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#662288', mana: 0, cd: 0 },
+    ],
+  },
+  monk: {
+    name: 'Monk', color: '#eedd88', glow: '#ccaa44',
+    desc: 'Martial arts. Fast melee + dodging.',
+    passive: { name: 'Inner Peace', desc: 'Dodge 20% of attacks naturally' },
+    spells: [
+      { name: 'Palm Strike', key: 'LMB', type: SpellType.Cone, dmg: 1, range: 45, mana: 2, cd: 0.15, angle: 1.0, color: '#eedd88' },
+      { name: 'Flying Kick', key: 'RMB', type: SpellType.Leap, range: 150, mana: 15, cd: 2.5, dmg: 3, aoeR: 40, color: '#ccaa44' },
+      { name: 'Meditation', key: 'Q', type: SpellType.Zone, dmg: 0, mana: 20, cd: 8, radius: 30, duration: 3, tickRate: 1, heal: 1, color: '#ffffcc' },
+      { name: 'Thousand Fists', key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#eedd88', mana: 0, cd: 0 },
+    ],
+  },
+  engineer: {
+    name: 'Engineer', color: '#dd8833', glow: '#aa6622',
+    desc: 'Builds turrets and gadgets.',
+    passive: { name: 'Overclock', desc: 'Turrets fire 20% faster' },
+    spells: [
+      { name: 'Wrench Throw', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 350, radius: 7, mana: 5, cd: 0.3, life: 1.0, color: '#dd8833', trail: '#aa6622' },
+      { name: 'Deploy Turret', key: 'RMB', type: SpellType.Zone, dmg: 1, mana: 25, cd: 6, radius: 120, duration: 15, tickRate: 0.8, color: '#cc7722' },
+      { name: 'Mine Field', key: 'Q', type: SpellType.Trap, mana: 20, cd: 5, dmg: 4, radius: 45, count: 3, spread: 0.8, color: '#ffaa33' },
+      { name: 'Mega Turret', key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#dd8833', mana: 0, cd: 0 },
+    ],
+  },
 };
 
 export const CLASS_ORDER: string[] = [
   'pyromancer', 'cryomancer', 'stormcaller', 'arcanist', 'necromancer',
   'chronomancer', 'knight', 'berserker', 'paladin', 'ranger',
+  'druid', 'warlock', 'monk', 'engineer',
 ];
 
 // ═══════════════════════════════════
@@ -196,7 +241,14 @@ export const ENEMIES: Record<string, EnemyDef> = {
   wraith: { name: 'Wraith', hp: 3, speed: 130, size: 10, color: '#8855cc', dmg: 2, xp: 3, gold: 3, ai: EnemyAI.Chase, atkR: 18, atkCd: 0.8, phase: true },
   golem: { name: 'Golem', hp: 20, speed: 35, size: 24, color: '#886644', dmg: 3, xp: 10, gold: 10, ai: EnemyAI.Chase, atkR: 32, atkCd: 2, boss: true },
   demon: { name: 'Demon', hp: 25, speed: 50, size: 22, color: '#cc3333', dmg: 3, xp: 12, gold: 12, ai: EnemyAI.Ranged, atkR: 250, atkCd: 1.2, projSpd: 350, projCol: '#ff4422', boss: true },
+  spider: { name: 'Spider', hp: 3, speed: 100, size: 9, color: '#665544', dmg: 1, xp: 2, gold: 2, ai: EnemyAI.Chase, atkR: 16, atkCd: 0.6 },
+  spiderling: { name: 'Spiderling', hp: 1, speed: 110, size: 6, color: '#887766', dmg: 1, xp: 1, gold: 0, ai: EnemyAI.Chase, atkR: 14, atkCd: 0.5 },
+  necro: { name: 'Necro', hp: 5, speed: 50, size: 12, color: '#55aa77', dmg: 1, xp: 3, gold: 3, ai: EnemyAI.Ranged, atkR: 250, atkCd: 1.6, projSpd: 250, projCol: '#77cc99' },
+  shieldbearer: { name: 'Shield Bearer', hp: 8, speed: 40, size: 14, color: '#7788aa', dmg: 2, xp: 4, gold: 4, ai: EnemyAI.Chase, atkR: 24, atkCd: 1.5 },
+  assassin: { name: 'Assassin', hp: 2, speed: 160, size: 8, color: '#334455', dmg: 4, xp: 3, gold: 3, ai: EnemyAI.Chase, atkR: 16, atkCd: 1.2 },
   _ally: { name: 'Skeleton', hp: 4, speed: 80, size: 9, color: '#55cc55', dmg: 2, xp: 0, gold: 0, ai: EnemyAI.Chase, atkR: 20, atkCd: 0.8 },
+  _wolf: { name: 'Wolf', hp: 8, speed: 120, size: 10, color: '#88aa66', dmg: 2, xp: 0, gold: 0, ai: EnemyAI.Chase, atkR: 20, atkCd: 0.6 },
+  _imp: { name: 'Imp', hp: 5, speed: 90, size: 8, color: '#cc4466', dmg: 1, xp: 0, gold: 0, ai: EnemyAI.Ranged, atkR: 150, atkCd: 1.0, projSpd: 300, projCol: '#ff5577' },
 };
 
 // ═══════════════════════════════════

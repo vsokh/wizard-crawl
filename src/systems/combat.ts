@@ -330,6 +330,13 @@ function classSfx(clsKey: string): SfxName {
 export function castSpell(state: GameState, p: Player, idx: number, angle: number): void {
   const def = p.cls.spells[idx];
   p.mana -= def.mana;
+  // Warlock Dark Pact: refund 30% mana cost but pay HP instead
+  if (p.clsKey === 'warlock' && def.mana > 0) {
+    const refund = Math.floor(def.mana * 0.3);
+    p.mana += refund;
+    p.hp -= 1;
+    if (p.hp <= 0) p.hp = 1; // don't let Dark Pact kill you
+  }
   p.cd[idx] = def.cd;
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
@@ -500,6 +507,41 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       _owner: p.idx, _dmg: def.dmg, _radius: def.radius, _slow: def.slow || 0, _color: def.color,
     });
     sfx(SfxName.Hit);
+    // Engineer mine field: place 3 mines
+    if (p.clsKey === 'engineer' && def.count && def.count > 1) {
+      for (let m = 1; m < def.count; m++) {
+        const spreadAngle = angle + (m - def.count / 2) * (def.spread || 0.4);
+        state.pickups.push({
+          x: wp.x + Math.cos(spreadAngle) * 30 * m, y: wp.y + Math.sin(spreadAngle) * 30 * m,
+          type: PickupType.Trap, collected: false,
+          value: 0,
+          _owner: p.idx, _dmg: def.dmg, _radius: def.radius, _slow: def.slow || 0, _color: def.color,
+        });
+      }
+    }
+  } else if (def.type === SpellType.Ultimate && def.key === 'Q') {
+    // Special Q abilities that use Ultimate type
+    if (p.clsKey === 'druid') {
+      // Spirit Wolf: summon a wolf ally
+      const wolf = createFriendlyEnemy(p.x + cos * 40, p.y + sin * 40, p.idx);
+      wolf.type = '_wolf';
+      wolf.hp = 8;
+      wolf.maxHp = 8;
+      wolf._lifespan = 15;
+      state.enemies.push(wolf);
+      spawnParticles(state, wolf.x, wolf.y, '#88aa66', 10);
+      sfx(SfxName.Pickup);
+    } else if (p.clsKey === 'warlock') {
+      // Summon Imp: small ranged demon ally
+      const imp = createFriendlyEnemy(p.x + cos * 40, p.y + sin * 40, p.idx);
+      imp.type = '_imp';
+      imp.hp = 5;
+      imp.maxHp = 5;
+      imp._lifespan = 12;
+      state.enemies.push(imp);
+      spawnParticles(state, imp.x, imp.y, '#cc4466', 10);
+      sfx(SfxName.Arcane);
+    }
   }
 }
 
@@ -630,5 +672,63 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
         sfx(SfxName.Hit);
       }, i * 60);
     }
+  } else if (p.clsKey === 'druid') {
+    // Nature's Wrath: all enemies take 5 dmg + roots them 3s
+    for (const e of state.enemies) {
+      if (!e.alive || e._friendly) continue;
+      damageEnemy(state, e, 5, p.idx);
+      e.stunTimer = (e.stunTimer || 0) + 3;
+    }
+    spawnShockwave(state, p.x, p.y, ROOM_WIDTH, 'rgba(80,180,60,.3)');
+  } else if (p.clsKey === 'warlock') {
+    // Doom: marks all enemies, after 3s they take 50% of their max HP as damage
+    const marked = state.enemies.filter(e => e.alive && !e._friendly);
+    for (const e of marked) {
+      spawnText(state, e.x, e.y - 15, 'DOOMED', '#662288');
+    }
+    setTimeout(() => {
+      for (const e of marked) {
+        if (!e.alive) continue;
+        const doomDmg = Math.max(1, Math.ceil(e.maxHp * 0.5));
+        damageEnemy(state, e, doomDmg, p.idx);
+        spawnParticles(state, e.x, e.y, '#662288', 10);
+      }
+      sfx(SfxName.Boom);
+      shake(state, 6);
+    }, 3000);
+  } else if (p.clsKey === 'monk') {
+    // Thousand Fists: 20 rapid melee hits in a cone
+    for (let i = 0; i < 20; i++) {
+      setTimeout(() => {
+        for (const e of state.enemies) {
+          if (!e.alive) continue;
+          const d = dist(p.x, p.y, e.x, e.y);
+          if (d > 60) continue;
+          const a2 = Math.atan2(e.y - p.y, e.x - p.x);
+          const diff = Math.abs(((a2 - angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
+          if (diff <= 0.8) {
+            damageEnemy(state, e, 1, p.idx);
+          }
+        }
+        spawnParticles(state, p.x + Math.cos(angle) * 30, p.y + Math.sin(angle) * 30, '#eedd88', 2, 0.3);
+        sfx(SfxName.Hit);
+      }, i * 40);
+    }
+  } else if (p.clsKey === 'engineer') {
+    // Mega Turret: huge turret (30 HP, 3 dmg/shot, 20s)
+    const turret = createFriendlyEnemy(p.x + Math.cos(angle) * 40, p.y + Math.sin(angle) * 40, p.idx);
+    turret.type = '_ally';
+    turret.hp = 30;
+    turret.maxHp = 30;
+    turret._lifespan = 20;
+    state.enemies.push(turret);
+    spawnParticles(state, turret.x, turret.y, '#dd8833', 15);
+    // Also create a high-damage zone around the turret
+    state.zones.push({
+      x: turret.x, y: turret.y, radius: 130, duration: 20,
+      dmg: 3, color: '#dd8833', owner: p.idx,
+      slow: 0, tickRate: 0.7, tickTimer: 0, age: 0,
+      drain: 0, heal: 0,
+    });
   }
 }

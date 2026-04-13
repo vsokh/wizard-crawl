@@ -125,6 +125,24 @@ export function updatePlayers(state: GameState, dt: number): void {
     // Berserker: fury below 50% HP
     p._furyActive = p.clsKey === 'berserker' && p.hp <= p.maxHp / 2;
 
+    // Druid: Regrowth - regen 1 HP every 10 seconds
+    if (p.clsKey === 'druid') {
+      p._auraTick = (p._auraTick || 0) + dt;
+      if (p._auraTick >= 10) {
+        p._auraTick = 0;
+        if (p.hp < p.maxHp) {
+          p.hp = Math.min(p.maxHp, p.hp + 1);
+          spawnText(state, p.x, p.y - 20, '+1 HP', '#44aa33');
+        }
+      }
+    }
+
+    // Monk: Inner Peace - 20% dodge naturally (added at creation, stacks with Dodge upgrade)
+    // Applied via dodgeChance in damagePlayer, set below
+    if (p.clsKey === 'monk' && p.dodgeChance < 0.2) {
+      p.dodgeChance = 0.2;
+    }
+
     // Paladin: aura of light - heal nearby ally 2 HP/s
     if (p.clsKey === 'paladin') {
       const ally = state.players[1 - p.idx];
