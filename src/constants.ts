@@ -186,6 +186,7 @@ export const TIMING = {
   ANIM_CAST: 0.25,
   ANIM_ATTACK: 0.8,
   ANIM_ATTACK_WIND: 0.2,
+  ANIM_ULT: 0.8,             // duration of class-specific ultimate animation
   // tick rates & delays
   ZONE_TICK: 0.5,
   BURN_TICK: 0.5,

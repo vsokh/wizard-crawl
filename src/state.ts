@@ -380,6 +380,7 @@ export function createPlayer(idx: number, clsKey: string): Player {
     _animHitFlash: 0,
     _animDeathFade: -1,
     _animMoving: false,
+    _animUltTimer: 0,
     respawnTimer: 0,
   };
 }

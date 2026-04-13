@@ -1,5 +1,5 @@
 import { GameState } from '../state';
-import { ENEMIES, WIZARD_SIZE } from '../constants';
+import { ENEMIES, WIZARD_SIZE, TIMING } from '../constants';
 import { PickupType } from '../types';
 
 // ═══════════════════════════════════
@@ -24,6 +24,428 @@ export const CLASS_SCALE: Record<string, number> = {
   necromancer: 1.0, chronomancer: 0.95, knight: 1.2, berserker: 1.25,
   paladin: 1.15, ranger: 0.85, druid: 0.95, warlock: 1.0, monk: 0.88, engineer: 1.0,
 };
+
+// ── Class-specific ultimate cast animation ──
+function drawUltimateAnim(ctx: CanvasRenderingContext2D, x: number, y: number, clsKey: string, color: string, glow: string, time: number, progress: number): void {
+  ctx.save();
+  const S = WIZARD_SIZE;
+  const alpha = progress * 0.8;
+
+  switch (clsKey) {
+    // 1. Pyromancer — Fire vortex: 6 flame tendrils spiraling upward
+    case 'pyromancer': {
+      const colors = ['#ff6633', '#ff4400', '#ffaa33'];
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = 3;
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + time * 4 + progress * 6;
+        const r = S * (1 + (1 - progress) * 3);
+        const cx = x + Math.cos(angle) * r * 0.4;
+        const cy = y + Math.sin(angle) * r * 0.4 - (1 - progress) * S * 3;
+        const ex = x + Math.cos(angle + 0.5) * r;
+        const ey = y + Math.sin(angle + 0.5) * r - (1 - progress) * S * 5;
+        ctx.strokeStyle = colors[i % 3];
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(cx, cy, ex, ey);
+        ctx.stroke();
+      }
+      break;
+    }
+
+    // 2. Cryomancer — Ice crystal burst: 8 diamond shards expanding outward
+    case 'cryomancer': {
+      const colors = ['#44bbff', '#88ddff', '#ffffff'];
+      ctx.globalAlpha = alpha;
+      const expand = (1 - progress) * S * 5;
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + time * 0.5;
+        const dx = x + Math.cos(angle) * expand;
+        const dy = y + Math.sin(angle) * expand;
+        const sz = S * 0.3 * progress;
+        ctx.fillStyle = colors[i % 3];
+        ctx.beginPath();
+        ctx.moveTo(dx, dy - sz);
+        ctx.lineTo(dx + sz * 0.5, dy);
+        ctx.lineTo(dx, dy + sz);
+        ctx.lineTo(dx - sz * 0.5, dy);
+        ctx.closePath();
+        ctx.fill();
+      }
+      break;
+    }
+
+    // 3. Stormcaller — Lightning corona: jagged lightning bolts radiating out
+    case 'stormcaller': {
+      const boltColors = ['#bb66ff', '#ffee88', '#ffffff'];
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = 2;
+      const numBolts = 7;
+      for (let i = 0; i < numBolts; i++) {
+        const angle = (i / numBolts) * Math.PI * 2 + noise(i * 37 + time * 10) * 0.5;
+        const len = S * 3 * (1 - progress * 0.3);
+        ctx.strokeStyle = boltColors[i % 3];
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        let bx = x, by = y;
+        const segs = 5;
+        for (let s = 1; s <= segs; s++) {
+          const t = s / segs;
+          const jitter = noise(i * 13 + s * 7 + time * 20) * S * 0.5;
+          bx = x + Math.cos(angle) * len * t + Math.cos(angle + Math.PI / 2) * jitter;
+          by = y + Math.sin(angle) * len * t + Math.sin(angle + Math.PI / 2) * jitter;
+          ctx.lineTo(bx, by);
+        }
+        ctx.stroke();
+      }
+      break;
+    }
+
+    // 4. Arcanist — Arcane circle: rotating magic circle with rune dots
+    case 'arcanist': {
+      ctx.globalAlpha = alpha;
+      const outerR = S * 2 + (1 - progress) * S * 2;
+      const innerR = outerR * 0.6;
+      const rot = time * 3;
+      ctx.strokeStyle = '#ff55aa';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, outerR, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = '#dd3388';
+      ctx.beginPath();
+      ctx.arc(x, y, innerR, 0, Math.PI * 2);
+      ctx.stroke();
+      // Rune dots orbiting
+      ctx.fillStyle = '#ff55aa';
+      for (let i = 0; i < 6; i++) {
+        const a = rot + (i / 6) * Math.PI * 2;
+        const rx = x + Math.cos(a) * (outerR + innerR) * 0.5;
+        const ry = y + Math.sin(a) * (outerR + innerR) * 0.5;
+        ctx.beginPath();
+        ctx.arc(rx, ry, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    }
+
+    // 5. Necromancer — Death spiral: ghostly wisps swirling upward
+    case 'necromancer': {
+      const wispColors = ['#55cc55', '#338833', '#44aa44'];
+      ctx.globalAlpha = alpha;
+      for (let i = 0; i < 4; i++) {
+        const phase = (i / 4) * Math.PI * 2;
+        const rise = (1 - progress) * S * 6;
+        const helixR = S * 1.2 + noise(i * 17) * S * 0.3;
+        const wx = x + Math.cos(phase + time * 3) * helixR;
+        const wy = y - rise - i * S * 0.5;
+        ctx.fillStyle = wispColors[i % 3];
+        ctx.beginPath();
+        ctx.arc(wx, wy, S * 0.25 * progress, 0, Math.PI * 2);
+        ctx.fill();
+        // Trail
+        ctx.globalAlpha = alpha * 0.4;
+        for (let t = 1; t <= 3; t++) {
+          const tr = rise - t * S * 0.4;
+          const tx = x + Math.cos(phase + time * 3 - t * 0.4) * helixR;
+          const ty = y - tr - i * S * 0.5;
+          ctx.beginPath();
+          ctx.arc(tx, ty, S * 0.15 * progress, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = alpha;
+      }
+      break;
+    }
+
+    // 6. Chronomancer — Time rings: concentric clock rings spinning
+    case 'chronomancer': {
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#ffcc44';
+      ctx.lineWidth = 2;
+      const radii = [S * 1.5, S * 2.5, S * 3.5];
+      const speeds = [2, -3, 1.5];
+      for (let r = 0; r < 3; r++) {
+        const radius = radii[r] * (0.5 + (1 - progress) * 0.5);
+        const rot = time * speeds[r];
+        ctx.strokeStyle = r === 1 ? '#ddaa33' : '#ffcc44';
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+        // Tick marks
+        const ticks = 8 + r * 4;
+        for (let t = 0; t < ticks; t++) {
+          const a = rot + (t / ticks) * Math.PI * 2;
+          const inner = radius - 4;
+          const outer = radius + 4;
+          ctx.beginPath();
+          ctx.moveTo(x + Math.cos(a) * inner, y + Math.sin(a) * inner);
+          ctx.lineTo(x + Math.cos(a) * outer, y + Math.sin(a) * outer);
+          ctx.stroke();
+        }
+      }
+      break;
+    }
+
+    // 7. Knight — Shield nova: octagonal shield pulsing outward
+    case 'knight': {
+      ctx.globalAlpha = alpha;
+      const expand = (1 - progress) * S * 4;
+      ctx.strokeStyle = '#ddeeff';
+      ctx.lineWidth = 3;
+      // Main octagon
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2 - Math.PI / 8;
+        const px = x + Math.cos(a) * (S + expand);
+        const py = y + Math.sin(a) * (S + expand);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      // 4 smaller shields at cardinal directions
+      ctx.strokeStyle = '#aabbcc';
+      ctx.lineWidth = 2;
+      for (let d = 0; d < 4; d++) {
+        const a = (d / 4) * Math.PI * 2;
+        const sx = x + Math.cos(a) * (S * 1.5 + expand * 0.7);
+        const sy = y + Math.sin(a) * (S * 1.5 + expand * 0.7);
+        const ss = S * 0.3 * progress;
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const oa = (i / 8) * Math.PI * 2;
+          const px = sx + Math.cos(oa) * ss;
+          const py = sy + Math.sin(oa) * ss;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+      break;
+    }
+
+    // 8. Berserker — Rage cracks: jagged crack lines radiating outward
+    case 'berserker': {
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#ff4444';
+      ctx.lineWidth = 2.5;
+      const crackLen = S * 4 * (1 - progress * 0.2);
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + noise(i * 23) * 0.3;
+        ctx.strokeStyle = i % 2 === 0 ? '#ff4444' : '#ff2222';
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        let cx = x, cy = y;
+        const segs = 4;
+        for (let s = 1; s <= segs; s++) {
+          const t = s / segs;
+          const jitter = noise(i * 11 + s * 19) * S * 0.4;
+          cx = x + Math.cos(angle) * crackLen * t + Math.cos(angle + Math.PI / 2) * jitter;
+          cy = y + Math.sin(angle) * crackLen * t + Math.sin(angle + Math.PI / 2) * jitter;
+          ctx.lineTo(cx, cy);
+        }
+        ctx.stroke();
+      }
+      break;
+    }
+
+    // 9. Paladin — Holy cross: expanding glowing cross with light rays
+    case 'paladin': {
+      ctx.globalAlpha = alpha;
+      const crossSize = S * (1 + (1 - progress) * 3);
+      const armW = S * 0.4;
+      ctx.fillStyle = '#ffffcc';
+      ctx.beginPath();
+      // Vertical arm
+      ctx.rect(x - armW / 2, y - crossSize, armW, crossSize * 2);
+      // Horizontal arm
+      ctx.rect(x - crossSize, y - armW / 2, crossSize * 2, armW);
+      ctx.fill();
+      // Light rays between arms
+      ctx.globalAlpha = alpha * 0.4;
+      ctx.fillStyle = '#ffddaa';
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        const rayLen = crossSize * 0.8;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + Math.cos(a - 0.3) * rayLen, y + Math.sin(a - 0.3) * rayLen);
+        ctx.lineTo(x + Math.cos(a + 0.3) * rayLen, y + Math.sin(a + 0.3) * rayLen);
+        ctx.closePath();
+        ctx.fill();
+      }
+      break;
+    }
+
+    // 10. Ranger — Arrow spiral: 8 arrow shapes spiraling outward
+    case 'ranger': {
+      const arrowColors = ['#88cc44', '#668833'];
+      ctx.globalAlpha = alpha;
+      const spiral = (1 - progress) * S * 5;
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + time * 3 + progress * 4;
+        const dist = S * 0.5 + spiral;
+        const ax = x + Math.cos(angle) * dist;
+        const ay = y + Math.sin(angle) * dist;
+        const sz = S * 0.3;
+        ctx.fillStyle = arrowColors[i % 2];
+        ctx.beginPath();
+        // Arrow triangle pointing outward
+        ctx.moveTo(ax + Math.cos(angle) * sz, ay + Math.sin(angle) * sz);
+        ctx.lineTo(ax + Math.cos(angle + 2.5) * sz * 0.5, ay + Math.sin(angle + 2.5) * sz * 0.5);
+        ctx.lineTo(ax + Math.cos(angle - 2.5) * sz * 0.5, ay + Math.sin(angle - 2.5) * sz * 0.5);
+        ctx.closePath();
+        ctx.fill();
+      }
+      break;
+    }
+
+    // 11. Druid — Nature bloom: 4 vine tendrils curling outward with leaf tips
+    case 'druid': {
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = 2.5;
+      const vineLen = S * 3 * (1 - progress * 0.3);
+      for (let i = 0; i < 4; i++) {
+        const baseAngle = (i / 4) * Math.PI * 2 + time * 0.5;
+        const curl = Math.sin(time * 2 + i) * 0.8;
+        const ex = x + Math.cos(baseAngle + curl) * vineLen;
+        const ey = y + Math.sin(baseAngle + curl) * vineLen;
+        const cpx = x + Math.cos(baseAngle + curl * 0.5) * vineLen * 0.6;
+        const cpy = y + Math.sin(baseAngle + curl * 0.5) * vineLen * 0.6 - S;
+        ctx.strokeStyle = '#44aa33';
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(cpx, cpy, ex, ey);
+        ctx.stroke();
+        // Leaf at tip
+        ctx.fillStyle = '#88cc66';
+        const leafSz = S * 0.3 * progress;
+        ctx.beginPath();
+        ctx.ellipse(ex, ey, leafSz, leafSz * 0.5, baseAngle + curl, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    }
+
+    // 12. Warlock — Void vortex: dark swirling portal with tendrils
+    case 'warlock': {
+      ctx.globalAlpha = alpha;
+      const vortexR = S * 2 * (0.5 + (1 - progress) * 0.5);
+      // Dark portal
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, vortexR);
+      grad.addColorStop(0, '#220044');
+      grad.addColorStop(0.6, '#662288');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, vortexR, 0, Math.PI * 2);
+      ctx.fill();
+      // Swirl lines
+      ctx.strokeStyle = '#8833aa';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 4; i++) {
+        const angle = (i / 4) * Math.PI * 2 + time * -4;
+        const tendrilLen = vortexR * 1.5;
+        ctx.beginPath();
+        ctx.moveTo(
+          x + Math.cos(angle) * vortexR * 0.3,
+          y + Math.sin(angle) * vortexR * 0.3
+        );
+        ctx.quadraticCurveTo(
+          x + Math.cos(angle + 0.8) * tendrilLen * 0.6,
+          y + Math.sin(angle + 0.8) * tendrilLen * 0.6,
+          x + Math.cos(angle + 0.4) * tendrilLen,
+          y + Math.sin(angle + 0.4) * tendrilLen
+        );
+        ctx.stroke();
+      }
+      break;
+    }
+
+    // 13. Monk — Chi pulse: 3 concentric energy rings expanding with angular shapes
+    case 'monk': {
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#eedd88';
+      ctx.lineWidth = 2;
+      for (let r = 0; r < 3; r++) {
+        const delay = r * 0.15;
+        const ringProgress = Math.max(0, Math.min(1, (1 - progress - delay) / (1 - delay)));
+        const radius = S * 1 + ringProgress * S * 4;
+        const ringAlpha = alpha * (1 - ringProgress);
+        ctx.globalAlpha = ringAlpha;
+        ctx.strokeStyle = r % 2 === 0 ? '#eedd88' : '#ccbb66';
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      // Inner angular kanji-like shapes
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#eedd88';
+      ctx.lineWidth = 1.5;
+      const innerR = S * 1.2;
+      const rot = time * 2;
+      for (let i = 0; i < 4; i++) {
+        const a = rot + (i / 4) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(a) * innerR * 0.3, y + Math.sin(a) * innerR * 0.3);
+        ctx.lineTo(x + Math.cos(a + 0.2) * innerR, y + Math.sin(a + 0.2) * innerR);
+        ctx.lineTo(x + Math.cos(a + 0.5) * innerR * 0.6, y + Math.sin(a + 0.5) * innerR * 0.6);
+        ctx.stroke();
+      }
+      break;
+    }
+
+    // 14. Engineer — Gear burst: 2 interlocking cogs spinning with sparks
+    case 'engineer': {
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#dd8833';
+      ctx.lineWidth = 2.5;
+      const gearR = S * 1.5 + (1 - progress) * S;
+      const teeth = 8;
+      // Draw two interlocking gears
+      for (let g = 0; g < 2; g++) {
+        const gx = x + (g === 0 ? -gearR * 0.5 : gearR * 0.5);
+        const rot = time * (g === 0 ? 4 : -4);
+        const r1 = gearR * 0.6;
+        const r2 = gearR * 0.8;
+        ctx.strokeStyle = g === 0 ? '#dd8833' : '#ffaa44';
+        ctx.beginPath();
+        for (let t = 0; t < teeth; t++) {
+          const a1 = rot + (t / teeth) * Math.PI * 2;
+          const a2 = rot + ((t + 0.5) / teeth) * Math.PI * 2;
+          ctx.lineTo(gx + Math.cos(a1) * r2, y + Math.sin(a1) * r2);
+          ctx.lineTo(gx + Math.cos(a2) * r1, y + Math.sin(a2) * r1);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+      // Sparks
+      ctx.fillStyle = '#ffaa44';
+      for (let s = 0; s < 6; s++) {
+        const sa = noise(s * 31 + time * 15) * Math.PI * 2;
+        const sd = S * 1.5 + noise(s * 17 + time * 10) * S;
+        ctx.beginPath();
+        ctx.arc(x + Math.cos(sa) * sd, y + Math.sin(sa) * sd, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    }
+
+    default:
+      // Fallback: simple expanding ring
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, S * (1 + (1 - progress) * 3), 0, Math.PI * 2);
+      ctx.stroke();
+      break;
+  }
+
+  ctx.restore();
+}
 
 // ── Class-specific silhouette drawing ──
 export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, clsKey: string, color: string, glow: string, time: number, player?: { hp: number; maxHp: number; _furyActive: boolean }): void {
@@ -996,6 +1418,11 @@ export function drawWizard(ctx: CanvasRenderingContext2D, state: GameState): voi
       ctx.beginPath();
       ctx.arc(p.x, p.y, WIZARD_SIZE * 3, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    // ── Class-specific ultimate animation ──
+    if (p._animUltTimer > 0) {
+      drawUltimateAnim(ctx, p.x, p.y, p.clsKey, cls.color, cls.glow, state.time, p._animUltTimer / TIMING.ANIM_ULT);
     }
 
     // ── Hit flash overlay (at bobbed position) ──

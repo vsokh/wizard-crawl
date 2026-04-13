@@ -114,6 +114,7 @@ export function updatePlayers(state: GameState, dt: number): void {
     if (p.iframes > 0) p.iframes -= dt;
     if (p._animCastFlash > 0) p._animCastFlash -= dt;
     if (p._animHitFlash > 0) p._animHitFlash -= dt;
+    if (p._animUltTimer > 0) p._animUltTimer -= dt;
 
     // Storm Shield: lightning strikes random nearby enemy every 1s
     if (p.stormShield) {

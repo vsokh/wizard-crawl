@@ -942,6 +942,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
 export function castUltimate(state: GameState, p: Player, angle: number): void {
   p.ultCharge = 0;
   p.ultReady = false;
+  p._animUltTimer = TIMING.ANIM_ULT;
   sfx(SfxName.Boom);
   shake(state, 12);
   flashScreen(state, TIMING.FLASH_SCREEN);
