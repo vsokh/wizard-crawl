@@ -27,6 +27,7 @@ import {
   CLASSES,
   ROOM_WIDTH,
   ROOM_HEIGHT,
+  DEFAULT_LIVES,
 } from './constants';
 
 // ═══════════════════════════════════
@@ -121,6 +122,10 @@ export interface GameState {
   // Synergy
   activeSynergy: { name: string; desc: string; color: string } | null;
   synergyBannerTimer: number;
+
+  // Lives system (single-player)
+  lives: number;
+  maxLives: number;
 }
 
 export function createInitialState(): GameState {
@@ -182,6 +187,8 @@ export function createInitialState(): GameState {
     shopShieldHits: 0,
     activeSynergy: null,
     synergyBannerTimer: 0,
+    lives: 0,
+    maxLives: 0,
   };
 }
 

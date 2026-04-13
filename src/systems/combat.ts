@@ -19,6 +19,7 @@ import {
   SpellType,
   PickupType,
   GamePhase,
+  NetworkMode,
   SfxName,
 } from '../types';
 import {
@@ -405,6 +406,26 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
       return;
     }
 
+    // Lives system: respawn if lives remain (single-player only)
+    if (state.lives > 1) {
+      state.lives--;
+      p.hp = p.maxHp;
+      p.x = ROOM_WIDTH / 2;
+      p.y = ROOM_HEIGHT * 0.6;
+      p.vx = 0;
+      p.vy = 0;
+      p.iframes = 3.0; // generous iframes on respawn
+      p.stunTimer = 0;
+      p.slowTimer = 0;
+      spawnParticles(state, p.x, p.y, '#44ccff', 25, 1.2);
+      spawnShockwave(state, p.x, p.y, 80, 'rgba(68,204,255,.5)');
+      spawnText(state, p.x, p.y - 30, `${state.lives} LIVES LEFT`, '#44ccff');
+      sfx(SfxName.Pickup);
+      shake(state, 5);
+      flashScreen(state, 0.2, '68,204,255');
+      return;
+    }
+
     p.alive = false;
     p._animDeathFade = 1.0;
     spawnParticles(state, p.x, p.y, '#ff6633', 35, 1.3);
@@ -419,7 +440,7 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
     setTimeout(() => {
       const statsEl = document.getElementById('go-stats');
       if (statsEl) {
-        statsEl.innerHTML = `Wave Reached: ${state.wave} / 20<br>Kills: ${state.totalKills}<br>Gold: ${state.gold}`;
+        statsEl.innerHTML = `Wave Reached: ${state.wave} / 20<br>Kills: ${state.totalKills}<br>Gold: ${state.gold}<br>Lives Used: ${state.maxLives}`;
       }
       const goEl = document.getElementById('gameover');
       if (goEl) goEl.style.display = 'flex';

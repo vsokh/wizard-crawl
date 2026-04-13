@@ -16,6 +16,7 @@ import {
   NET_SEND_INTERVAL,
   MAX_WAVES,
   WAVE_PHYSICS,
+  DEFAULT_LIVES,
 } from './constants';
 import { sfx } from './audio';
 import { SfxName } from './types';
@@ -112,6 +113,15 @@ function beginGame(c1: string, c2: string): void {
   state.shopShieldHits = 0;
   state.activeSynergy = null;
   state.synergyBannerTimer = 0;
+
+  // Initialize lives for single-player
+  if (state.mode === NetworkMode.Local) {
+    state.lives = DEFAULT_LIVES;
+    state.maxLives = DEFAULT_LIVES;
+  } else {
+    state.lives = 0;
+    state.maxLives = 0;
+  }
 
   // Spawn players
   state.players = [];

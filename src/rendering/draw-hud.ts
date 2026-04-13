@@ -39,6 +39,9 @@ export function updateHUD(state: GameState): void {
 
   const hudP1 = document.getElementById('hud-p1');
   if (hudP1) {
+    const livesHtml = state.maxLives > 0
+      ? `<div style="margin-top:3px;font-size:10px;color:#44ccff">${'❤️'.repeat(state.lives)}${'🖤'.repeat(state.maxLives - state.lives)}</div>`
+      : '';
     hudP1.innerHTML = `<span style="color:${p.cls.color}">${p.cls.name}</span>${fury}
       <div>
         <div class="bar-o"><div class="bar-i" style="width:${hpRatio * 100}%;background:${hpColor}"></div></div>
@@ -48,6 +51,7 @@ export function updateHUD(state: GameState): void {
           <span class="xp-lv">Lv${p.level}</span>
           <div class="bar-o bar-xp"><div class="bar-i" style="width:${xpRatio}%;background:#bb77ff"></div></div>
         </div>
+        ${livesHtml}
       </div>`;
   }
 

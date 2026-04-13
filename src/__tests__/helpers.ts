@@ -62,6 +62,10 @@ export function createTestState(): GameState {
     shopPurchases: {},
     shopTempDmg: 0,
     shopShieldHits: 0,
+    activeSynergy: null,
+    synergyBannerTimer: 0,
+    lives: 0,
+    maxLives: 0,
   };
 }
 
