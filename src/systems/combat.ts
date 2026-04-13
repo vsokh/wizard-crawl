@@ -786,16 +786,25 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
   const pw = p.ultPower || 1;
 
   if (p.clsKey === 'pyromancer') {
-    // Inferno: rain 5 meteors across the room
-    for (let i = 0; i < 5; i++) {
+    // Inferno: rain 8 meteors across the room with lingering burn zones
+    for (let i = 0; i < 8; i++) {
       const mx = rand(60, ROOM_WIDTH - 60);
       const my = rand(60, ROOM_HEIGHT - 60);
       setTimeout(() => {
         state.aoeMarkers.push({
-          x: mx, y: my, radius: 65, delay: 0.5, dmg: Math.round(5 * pw), color: '#ff2200',
+          x: mx, y: my, radius: 80, delay: 0.3, dmg: Math.round(5 * pw), color: '#ff2200',
           owner: p.idx, stun: 0, age: 0,
         });
         sfx(SfxName.Fire);
+        // Lingering burn zone after meteor lands
+        setTimeout(() => {
+          state.zones.push({
+            x: mx, y: my, radius: 40, duration: 3,
+            dmg: 1, color: '#ff4400', owner: p.idx,
+            slow: 0, tickRate: 0.5, tickTimer: 0, age: 0,
+            drain: 0, heal: 0, pull: 0, freezeAfter: 0,
+          });
+        }, 300);
       }, i * 200);
     }
   } else if (p.clsKey === 'cryomancer') {
