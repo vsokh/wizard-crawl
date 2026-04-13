@@ -24,7 +24,7 @@ import {
 import { sfx } from './audio';
 import { SfxName } from './types';
 import { setupInput, getInput } from './input';
-import { setNetworkCallbacks, sendState, sendInput, getAdaptiveInterval } from './network';
+import { setNetworkCallbacks, sendState, sendInput, flushOutbox, getAdaptiveInterval } from './network';
 import { setChestPickupHandler } from './systems/physics';
 import { updatePlayers } from './systems/physics';
 import { updateEnemies, updateEProj } from './systems/enemies';
@@ -373,6 +373,9 @@ function loop(now: number): void {
 
   // Synergy banner (screen-space, drawn after restore)
   drawSynergyBanner(ctx, state);
+
+  // Flush all queued network messages as a single batched packet
+  flushOutbox();
 
   requestAnimationFrame(loop);
 }

@@ -6,6 +6,7 @@ import {
   NetMessage,
   NetStateMessage,
   NetDeltaMessage,
+  NetWireMessage,
   PickupType,
   Enemy,
   PlayerInput,
@@ -57,6 +58,8 @@ let conn: DataConnection | null = null;
 let sendFailCount = 0;
 /** Current adaptive send interval — starts at base, adjusts with congestion */
 let adaptiveInterval = NET_SEND_INTERVAL;
+/** Outbox for batching multiple messages into a single packet per frame */
+const outbox: NetMessage[] = [];
 
 export function getAdaptiveInterval(): number {
   return adaptiveInterval;
@@ -86,12 +89,23 @@ export function getConnection(): DataConnection | null {
 
 export function sendMessage(state: GameState, msg: NetMessage): void {
   if (!conn || !conn.open) return;
+  outbox.push(msg);
+}
+
+export function flushOutbox(): void {
+  if (!conn || !conn.open || outbox.length === 0) return;
   try {
-    conn.send(msg);
+    if (outbox.length === 1) {
+      conn.send(outbox[0]);
+    } else {
+      conn.send({ type: 'batch', msgs: outbox.slice() } as NetWireMessage);
+    }
+    outbox.length = 0;
     sendFailCount = 0;
     adaptiveInterval = Math.max(NET_SEND_INTERVAL, adaptiveInterval * 0.9);
   } catch (e) {
-    console.warn('sendMessage failed:', e);
+    console.warn('flushOutbox failed:', e);
+    outbox.length = 0;
     sendFailCount++;
     adaptiveInterval = Math.min(NET_SEND_INTERVAL_MAX, adaptiveInterval * 1.5);
     if (sendFailCount >= 3) {
@@ -139,8 +153,7 @@ export function hostGame(state: GameState): void {
       setTimeout(() => { if (onShowSelect) onShowSelect(); }, 400);
     });
 
-    conn.on('data', (msg: unknown) => {
-      if (!isNetMessage(msg)) return;
+    const handleHostMessage = (msg: NetMessage) => {
       if (msg.type === 'input') {
         state.remoteInput = {
           angle: msg.angle,
@@ -156,7 +169,7 @@ export function hostGame(state: GameState): void {
       if (msg.type === 'cls') {
         if (typeof msg.cls !== 'string' || !(msg.cls in CLASSES)) return;
         if (onStartWithClasses && state.hostClassKey) {
-          conn!.send({ type: 'go', h: state.hostClassKey, g: msg.cls });
+          outbox.push({ type: 'go', h: state.hostClassKey, g: msg.cls } as NetMessage);
           onStartWithClasses(state.hostClassKey, msg.cls);
         } else {
           state.guestClassKey = msg.cls;
@@ -173,6 +186,18 @@ export function hostGame(state: GameState): void {
         }
         state.upgradePickedRemote = true;
         checkBothPicked(state);
+      }
+    };
+
+    conn.on('data', (raw: unknown) => {
+      if (typeof raw !== 'object' || raw === null || !('type' in raw)) return;
+      const r = raw as Record<string, unknown>;
+      if (r.type === 'batch' && Array.isArray(r.msgs)) {
+        for (const m of r.msgs) {
+          if (isNetMessage(m)) handleHostMessage(m);
+        }
+      } else if (isNetMessage(raw)) {
+        handleHostMessage(raw);
       }
     });
 
@@ -223,8 +248,7 @@ export function joinGame(state: GameState): void {
       setTimeout(() => { if (onShowSelect) onShowSelect(); }, 400);
     });
 
-    conn.on('data', (msg: unknown) => {
-      if (!isNetMessage(msg)) return;
+    const handleGuestMessage = (msg: NetMessage) => {
       if (msg.type === 'state' || msg.type === 'delta') {
         applyState(state, msg as NetStateMessage);
       }
@@ -252,6 +276,18 @@ export function joinGame(state: GameState): void {
         if (screen) screen.style.display = 'none';
         document.body.classList.add('in-game');
         state.gamePhase = GamePhase.Playing;
+      }
+    };
+
+    conn.on('data', (raw: unknown) => {
+      if (typeof raw !== 'object' || raw === null || !('type' in raw)) return;
+      const r = raw as Record<string, unknown>;
+      if (r.type === 'batch' && Array.isArray(r.msgs)) {
+        for (const m of r.msgs) {
+          if (isNetMessage(m)) handleGuestMessage(m);
+        }
+      } else if (isNetMessage(raw)) {
+        handleGuestMessage(raw);
       }
     });
 
@@ -360,18 +396,7 @@ export function sendState(state: GameState): void {
     }
     // Don't cache fx — it's one-shot
 
-    try {
-      conn.send(msg);
-      sendFailCount = 0;
-    } catch (e) {
-      console.warn('sendState failed:', e);
-      sendFailCount++;
-      if (sendFailCount >= 3) {
-        const errorMsg = document.getElementById('error-msg');
-        if (errorMsg) errorMsg.textContent = 'Connection unstable — messages failing to send';
-        sendFailCount = 0;
-      }
-    }
+    outbox.push(msg);
     return;
   }
 
@@ -408,20 +433,7 @@ export function sendState(state: GameState): void {
   // Skip send entirely if nothing changed
   if (!hasChanges) return;
 
-  try {
-    conn.send(delta);
-    sendFailCount = 0;
-    adaptiveInterval = Math.max(NET_SEND_INTERVAL, adaptiveInterval * 0.9);
-  } catch (e) {
-    console.warn('sendState failed:', e);
-    sendFailCount++;
-    adaptiveInterval = Math.min(NET_SEND_INTERVAL_MAX, adaptiveInterval * 1.5);
-    if (sendFailCount >= 3) {
-      const errorMsg = document.getElementById('error-msg');
-      if (errorMsg) errorMsg.textContent = 'Connection unstable — messages failing to send';
-      sendFailCount = 0;
-    }
-  }
+  outbox.push(delta as unknown as NetDeltaMessage);
 }
 
 export function resetDeltaState(): void {
@@ -666,28 +678,15 @@ export function sendInput(state: GameState, input: {
   lastSentInput = { ...input };
   lastSendTime = now;
 
-  try {
-    conn.send({
-      type: 'input',
-      angle: Math.round(input.angle * 100) / 100,
-      mx: ~~input.mx,
-      my: ~~input.my,
-      shoot: input.shoot,
-      shoot2: input.shoot2,
-      ability: input.ability,
-      ult: input.ult,
-      dash: input.dash,
-    });
-    sendFailCount = 0;
-    adaptiveInterval = Math.max(NET_SEND_INTERVAL, adaptiveInterval * 0.9);
-  } catch (e) {
-    console.warn('sendInput failed:', e);
-    sendFailCount++;
-    adaptiveInterval = Math.min(NET_SEND_INTERVAL_MAX, adaptiveInterval * 1.5);
-    if (sendFailCount >= 3) {
-      const errorMsg = document.getElementById('error-msg');
-      if (errorMsg) errorMsg.textContent = 'Connection unstable — messages failing to send';
-      sendFailCount = 0;
-    }
-  }
+  outbox.push({
+    type: 'input',
+    angle: Math.round(input.angle * 100) / 100,
+    mx: ~~input.mx,
+    my: ~~input.my,
+    shoot: input.shoot,
+    shoot2: input.shoot2,
+    ability: input.ability,
+    ult: input.ult,
+    dash: input.dash,
+  });
 }

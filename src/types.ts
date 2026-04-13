@@ -740,3 +740,10 @@ export type NetMessage =
   | NetResumeMessage
   | NetStateMessage
   | NetDeltaMessage;
+
+export interface NetBatchMessage {
+  type: 'batch';
+  msgs: NetMessage[];
+}
+
+export type NetWireMessage = NetMessage | NetBatchMessage;
