@@ -29,6 +29,7 @@ import {
   GAME_OVER_DELAY_MS,
   RESPAWN_DELAY_MS,
   scaledHealthDropChance,
+  goldDropBonus,
 } from '../constants';
 import { sfx } from '../audio';
 import { createFriendlyEnemy } from './dungeon';
@@ -42,7 +43,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
   // Already in death animation — don't re-trigger death effects
   if (e._deathTimer >= 0) return;
   const p = state.players[pIdx];
-  let dmg = rawDmg;
+  let dmg = rawDmg + (state.shopTempDmg || 0);
 
   // Chaos damage: random 1-4
   if (p && p.chaosDmg) dmg = 1 + Math.floor(Math.random() * 4);
@@ -150,7 +151,8 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
     }
 
     // ── Spawn gold as physical pickups ──
-    const goldDrop = et.gold * (p ? p.goldMul : 1);
+    const bonusGold = goldDropBonus(state.wave);
+    const goldDrop = (et.gold + bonusGold) * (p ? p.goldMul : 1);
     if (goldDrop > 0) {
       const goldGemCount = 2 + Math.floor(Math.random() * 2); // 2-3 coins
       const goldPerGem = Math.max(1, Math.ceil(goldDrop / goldGemCount));
@@ -338,6 +340,14 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
 
 export function damagePlayer(state: GameState, p: Player, rawDmg: number, attacker?: Enemy): void {
   if (p.iframes > 0) return;
+
+  // Ward Stone shield: block hit entirely
+  if (state.shopShieldHits > 0) {
+    state.shopShieldHits--;
+    spawnText(state, p.x, p.y - 20, 'BLOCKED!', '#4488cc');
+    p.iframes = 0.3;
+    return;
+  }
 
   // Dodge
   if (p.dodgeChance && Math.random() < p.dodgeChance) {

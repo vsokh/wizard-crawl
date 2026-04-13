@@ -25,6 +25,7 @@ import { updateEnemies, updateEProj } from './systems/enemies';
 import { updateSpells, updateAoe, updateZones } from './systems/waves';
 import { generateArena, updateWaves } from './systems/dungeon';
 import { showUpgradeScreen } from './systems/upgrades';
+import { initShop } from './systems/shop';
 
 import { updateCamera } from './rendering/renderer';
 import { updateFx, drawBeams, drawZones, drawAoe, drawFx, drawCrosshair, drawCountdown } from './rendering/draw-effects';
@@ -58,6 +59,9 @@ setupInput(state, canvas);
 // Wire chest pickup handler to break circular dependency physics -> upgrades
 setChestPickupHandler((s: GameState) => showUpgradeScreen(s));
 
+// Initialize shop event listeners
+initShop(state);
+
 // ═══════════════════════════════════
 //       GAME START
 // ═══════════════════════════════════
@@ -85,6 +89,10 @@ function beginGame(c1: string, c2: string): void {
   state.comboCount = 0;
   state.comboTimer = 0;
   state.hitStop = 0;
+  state.shopOpen = false;
+  state.shopPurchases = {};
+  state.shopTempDmg = 0;
+  state.shopShieldHits = 0;
 
   // Spawn players
   state.players = [];

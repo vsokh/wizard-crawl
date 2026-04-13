@@ -395,3 +395,87 @@ input[type=text]:focus {
   margin-bottom: 20px;
   text-align: center;
 }
+
+/* ══════════ SHOP ══════════ */
+#shop-screen {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(10, 5, 20, 0.92);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  gap: 12px;
+}
+#shop-screen h2 {
+  color: #ddcc44;
+  font-family: 'Courier New', monospace;
+  font-size: 28px;
+  text-shadow: 0 0 20px rgba(220, 200, 60, 0.4);
+  margin: 0;
+}
+.shop-gold {
+  color: #ddcc44;
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+}
+.shop-grid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 650px;
+}
+.shop-item {
+  background: rgba(30, 20, 50, 0.9);
+  border: 1px solid rgba(100, 80, 140, 0.4);
+  border-radius: 8px;
+  padding: 12px 14px;
+  width: 115px;
+  cursor: pointer;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.shop-item:hover {
+  border-color: #ddcc44;
+  box-shadow: 0 0 12px rgba(220, 200, 60, 0.3);
+}
+.shop-item-disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.shop-item-disabled:hover {
+  border-color: rgba(100, 80, 140, 0.4);
+  box-shadow: none;
+}
+.shop-item-sold {
+  opacity: 0.3;
+  cursor: default;
+}
+.shop-item-sold:hover {
+  border-color: rgba(100, 80, 140, 0.4);
+  box-shadow: none;
+}
+.shop-item-name {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.shop-item-desc {
+  font-size: 10px;
+  color: #998899;
+  margin-bottom: 6px;
+}
+.shop-item-price {
+  font-size: 14px;
+  color: #ddcc44;
+  font-weight: bold;
+}
+.shop-hint {
+  color: #665577;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  margin-top: 4px;
+}

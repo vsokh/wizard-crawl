@@ -729,15 +729,17 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
 
   // Wave indicator
   if (!state.waveActive && state.waveBreakTimer > 0 && state.gamePhase === GamePhase.Playing) {
-    const waveAlpha = 0.2 + 0.1 * Math.sin(t * 3);
-    ctx.fillStyle = `rgba(200, 170, 80, ${waveAlpha})`;
-    ctx.font = 'bold 28px Courier New';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(200, 170, 80, 0.3)';
-    ctx.shadowBlur = 15;
-    ctx.fillText(`NEXT WAVE IN ${Math.ceil(state.waveBreakTimer)}`, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 20);
-    ctx.shadowBlur = 0;
+    if (!state.shopOpen) {
+      const waveAlpha = 0.2 + 0.1 * Math.sin(t * 3);
+      ctx.fillStyle = `rgba(200, 170, 80, ${waveAlpha})`;
+      ctx.font = 'bold 28px Courier New';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(200, 170, 80, 0.3)';
+      ctx.shadowBlur = 15;
+      ctx.fillText(`NEXT WAVE IN ${Math.ceil(state.waveBreakTimer)}`, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 20);
+      ctx.shadowBlur = 0;
+    }
   }
 
   // Enemy count

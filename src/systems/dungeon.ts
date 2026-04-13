@@ -12,7 +12,9 @@ import {
   PILLAR_MAX_EXTRA_RADIUS,
   PILLAR_CENTER_EXCLUSION,
   PILLAR_SPAWN_TRIES,
+  waveClearGold,
 } from '../constants';
+import { openShop } from './shop';
 import { sfx } from '../audio';
 
 // ═══════════════════════════════════
@@ -110,6 +112,7 @@ export function spawnEnemy(state: GameState, type: string, hpScale: number, spdS
 /** Start the current wave — spawn enemies for it */
 export function startWave(state: GameState): void {
   state.waveActive = true;
+  state.shopTempDmg = 0; // reset temporary damage boost each wave
   const wave = state.wave;
   const isBoss = wave % 5 === 0;
   const hpScale = wave <= 10 ? 1 + Math.floor(wave / 4) : 2 + Math.floor(wave / 3);
@@ -241,6 +244,13 @@ export function checkWaveComplete(state: GameState): void {
     state.waveActive = false;
     state.waveBreakTimer = 2; // 2 second break between waves
 
+    // Wave clear gold bonus
+    const clearGold = waveClearGold(state.wave);
+    const wcp = state.players[0]; // local player
+    const finalGold = Math.round(clearGold * (wcp ? wcp.goldMul : 1));
+    state.gold += finalGold;
+    spawnText(state, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 + 20, `+${finalGold}g WAVE CLEAR`, '#ddcc44');
+
     // Drop some health pickups — more reliable in later waves
     const isBossWave = state.wave % 5 === 0;
     if (isBossWave || Math.random() < 0.55) {
@@ -276,6 +286,12 @@ export function checkWaveComplete(state: GameState): void {
     }
 
     // Upgrades are now XP-driven (level-ups), not wave-driven
+
+    // Open shop between waves (not on final wave / victory)
+    if (state.wave < MAX_WAVES) {
+      state.waveBreakTimer = 999; // paused until shop closes
+      openShop(state);
+    }
 
     // Victory check — completed all waves
     if (state.wave >= MAX_WAVES) {
@@ -317,6 +333,7 @@ export function updateWaves(state: GameState, dt: number): void {
     return;
   }
   // Between waves: countdown to next
+  if (state.shopOpen) return; // don't count down while shopping
   state.waveBreakTimer -= dt;
   if (state.waveBreakTimer <= 0) {
     if (state.wave >= MAX_WAVES) return; // Don't start wave 21

@@ -98,6 +98,39 @@ export function getXpStep(level: number): number {
 }
 
 
+/** Bonus gold per kill scales with wave progression */
+export function goldDropBonus(wave: number): number {
+  if (wave >= 15) return 3;  // Late game: +3 bonus gold
+  if (wave >= 8) return 2;   // Mid game: +2 bonus gold
+  if (wave >= 4) return 1;   // Early-mid: +1 bonus gold
+  return 0;                   // Waves 1-3: no bonus
+}
+
+/** Gold reward for clearing a wave */
+export function waveClearGold(wave: number): number {
+  const base = 5 + wave * 3;  // Wave 1: 8g, Wave 10: 35g, Wave 20: 65g
+  return Math.round(base);
+}
+
+/** Shop item definitions */
+export interface ShopItemDef {
+  id: string;
+  name: string;
+  desc: string;
+  basePrice: number;
+  priceIncrease: number; // price goes up by this each purchase
+  maxBuys: number;       // 0 = unlimited
+  color: string;
+}
+
+export const SHOP_ITEMS: ShopItemDef[] = [
+  { id: 'heal', name: 'Health Potion', desc: 'Restore 3 HP', basePrice: 8, priceIncrease: 2, maxBuys: 0, color: '#44cc55' },
+  { id: 'maxhp', name: 'Vitality Charm', desc: '+2 Max HP', basePrice: 30, priceIncrease: 15, maxBuys: 5, color: '#cc4444' },
+  { id: 'dmgboost', name: 'Power Shard', desc: '+1 spell damage (this wave)', basePrice: 15, priceIncrease: 5, maxBuys: 0, color: '#cc8833' },
+  { id: 'shield', name: 'Ward Stone', desc: 'Block next 2 hits', basePrice: 20, priceIncrease: 5, maxBuys: 0, color: '#4488cc' },
+  { id: 'speed', name: 'Swift Boots', desc: '+15% move speed (permanent)', basePrice: 25, priceIncrease: 20, maxBuys: 3, color: '#88cc44' },
+];
+
 /** Minimap cell size */
 export const MINIMAP_CELL_SIZE = 16;
 

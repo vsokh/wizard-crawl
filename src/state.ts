@@ -111,6 +111,12 @@ export interface GameState {
   selectedClassIndex: number;
   hostClassKey: string | null;
   guestClassKey: string | null;
+
+  // Shop state
+  shopOpen: boolean;
+  shopPurchases: Record<string, number>; // tracks how many times each item was bought
+  shopTempDmg: number; // temporary damage boost from Power Shard
+  shopShieldHits: number; // remaining shield hits from Ward Stone
 }
 
 export function createInitialState(): GameState {
@@ -166,6 +172,10 @@ export function createInitialState(): GameState {
     selectedClassIndex: 0,
     hostClassKey: null,
     guestClassKey: null,
+    shopOpen: false,
+    shopPurchases: {},
+    shopTempDmg: 0,
+    shopShieldHits: 0,
   };
 }
 
