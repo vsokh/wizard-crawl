@@ -281,12 +281,13 @@ function loop(now: number): void {
       }
       const p = state.players[i];
       if (p._targetX !== undefined && p._targetY !== undefined) {
-        p._lerpT = Math.min(1, (p._lerpT || 0) + dt * lerpSpeed);
-        let ix = lerp(p._prevX ?? p.x, p._targetX, p._lerpT);
-        let iy = lerp(p._prevY ?? p.y, p._targetY, p._lerpT);
+        p._lerpT = (p._lerpT || 0) + dt * lerpSpeed; // don't clamp — track total elapsed time
+        const lerpParam = Math.min(1, p._lerpT);      // clamp for lerp only
+        let ix = lerp(p._prevX ?? p.x, p._targetX, lerpParam);
+        let iy = lerp(p._prevY ?? p.y, p._targetY, lerpParam);
         // Extrapolate past target using server velocity to reduce stutter between updates
-        if (p._lerpT >= 1 && (p._serverVx || p._serverVy)) {
-          const overTime = ((p._lerpT || 1) - 1) * NET_SEND_INTERVAL;
+        if (p._lerpT > 1 && (p._serverVx || p._serverVy)) {
+          const overTime = (p._lerpT - 1) * NET_SEND_INTERVAL;
           ix += (p._serverVx || 0) * overTime;
           iy += (p._serverVy || 0) * overTime;
         }
