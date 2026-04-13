@@ -49,7 +49,7 @@ import { createFriendlyEnemy } from './dungeon';
  *   2. chaosDmg — replaces with random 1–4
  *   3. fury — ×1.5 (Berserker, below half HP)
  *   4. bloodRage — ×2 (ultimate active)
- *   5. critStrike — ×2 or ×3 (with Lethal Precision)
+ *   5. critStrike — ×2 or ×2.5 (with Lethal Precision)
  *   6. momentum — ×1.0–1.2 (speed-based)
  * Capped at COMBAT.DAMAGE_CAP × rawDmg to prevent runaway burst.
  */

@@ -711,8 +711,8 @@ export const UPGRADE_POOL: UpgradeDef[] = [
   { name: 'Primary Overload', desc: 'Primary +6 damage and explodes on hit (3 AoE dmg)', isEvolution: true, evolvesFrom: 1, color: '#ffaa00',
     apply: (p: Player, _s: number) => { p.cls.spells[0].dmg += 6; p.cls.spells[0].explode = (p.cls.spells[0].explode || 0) + 40; } },
 
-  { name: 'Lethal Precision', desc: 'Crits deal 3x damage and +30% crit chance', isEvolution: true, evolvesFrom: 4, color: '#ffaa00',
-    apply: (p: Player, _s: number) => { p.critChance = (p.critChance || 0) + 0.30; p.critMul = 3; } },
+  { name: 'Lethal Precision', desc: 'Crits deal 2.5x damage and +25% crit chance', isEvolution: true, evolvesFrom: 4, color: '#ffaa00',
+    apply: (p: Player, _s: number) => { p.critChance = (p.critChance || 0) + 0.25; p.critMul = 2.5; } },
 
   { name: 'Void Lance', desc: 'Primary pierces all enemies and gains +3 damage', isEvolution: true, evolvesFrom: 6, color: '#ffaa00',
     apply: (p: Player, _s: number) => { p.pierce = (p.pierce || 0) + 99; p.cls.spells[0].dmg += 3; } },
