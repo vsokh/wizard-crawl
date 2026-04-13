@@ -59,6 +59,12 @@ export const GAME_OVER_DELAY_MS = 1500;
 /** Default number of lives per match */
 export const DEFAULT_LIVES = 3;
 
+/** Minimum cooldown floors — prevent stacking from reaching absurd fire rates */
+export const CD_FLOOR_PRIMARY = 0.15;
+export const CD_FLOOR_SECONDARY = 1.0;
+export const CD_FLOOR_Q = 2.0;
+export const CD_FLOORS = [CD_FLOOR_PRIMARY, CD_FLOOR_SECONDARY, CD_FLOOR_Q, 0];
+
 /** Fixed run length — 20 waves with a finale boss */
 export const MAX_WAVES = 20;
 

@@ -35,6 +35,7 @@ import {
   TIMING,
   ULTIMATE,
   RANGES,
+  CD_FLOORS,
 } from '../constants';
 import { sfx } from '../audio';
 import { createFriendlyEnemy } from './dungeon';
@@ -538,7 +539,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     p.hp -= 1;
     if (p.hp <= 0) p.hp = 1; // don't let Dark Pact kill you
   }
-  p.cd[idx] = def.cd;
+  p.cd[idx] = Math.max(CD_FLOORS[idx] ?? 0, def.cd);
 
   // ultEcho: double LMB damage for N casts after ultimate
   let echoDmgMul = 1;
