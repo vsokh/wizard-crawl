@@ -324,6 +324,7 @@ export function createPlayer(idx: number, clsKey: string): Player {
     turretArmy: false,
     laserTurret: false,
     turretExplode: false,
+    _hyperAcc: {},
     _snapTimer: 0,
     _rewindSnap: null,
     _hasteBonus: false,

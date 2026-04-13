@@ -266,6 +266,9 @@ export interface Player {
   laserTurret: boolean;
   turretExplode: boolean;
 
+  // Hyperbolic stacking accumulators (raw sums before diminishing returns)
+  _hyperAcc: Record<string, number>;
+
   // Internal timers / state
   _snapTimer: number;
   _rewindSnap: { hp: number; mana: number } | null;

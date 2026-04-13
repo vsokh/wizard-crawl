@@ -273,13 +273,21 @@ export const ENEMIES: Record<string, EnemyDef> = {
 //           UPGRADES
 // ═══════════════════════════════════
 
+/** Hyperbolic stacking: diminishing returns that never reach 100%.
+ *  Formula: 1 - 1/(1 + acc), where acc is the raw sum of base increments.
+ *  Example: critChance base 0.15 → 1 stack = 13%, 2 = 23%, 5 = 43%, 10 = 60% */
+function hyperStack(p: Player, key: string, base: number): number {
+  const acc = (p._hyperAcc[key] = (p._hyperAcc[key] || 0) + base);
+  return 1 - 1 / (1 + acc);
+}
+
 export const UPGRADE_POOL: UpgradeDef[] = [
   // -- DAMAGE --
   { name: 'Spell Power', desc: 'All spells deal +1 damage', stackable: true, maxStacks: 5, apply: (p: Player) => { for (const s of p.cls.spells) s.dmg = (s.dmg || 0) + 1; } },
   { name: 'Primary Boost', desc: 'Primary spell +2 damage', stackable: true, maxStacks: 4, apply: (p: Player) => { p.cls.spells[0].dmg += 2; } },
   { name: 'Ultimate Power', desc: 'Ultimate spell +3 damage', apply: (p: Player) => { if (p.cls.spells[2].dmg) p.cls.spells[2].dmg += 3; } },
   { name: 'Glass Cannon', desc: '+3 spell damage, -2 max HP', apply: (p: Player) => { for (const s of p.cls.spells) s.dmg = (s.dmg || 0) + 3; p.maxHp = Math.max(1, p.maxHp - 2); p.hp = Math.min(p.hp, p.maxHp); } },
-  { name: 'Critical Strike', desc: '15% chance to deal 2x damage', stackable: true, maxStacks: 3, apply: (p: Player) => { p.critChance = (p.critChance || 0) + 0.15; } },
+  { name: 'Critical Strike', desc: '15% chance to deal 2x damage', stackable: true, maxStacks: 3, apply: (p: Player) => { p.critChance = hyperStack(p, 'critChance', 0.15); } },
   { name: 'Overkill', desc: 'Excess kill damage chains to nearby enemy', apply: (p: Player) => { p.overkill = true; } },
 
   // -- PROJECTILE MODIFIERS --
@@ -309,10 +317,10 @@ export const UPGRADE_POOL: UpgradeDef[] = [
   { name: 'Vitality', desc: 'Max HP +2, heal to full', stackable: true, maxStacks: 5, apply: (p: Player) => { p.maxHp += 2; p.hp = p.maxHp; } },
   { name: 'Armor', desc: 'Take -1 damage (min 1)', stackable: true, maxStacks: 4, apply: (p: Player) => { p.armor = (p.armor || 0) + 1; } },
   { name: 'Vampirism', desc: 'Heal 1 HP per 4 kills', apply: (p: Player) => { p.vampirism = (p.vampirism || 0) + 1; p.vampKillReq = 4; } },
-  { name: 'Life Steal', desc: '5% of damage dealt heals you', apply: (p: Player) => { p.lifeSteal = (p.lifeSteal || 0) + 0.05; } },
+  { name: 'Life Steal', desc: '5% of damage dealt heals you', apply: (p: Player) => { p.lifeSteal = hyperStack(p, 'lifeSteal', 0.05); } },
   { name: 'Second Wind', desc: 'Revive once per floor with 50% HP', apply: (p: Player) => { p.secondWind = (p.secondWind || 0) + 1; } },
   { name: 'Thorns', desc: 'Enemies take 1 damage when they hit you', apply: (p: Player) => { p.thorns = (p.thorns || 0) + 1; } },
-  { name: 'Dodge', desc: '15% chance to avoid damage entirely', stackable: true, maxStacks: 3, apply: (p: Player) => { p.dodgeChance = (p.dodgeChance || 0) + 0.15; } },
+  { name: 'Dodge', desc: '15% chance to avoid damage entirely', stackable: true, maxStacks: 3, apply: (p: Player) => { p.dodgeChance = hyperStack(p, 'dodgeChance', 0.15); } },
 
   // -- MOBILITY --
   { name: 'Quick Step', desc: 'Move speed +25%', apply: (p: Player) => { p.moveSpeed *= 1.25; } },
@@ -350,7 +358,7 @@ export const UPGRADE_POOL: UpgradeDef[] = [
   { name: 'Chaos Bolts', desc: 'Primary deals random 1-4 damage', apply: (p: Player) => { p.chaosDmg = true; } },
   { name: 'Magnet', desc: 'Pickups fly to you from further away', apply: (p: Player) => { p.magnetRange = (p.magnetRange || 30) + 60; } },
   { name: 'Gold Rush', desc: 'Enemies drop 2x gold', apply: (p: Player) => { p.goldMul = (p.goldMul || 1) * 2; } },
-  { name: 'XP Boost', desc: 'Gain upgrades 30% more often', apply: (p: Player) => { p.xpBoost = (p.xpBoost || 0) + 0.3; } },
+  { name: 'XP Boost', desc: 'Gain upgrades 30% more often', apply: (p: Player) => { p.xpBoost = hyperStack(p, 'xpBoost', 0.3); } },
   { name: 'Friendly Fire', desc: '+2 dmg but your spells can hurt you', apply: (p: Player) => { for (const s of p.cls.spells) s.dmg = (s.dmg || 0) + 2; p.selfDmg = true; } },
 
   // ══════════════════════════════════════
@@ -387,11 +395,11 @@ export const UPGRADE_POOL: UpgradeDef[] = [
   { name: 'Phase Shift', desc: 'Blink leaves behind an explosion (4 dmg, 60px radius)', forClass: 'arcanist', color: '#ff55aa',
     apply: (p: Player) => { p.blinkExplode = true; } },
   { name: 'Spell Mirror', desc: '30% chance to copy any spell you cast for free', forClass: 'arcanist', color: '#ff55aa',
-    apply: (p: Player) => { p.spellMirror = (p.spellMirror || 0) + 0.3; } },
+    apply: (p: Player) => { p.spellMirror = hyperStack(p, 'spellMirror', 0.3); } },
 
   // ── Necromancer ──
   { name: 'Raise Dead', desc: 'Killed enemies have 25% chance to fight for you (5s)', forClass: 'necromancer', color: '#55cc55', stackable: true, maxStacks: 3,
-    apply: (p: Player) => { p.raiseDead = (p.raiseDead || 0) + 0.25; } },
+    apply: (p: Player) => { p.raiseDead = hyperStack(p, 'raiseDead', 0.25); } },
   { name: 'Death Mark', desc: 'Enemies below 20% HP take 3x damage', forClass: 'necromancer', color: '#55cc55',
     apply: (p: Player) => { p.deathMark = true; } },
   { name: 'Soul Well', desc: 'Kills create a healing zone (heals 2 HP/s, 3s, 50px)', forClass: 'necromancer', color: '#55cc55',
@@ -457,7 +465,7 @@ export const UPGRADE_POOL: UpgradeDef[] = [
   { name: 'Way of the Fist', desc: 'Chi Blast fires 3 projectiles in a fan', forClass: 'monk', color: '#eedd88',
     apply: (p: Player) => { p.splitShot = (p.splitShot || 0) + 2; } },
   { name: 'Iron Skin', desc: 'Dodge chance +25%, take -1 damage from all sources', forClass: 'monk', color: '#eedd88',
-    apply: (p: Player) => { p.dodgeChance = (p.dodgeChance || 0) + 0.25; p.armor = (p.armor || 0) + 1; } },
+    apply: (p: Player) => { p.dodgeChance = hyperStack(p, 'dodgeChance', 0.25); p.armor = (p.armor || 0) + 1; } },
   { name: 'Zen Master', desc: 'Meditation heals 3x faster and also restores mana', forClass: 'monk', color: '#eedd88',
     apply: (p: Player) => { if (p.cls.spells[2]) { p.cls.spells[2].heal = (p.cls.spells[2].heal || 1) * 3; } p.zenMana = true; } },
 
