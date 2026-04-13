@@ -158,6 +158,7 @@ export const COMBAT = {
   WARLOCK_MANA_REFUND: 0.3,
   THORNS_PARTICLE_LIFE: 0.3,
   MONK_DODGE_CHANCE: 0.2,
+  DAMAGE_CAP: 8,
 } as const;
 
 export const TIMING = {

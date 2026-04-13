@@ -80,7 +80,7 @@ export function spawnEnemy(state: GameState, type: string, hpScale: number, spdS
   else if (side === 2) { ex = rand(30, ROOM_WIDTH - 30); ey = ROOM_HEIGHT + 20; }
   else { ex = -20; ey = rand(30, ROOM_HEIGHT - 30); }
 
-  const hp = Math.ceil((et.hp + hpScale - 1) * timeMul);
+  const hp = Math.max(1, Math.ceil((et.hp + hpScale - 1) * timeMul));
   state.enemies.push({
     type,
     x: ex,

@@ -43,6 +43,16 @@ import { createFriendlyEnemy } from './dungeon';
 //       DAMAGE ENEMY
 // ═══════════════════════════════════
 
+/**
+ * Damage modifier application order (multiplicative stacking):
+ *   1. shopTempDmg — flat additive (+1 from Power Shard)
+ *   2. chaosDmg — replaces with random 1–4
+ *   3. fury — ×1.5 (Berserker, below half HP)
+ *   4. bloodRage — ×2 (ultimate active)
+ *   5. critStrike — ×2 or ×3 (with Lethal Precision)
+ *   6. momentum — ×1.0–1.2 (speed-based)
+ * Capped at COMBAT.DAMAGE_CAP × rawDmg to prevent runaway burst.
+ */
 export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: number): void {
   if (e.iframes > 0) return;
   // Already in death animation — don't re-trigger death effects
@@ -66,6 +76,10 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
     const spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
     dmg = Math.round(dmg * (1 + Math.min(COMBAT.MOMENTUM_CAP, spd / COMBAT.MOMENTUM_DIVISOR)));
   }
+
+  // Cap total damage to prevent runaway multiplicative burst
+  const maxDmg = rawDmg * COMBAT.DAMAGE_CAP;
+  if (dmg > maxDmg) dmg = maxDmg;
 
   e.hp -= dmg;
   e.iframes = 0.1;

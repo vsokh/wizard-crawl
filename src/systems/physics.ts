@@ -34,7 +34,7 @@ export function updatePlayers(state: GameState, dt: number): void {
     if (!p.alive) {
       if (p.respawnTimer > 0) {
         p.respawnTimer -= dt;
-        if (p.respawnTimer <= 0 && state.lives > 0) {
+        if (p.respawnTimer <= 0 && state.lives > 0 && state.gamePhase === GamePhase.Playing) {
           // Respawn this player
           state.lives--;
           p.alive = true;
@@ -49,7 +49,7 @@ export function updatePlayers(state: GameState, dt: number): void {
           p.vy = 0;
           p.stunTimer = 0;
           p.slowTimer = 0;
-        } else if (p.respawnTimer <= 0 && state.lives <= 0) {
+        } else if (p.respawnTimer <= 0 && state.lives <= 0 && state.gamePhase === GamePhase.Playing) {
           // No lives left -- check if all players dead for game over
           const allDead = state.players.every(pl => !pl.alive);
           if (allDead) {
