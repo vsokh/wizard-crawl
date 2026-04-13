@@ -1,5 +1,5 @@
 import { GameState, spawnText } from '../state';
-import { SHOP_ITEMS, ShopItemDef, ROOM_WIDTH, ROOM_HEIGHT } from '../constants';
+import { SHOP_ITEMS, ShopItemDef, ROOM_WIDTH, ROOM_HEIGHT, MAX_WAVES } from '../constants';
 
 /** Get current price for a shop item based on how many times it's been bought */
 export function getItemPrice(item: ShopItemDef, purchases: number): number {
@@ -64,6 +64,7 @@ export function openShop(state: GameState): void {
   document.body.classList.remove('in-game');
   if (document.pointerLockElement) document.exitPointerLock();
   state.shopOpen = true;
+  state.waveBreakTimer = 999; // pause wave countdown while shopping
   renderShop(state);
   const el = document.getElementById('shop-screen');
   if (el) el.style.display = 'flex';
@@ -113,9 +114,15 @@ export function initShop(state: GameState): void {
     closeBtn.onclick = () => closeShop(state);
   }
 
-  // Number keys 1-5 to buy items
+  // Number keys 1-5 to buy items, B to open shop
   document.addEventListener('keydown', (e) => {
-    if (!state.shopOpen) return;
+    if (!state.shopOpen) {
+      // B key opens shop between waves
+      if ((e.key === 'b' || e.key === 'B') && !state.waveActive && state.wave < MAX_WAVES) {
+        openShop(state);
+      }
+      return;
+    }
     const num = parseInt(e.key);
     if (num >= 1 && num <= 5) {
       purchaseItem(state, num - 1);

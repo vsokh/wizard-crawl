@@ -15,7 +15,7 @@ import {
   waveClearGold,
   DUNGEON_TIMING,
 } from '../constants';
-import { openShop } from './shop';
+
 import { sfx } from '../audio';
 
 // ═══════════════════════════════════
@@ -287,12 +287,6 @@ export function checkWaveComplete(state: GameState): void {
     }
 
     // Upgrades are now XP-driven (level-ups), not wave-driven
-
-    // Open shop between waves (not on final wave / victory)
-    if (state.wave < MAX_WAVES) {
-      state.waveBreakTimer = 999; // paused until shop closes
-      openShop(state);
-    }
 
     // Victory check — completed all waves
     if (state.wave >= MAX_WAVES) {

@@ -516,6 +516,28 @@ input[type=text]:focus {
   letter-spacing: 1px;
 }
 
+#shop-btn {
+  position: fixed; top: 30px; left: 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px; padding: 3px 10px;
+  background: rgba(40, 20, 60, 0.85);
+  color: var(--accent-gold);
+  border: 1px solid rgba(180, 150, 50, 0.35);
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  z-index: 10; display: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+#shop-btn:hover:not(:disabled) {
+  border-color: rgba(220, 190, 60, 0.7);
+  box-shadow: 0 0 8px rgba(220, 200, 60, 0.25);
+}
+#shop-btn:disabled {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
 #minimap-wrap { position: fixed; top: 8px; right: 8px; z-index: 10; display: none; }
 
 /* ══════════ GAME OVER ══════════ */

@@ -14,6 +14,7 @@ import {
   ROOM_HEIGHT,
   COUNTDOWN_DURATION,
   NET_SEND_INTERVAL,
+  MAX_WAVES,
 } from './constants';
 import { sfx } from './audio';
 import { SfxName } from './types';
@@ -25,7 +26,7 @@ import { updateEnemies, updateEProj } from './systems/enemies';
 import { updateSpells, updateAoe, updateZones } from './systems/waves';
 import { generateArena, updateWaves } from './systems/dungeon';
 import { showUpgradeScreen } from './systems/upgrades';
-import { initShop } from './systems/shop';
+import { initShop, openShop } from './systems/shop';
 
 import { updateCamera } from './rendering/renderer';
 import { updateFx, drawBeams, drawZones, drawAoe, drawFx, drawCrosshair, drawCountdown } from './rendering/draw-effects';
@@ -62,6 +63,16 @@ setChestPickupHandler((s: GameState) => showUpgradeScreen(s));
 // Initialize shop event listeners
 initShop(state);
 
+// Wire up shop button
+const shopBtn = document.getElementById('shop-btn');
+if (shopBtn) {
+  shopBtn.addEventListener('click', () => {
+    if (!state.waveActive && state.wave < MAX_WAVES && !state.shopOpen) {
+      openShop(state);
+    }
+  });
+}
+
 // ═══════════════════════════════════
 //       GAME START
 // ═══════════════════════════════════
@@ -78,6 +89,8 @@ function beginGame(c1: string, c2: string): void {
   if (skillBar) skillBar.style.display = 'flex';
   if (floorDisplay) floorDisplay.style.display = 'block';
   if (goldDisplay) goldDisplay.style.display = 'block';
+  const shopBtnEl = document.getElementById('shop-btn');
+  if (shopBtnEl) shopBtnEl.style.display = 'block';
   document.body.classList.add('in-game');
 
   state.wave = 1;

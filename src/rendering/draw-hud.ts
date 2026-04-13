@@ -63,6 +63,12 @@ export function updateHUD(state: GameState): void {
   const goldVal = document.getElementById('gold-val');
   if (goldVal) goldVal.textContent = String(state.gold);
 
+  const shopBtn = document.getElementById('shop-btn') as HTMLButtonElement | null;
+  if (shopBtn) {
+    const canShop = !state.waveActive && !state.shopOpen && state.wave < MAX_WAVES;
+    shopBtn.disabled = !canShop;
+  }
+
   // Player 2 (partner) HUD
   const p2 = state.players[1];
   const hudP2 = document.getElementById('hud-p2');
