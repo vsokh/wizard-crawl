@@ -322,6 +322,8 @@ export function createPlayer(idx: number, clsKey: string): Player {
     goldMul: 1,
     xpBoost: 0,
     selfDmg: false,
+    damageTakenMul: 1,
+    selfDmgChance: 0,
     doubleSecondary: 0,
     comboBonus: false,
     ultChargeRate: 1,

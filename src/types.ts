@@ -216,6 +216,8 @@ export interface Player {
   goldMul: number;
   xpBoost: number;
   selfDmg: boolean;
+  damageTakenMul: number;   // multiplier for incoming damage (1 = normal)
+  selfDmgChance: number;    // chance to take self-damage when casting (0 = none)
 
   // Secondary (RMB) upgrades
   doubleSecondary: number;
@@ -540,6 +542,8 @@ export interface UpgradeDef {
   evolvesFrom?: number;
   /** If true, this is an evolution — never offered normally */
   isEvolution?: boolean;
+  /** If true, this is a cursed upgrade — benefit + drawback */
+  isCursed?: boolean;
 }
 
 // ── Network message types ──

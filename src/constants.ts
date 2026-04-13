@@ -790,4 +790,30 @@ export const UPGRADE_POOL: UpgradeDef[] = [
 
   { name: 'Lich King', desc: 'Raise dead chance +50% — nearly every kill raises a minion', isEvolution: true, evolvesFrom: 77, color: '#ffaa00', forClass: 'necromancer',
     apply: (p: Player, _s: number) => { p.raiseDead = (p.raiseDead || 0) + 0.50; } },
+
+  // ══════════════════════════════════════
+  //     CURSED UPGRADES (wave 16+)
+  // ══════════════════════════════════════
+  // Cursed upgrades offer powerful benefits with meaningful drawbacks.
+  // They appear as the 4th choice card from wave 16 onward.
+
+  { name: 'Reckless Haste', desc: 'All cooldowns -40%, but take +50% more damage',
+    isCursed: true, color: '#cc3333',
+    apply: (p: Player) => { for (const s of p.cls.spells) s.cd *= 0.6; p.damageTakenMul = (p.damageTakenMul || 1) * 1.5; } },
+
+  { name: 'Blood Pact', desc: '+20% life steal, but -3 max HP',
+    isCursed: true, color: '#cc3333',
+    apply: (p: Player) => { p.lifeSteal = hyperStack(p, 'lifeSteal', 0.2); p.maxHp = Math.max(1, p.maxHp - 3); p.hp = Math.min(p.hp, p.maxHp); } },
+
+  { name: 'Unstable Power', desc: 'Primary +8 damage, but 5% chance to hurt yourself when casting',
+    isCursed: true, color: '#cc3333',
+    apply: (p: Player) => { p.cls.spells[0].dmg += 8; p.selfDmgChance = Math.min(1, (p.selfDmgChance || 0) + 0.05); } },
+
+  { name: 'Berserker Pact', desc: '+50% crit chance, but -2 armor',
+    isCursed: true, color: '#cc3333',
+    apply: (p: Player) => { p.critChance = hyperStack(p, 'critChance', 0.5); p.armor = (p.armor || 0) - 2; } },
+
+  { name: 'Soul Bargain', desc: '+60% mana regen and -50% mana costs, but -4 max HP',
+    isCursed: true, color: '#cc3333',
+    apply: (p: Player) => { p.manaRegen *= 1.6; for (const s of p.cls.spells) s.mana *= 0.5; p.maxHp = Math.max(1, p.maxHp - 4); p.hp = Math.min(p.hp, p.maxHp); } },
 ];

@@ -9,7 +9,7 @@ import { sendMessage } from '../network';
 // ═══════════════════════════════════
 
 /** Generate 3 upgrade indices filtered by class and already-taken upgrades. */
-export function generateUpgradeIndices(clsKey: string, taken: Map<number, number>): number[] {
+export function generateUpgradeIndices(clsKey: string, taken: Map<number, number>, wave?: number): number[] {
   // Filter: skip other classes, skip already-taken non-stackable, handle evolutions
   const genericIndices: number[] = [];
   const classIndices: number[] = [];
@@ -18,6 +18,8 @@ export function generateUpgradeIndices(clsKey: string, taken: Map<number, number
     const up = UPGRADE_POOL[i];
     // Skip evolution upgrades in normal selection — they're injected below
     if (up.isEvolution) continue;
+    // Cursed upgrades handled separately
+    if (up.isCursed) continue;
     // Skip if already taken and not stackable
     if (taken.has(i) && !up.stackable) continue;
     // Skip if stackable but at max stacks
@@ -59,6 +61,21 @@ export function generateUpgradeIndices(clsKey: string, taken: Map<number, number
     if (!indices.includes(idx)) indices.push(idx);
   }
 
+  // Inject 1 cursed upgrade as extra choice from wave 16+
+  if (wave && wave >= 16) {
+    const cursedPool: number[] = [];
+    for (let i = 0; i < UPGRADE_POOL.length; i++) {
+      const up = UPGRADE_POOL[i];
+      if (!up.isCursed) continue;
+      if (taken.has(i) && !up.stackable) continue;
+      cursedPool.push(i);
+    }
+    if (cursedPool.length > 0) {
+      const pick = Math.floor(Math.random() * cursedPool.length);
+      indices.push(cursedPool[pick]);
+    }
+  }
+
   return indices;
 }
 
@@ -73,7 +90,7 @@ export function showUpgradeScreen(state: GameState): void {
   const localPlayer = state.players[state.localIdx];
   const clsKey = localPlayer?.clsKey || '';
   const taken = localPlayer?.takenUpgrades || new Map<number, number>();
-  const indices = generateUpgradeIndices(clsKey, taken);
+  const indices = generateUpgradeIndices(clsKey, taken, state.wave);
   state.pendingUpgradeChoices = indices;
 
   // Signal upgrade phase to guest (indices are host-specific; guest generates its own)
@@ -94,7 +111,7 @@ export function showUpgradeFromHost(state: GameState, _indices: number[]): void 
   const localPlayer = state.players[state.localIdx];
   const clsKey = localPlayer?.clsKey || '';
   const taken = localPlayer?.takenUpgrades || new Map<number, number>();
-  const guestIndices = generateUpgradeIndices(clsKey, taken);
+  const guestIndices = generateUpgradeIndices(clsKey, taken, state.wave);
   state.pendingUpgradeChoices = guestIndices;
   showUpgradeUI(state, guestIndices);
 }
@@ -116,13 +133,16 @@ function showUpgradeUI(state: GameState, indices: number[]): void {
     const nameColor = isEvo ? '#ffaa00' : up.color || (isClassSpecific ? '#ffcc44' : '#ddcc66');
     const classTag = isClassSpecific && !isEvo ? `<span style="font-size:8px;color:${up.color || '#888'};opacity:.7"> ★ CLASS</span>` : '';
     const evoTag = isEvo ? `<span style="font-size:8px;color:#ffaa00;opacity:.9"> ⚡ EVOLUTION</span>` : '';
+    const isCursed = !!up.isCursed;
+    const cursedTag = isCursed ? '<span style="font-size:8px;color:#cc3333;opacity:.9"> ☠ CURSED</span>' : '';
     const count = taken.get(idx) || 0;
     const stackInfo = up.stackable && up.maxStacks
       ? ` <span style="font-size:9px;color:#88aa66">${count}/${up.maxStacks}</span>`
       : up.stackable ? ` <span style="font-size:8px;color:#556644;opacity:.6"> ×${up.maxStacks || '∞'}</span>` : '';
-    card.innerHTML = `<div class="uname" style="color:${nameColor}">${up.name}${classTag}${evoTag}${stackInfo}</div><div class="udesc">${up.desc}</div>`;
+    card.innerHTML = `<div class="uname" style="color:${nameColor}">${up.name}${classTag}${evoTag}${cursedTag}${stackInfo}</div><div class="udesc">${up.desc}</div>`;
     if (isClassSpecific && !isEvo) card.style.borderColor = (up.color || '#ffcc44') + '44';
     if (isEvo) card.style.borderColor = '#ffaa0066';
+    if (isCursed) { card.style.borderColor = '#cc333388'; card.classList.add('cursed'); }
     card.onclick = () => {
       if (state.upgradePickedLocal) return;
       state.upgradePickedLocal = true;

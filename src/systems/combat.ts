@@ -439,6 +439,8 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
   if (p.clsKey === 'knight') reducedDmg = Math.ceil(reducedDmg * COMBAT.BULWARK_DMG_MULT);
   // Blood rage: take 2x damage
   if (p._rage > 0) reducedDmg = Math.ceil(reducedDmg * 2);
+  // Cursed: damage taken multiplier
+  if (p.damageTakenMul && p.damageTakenMul !== 1) reducedDmg = Math.ceil(reducedDmg * p.damageTakenMul);
   const dmg = Math.max(1, reducedDmg - (p.armor || 0));
 
   p.hp -= dmg;
@@ -599,6 +601,11 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     cd = cd / (1 + speedBonus);
   }
   p.cd[idx] = Math.max(CD_FLOORS[idx] ?? 0, cd);
+
+  // Cursed: self-damage chance
+  if (p.selfDmgChance && Math.random() < p.selfDmgChance) {
+    damagePlayer(state, p, 1);
+  }
 
   // ultEcho: double LMB damage for N casts after ultimate
   let echoDmgMul = 1;
