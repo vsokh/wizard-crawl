@@ -386,6 +386,15 @@ input[type=text]:focus {
   font-style: italic;
 }
 
+.cd-spell-preview {
+  width: 100%;
+  height: 36px;
+  border-radius: 3px;
+  margin-top: 4px;
+  display: block;
+  background: rgba(10, 7, 18, 0.85);
+}
+
 .class-grid {
   display: flex; gap: 8px; flex-wrap: wrap;
   justify-content: center; margin-bottom: 16px;

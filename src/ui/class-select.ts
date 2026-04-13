@@ -3,6 +3,7 @@ import { NetworkMode, SpellDefInput } from '../types';
 import { CLASSES, CLASS_ORDER } from '../constants';
 import { sendMessage } from '../network';
 import { getSynergy } from '../systems/synergy';
+import { startPreviews, stopPreviews } from './spell-preview';
 
 // ═══════════════════════════════════
 //       CLASS SELECTION SCREEN
@@ -153,6 +154,8 @@ function updateDetailPanel(state: GameState): void {
   const panel = document.getElementById('class-detail');
   if (!panel) return;
 
+  stopPreviews();
+
   const key = CLASS_ORDER[state.selectedClassIndex];
   const cls = CLASSES[key];
   if (!cls) { panel.innerHTML = ''; return; }
@@ -169,6 +172,7 @@ function updateDetailPanel(state: GameState): void {
       ${buildSpellStats(spell)}
       <div class="cd-spell-desc">${generateSpellDescription(spell)}</div>
       ${buildSpellEffects(spell)}
+      <canvas class="cd-spell-preview" width="250" height="36"></canvas>
     </div>`;
   }).join('');
 
@@ -198,6 +202,8 @@ function updateDetailPanel(state: GameState): void {
     `<div class="cd-divider"></div>` +
     `<div class="cd-section-label">Spells</div>` +
     spellCards;
+
+  startPreviews(cls.spells, cls.color, cls.glow);
 }
 
 export function showSelect(state: GameState): void {
