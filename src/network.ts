@@ -9,7 +9,7 @@ import {
   Enemy,
   PlayerInput,
 } from './types';
-import { UPGRADE_POOL, CLASSES } from './constants';
+import { UPGRADE_POOL, CLASSES, NET_SEND_INTERVAL, NET_SEND_INTERVAL_MAX } from './constants';
 import { initAudio } from './audio';
 import { showUpgradeFromHost, checkBothPicked, finishUpgrade } from './systems/upgrades';
 
@@ -54,6 +54,12 @@ function friendlyPeerError(type: string): string {
 let peer: Peer | null = null;
 let conn: DataConnection | null = null;
 let sendFailCount = 0;
+/** Current adaptive send interval — starts at base, adjusts with congestion */
+let adaptiveInterval = NET_SEND_INTERVAL;
+
+export function getAdaptiveInterval(): number {
+  return adaptiveInterval;
+}
 
 // Callbacks set by main.ts to break circular deps
 let onShowSelect: (() => void) | null = null;
@@ -77,9 +83,11 @@ export function sendMessage(state: GameState, msg: NetMessage): void {
   try {
     conn.send(msg);
     sendFailCount = 0;
+    adaptiveInterval = Math.max(NET_SEND_INTERVAL, adaptiveInterval * 0.9);
   } catch (e) {
     console.warn('sendMessage failed:', e);
     sendFailCount++;
+    adaptiveInterval = Math.min(NET_SEND_INTERVAL_MAX, adaptiveInterval * 1.5);
     if (sendFailCount >= 3) {
       const errorMsg = document.getElementById('error-msg');
       if (errorMsg) errorMsg.textContent = 'Connection unstable — messages failing to send';
@@ -309,9 +317,11 @@ export function sendState(state: GameState): void {
   try {
     conn.send(msg);
     sendFailCount = 0;
+    adaptiveInterval = Math.max(NET_SEND_INTERVAL, adaptiveInterval * 0.9);
   } catch (e) {
     console.warn('sendState failed:', e);
     sendFailCount++;
+    adaptiveInterval = Math.min(NET_SEND_INTERVAL_MAX, adaptiveInterval * 1.5);
     if (sendFailCount >= 3) {
       const errorMsg = document.getElementById('error-msg');
       if (errorMsg) errorMsg.textContent = 'Connection unstable — messages failing to send';
@@ -562,9 +572,11 @@ export function sendInput(state: GameState, input: {
   try {
     conn.send({ type: 'input', ...input });
     sendFailCount = 0;
+    adaptiveInterval = Math.max(NET_SEND_INTERVAL, adaptiveInterval * 0.9);
   } catch (e) {
     console.warn('sendInput failed:', e);
     sendFailCount++;
+    adaptiveInterval = Math.min(NET_SEND_INTERVAL_MAX, adaptiveInterval * 1.5);
     if (sendFailCount >= 3) {
       const errorMsg = document.getElementById('error-msg');
       if (errorMsg) errorMsg.textContent = 'Connection unstable — messages failing to send';

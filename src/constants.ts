@@ -30,6 +30,10 @@ export const DUNGEON_GRID_SIZE = 5;
 
 /** Network send interval in seconds */
 export const NET_SEND_INTERVAL = 0.05;
+/** Minimum network send interval (fastest rate during ideal conditions) */
+export const NET_SEND_INTERVAL_MIN = 0.033;
+/** Maximum network send interval (slowest rate during congestion) */
+export const NET_SEND_INTERVAL_MAX = 0.15;
 
 /** Countdown duration in seconds */
 export const COUNTDOWN_DURATION = 3;

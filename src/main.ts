@@ -14,7 +14,6 @@ import {
   ROOM_WIDTH,
   ROOM_HEIGHT,
   COUNTDOWN_DURATION,
-  NET_SEND_INTERVAL,
   MAX_WAVES,
   WAVE_PHYSICS,
   DEFAULT_LIVES,
@@ -25,7 +24,7 @@ import {
 import { sfx } from './audio';
 import { SfxName } from './types';
 import { setupInput, getInput } from './input';
-import { setNetworkCallbacks, sendState, sendInput } from './network';
+import { setNetworkCallbacks, sendState, sendInput, getAdaptiveInterval } from './network';
 import { setChestPickupHandler } from './systems/physics';
 import { updatePlayers } from './systems/physics';
 import { updateEnemies, updateEProj } from './systems/enemies';
@@ -229,7 +228,7 @@ function loop(now: number): void {
 
     state.netTimer -= dt;
     if (state.netTimer <= 0) {
-      state.netTimer = NET_SEND_INTERVAL;
+      state.netTimer = getAdaptiveInterval();
       sendState(state);
     }
   }
@@ -257,7 +256,7 @@ function loop(now: number): void {
     }
 
     // Interpolation speed: advance lerpT so we reach target in ~50ms (one net tick)
-    const lerpSpeed = 1 / NET_SEND_INTERVAL; // lerpT advances 0→1 over one tick interval
+    const lerpSpeed = 1 / getAdaptiveInterval(); // lerpT advances 0→1 over one tick interval
 
     // Interpolate all players except local (local uses prediction above)
     for (let i = 0; i < state.players.length; i++) {
