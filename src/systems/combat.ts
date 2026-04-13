@@ -30,6 +30,10 @@ import {
   RESPAWN_DELAY_MS,
   scaledHealthDropChance,
   goldDropBonus,
+  COMBAT,
+  TIMING,
+  ULTIMATE,
+  RANGES,
 } from '../constants';
 import { sfx } from '../audio';
 import { createFriendlyEnemy } from './dungeon';
@@ -48,7 +52,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
   // Chaos damage: random 1-4
   if (p && p.chaosDmg) dmg = 1 + Math.floor(Math.random() * 4);
   // Berserker fury: +50% dmg below half HP
-  if (p && p._furyActive) dmg = Math.ceil(dmg * 1.5);
+  if (p && p._furyActive) dmg = Math.ceil(dmg * COMBAT.FURY_DAMAGE_MULT);
   // Blood rage: 2x damage
   if (p && p._rageDmgMul > 1) dmg = Math.ceil(dmg * p._rageDmgMul);
   // Critical strike
@@ -59,28 +63,28 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
   // Momentum bonus
   if (p && p.momentum) {
     const spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-    dmg = Math.round(dmg * (1 + Math.min(0.2, spd / 1000)));
+    dmg = Math.round(dmg * (1 + Math.min(COMBAT.MOMENTUM_CAP, spd / COMBAT.MOMENTUM_DIVISOR)));
   }
 
   e.hp -= dmg;
   e.iframes = 0.1;
   e._hitFlash = 0.12;
-  spawnParticles(state, e.x, e.y, '#ff6644', 5, 0.5);
+  spawnParticles(state, e.x, e.y, '#ff6644', 5, TIMING.HIT_PARTICLE_SCALE);
   sfx(SfxName.Hit);
 
   // Ultimate charge (+5 per hit, +15 per kill)
   if (p) {
-    const hitChargeGain = Math.round(5 * (p.ultChargeRate || 1));
-    const chargeCap = p.ultOverflow ? 200 : 100;
+    const hitChargeGain = Math.round(COMBAT.ULT_CHARGE_HIT * (p.ultChargeRate || 1));
+    const chargeCap = p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD;
     p.ultCharge = Math.min(chargeCap, (p.ultCharge || 0) + hitChargeGain);
-    if (p.ultCharge >= (p.ultOverflow ? 200 : 100)) p.ultReady = true;
+    if (p.ultCharge >= (p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD)) p.ultReady = true;
   }
 
   // Passive: Stormcaller static (every 5th hit stuns)
   if (p && p.clsKey === 'stormcaller') {
     p.hitCounter = (p.hitCounter || 0) + 1;
     if (p.hitCounter % 5 === 0) {
-      e.stunTimer = (e.stunTimer || 0) + 0.5;
+      e.stunTimer = (e.stunTimer || 0) + COMBAT.COMBO_STUN_DURATION;
       spawnText(state, e.x, e.y - 15, 'STUN', '#ffcc44');
     }
   }
@@ -92,7 +96,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
   }
 
   // Passive: Arcanist echo (20% chance double cast)
-  if (p && p.clsKey === 'arcanist' && Math.random() < 0.2) {
+  if (p && p.clsKey === 'arcanist' && Math.random() < COMBAT.ARCANIST_ECHO_CHANCE) {
     castSpellSilent(state, p, 0, Math.atan2(e.y - p.y, e.x - p.x));
   }
 
@@ -115,7 +119,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
 
   if (e.hp <= 0) {
     // Start death animation instead of immediately removing
-    e._deathTimer = 0.4;
+    e._deathTimer = TIMING.DEATH_TIMER;
     state.totalKills++;
     const et = ENEMIES[e.type];
 
@@ -168,10 +172,10 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
     if (p) {
       p.killCount++;
       // Ultimate charge on kill
-      const killChargeGain = Math.round(15 * (p.ultChargeRate || 1));
-      const killChargeCap = p.ultOverflow ? 200 : 100;
+      const killChargeGain = Math.round(COMBAT.ULT_CHARGE_KILL * (p.ultChargeRate || 1));
+      const killChargeCap = p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD;
       p.ultCharge = Math.min(killChargeCap, (p.ultCharge || 0) + killChargeGain);
-      if (p.ultCharge >= (p.ultOverflow ? 200 : 100)) p.ultReady = true;
+      if (p.ultCharge >= (p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD)) p.ultReady = true;
 
       // Passive: Necro soul harvest
       if (p.clsKey === 'necromancer') {
@@ -206,7 +210,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
       if (p.forkOnKill) {
         const baseAngle = Math.random() * Math.PI * 2;
         for (let fi = 0; fi < 2; fi++) {
-          const fa = baseAngle + (fi === 0 ? -0.8 : 0.8);
+          const fa = baseAngle + (fi === 0 ? -COMBAT.SPLITTER_ANGLE : COMBAT.SPLITTER_ANGLE);
           const fDef = p.cls.spells[0];
           state.spells.push({
             ...spellToRuntime(fDef),
@@ -216,7 +220,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
             pierceLeft: 0,
             clsKey: p.clsKey,
             _reversed: false,
-            dmg: Math.max(1, Math.ceil(fDef.dmg * 0.5)),
+            dmg: Math.max(1, Math.ceil(fDef.dmg * COMBAT.SPLITTER_DMG_MULT)),
           });
         }
       }
@@ -229,7 +233,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
           slow: 0, tickRate: 4, tickTimer: 0, age: 0,
           drain: 0, heal: 0, pull: 0, freezeAfter: 0,
         });
-        spawnParticles(state, e.x, e.y, '#ff8844', 5, 0.3);
+        spawnParticles(state, e.x, e.y, '#ff8844', 5, TIMING.PARTICLE_LIFE_SHORT);
       }
     }
 
@@ -242,7 +246,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
           damagePlayer(state, pl, 2);
         }
       }
-      spawnParticles(state, e.x, e.y, '#ff8833', 25, 0.8);
+      spawnParticles(state, e.x, e.y, '#ff8833', 25, TIMING.PARTICLE_LIFE_LONG);
       spawnShockwave(state, e.x, e.y, explR, '#ff6622');
       shake(state, 4);
     }
@@ -267,7 +271,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
           alive: true,
           atkTimer: splitEt.atkCd * Math.random() + 0.5,
           target: Math.floor(Math.random() * 2),
-          iframes: 0.3,
+          iframes: TIMING.IFRAME_SPLIT,
           slowTimer: 0,
           stunTimer: 0,
           _burnTimer: 0,
@@ -296,7 +300,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
     if (et.boss) {
       shake(state, 10);
       spawnText(state, e.x, e.y - 20, 'BOSS SLAIN!', '#ffcc44');
-      flashScreen(state, 0.2, '255,220,100');
+      flashScreen(state, TIMING.FLASH_SCREEN_BOSS, '255,220,100');
     }
 
     // Chain hit: damage jumps to nearby enemy
@@ -306,10 +310,10 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
       for (const e2 of state.enemies) {
         if (!e2.alive || e2 === e) continue;
         const d = dist(e.x, e.y, e2.x, e2.y);
-        if (d < 120 && d < nd) { nd = d; nearest = e2; }
+        if (d < RANGES.CHAIN && d < nd) { nd = d; nearest = e2; }
       }
       if (nearest) {
-        damageEnemy(state, nearest, Math.max(1, Math.floor(p.chainFullDmg ? dmg : dmg * 0.5)), pIdx);
+        damageEnemy(state, nearest, Math.max(1, Math.floor(p.chainFullDmg ? dmg : dmg * COMBAT.CHAIN_DMG_MULT)), pIdx);
         state.beams.push({
           x: e.x, y: e.y,
           angle: Math.atan2(nearest.y - e.y, nearest.x - e.x),
@@ -354,7 +358,7 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
   if (state.shopShieldHits > 0) {
     state.shopShieldHits--;
     spawnText(state, p.x, p.y - 20, 'BLOCKED!', '#4488cc');
-    p.iframes = 0.3;
+    p.iframes = TIMING.IFRAME_BLOCK;
     return;
   }
 
@@ -366,14 +370,14 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
 
   let reducedDmg = rawDmg;
   // Knight bulwark: 25% less damage
-  if (p.clsKey === 'knight') reducedDmg = Math.ceil(reducedDmg * 0.75);
+  if (p.clsKey === 'knight') reducedDmg = Math.ceil(reducedDmg * COMBAT.BULWARK_DMG_MULT);
   // Blood rage: take 2x damage
   if (p._rage > 0) reducedDmg = Math.ceil(reducedDmg * 2);
   const dmg = Math.max(1, reducedDmg - (p.armor || 0));
 
   p.hp -= dmg;
-  p.iframes = 0.4;
-  p._animHitFlash = 0.3;
+  p.iframes = TIMING.IFRAME_DAMAGE;
+  p._animHitFlash = TIMING.HIT_FLASH;
   shake(state, 3);
   spawnParticles(state, p.x, p.y, '#ff4444', 8);
   sfx(SfxName.Hit);
@@ -382,7 +386,7 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
   // Thorns
   if (p.thorns && attacker && attacker.alive !== undefined) {
     attacker.hp -= p.thorns;
-    spawnParticles(state, attacker.x, attacker.y, '#aa88ff', 4, 0.3);
+    spawnParticles(state, attacker.x, attacker.y, '#aa88ff', 4, COMBAT.THORNS_PARTICLE_LIFE);
     if (attacker.hp <= 0) {
       attacker.alive = false;
       spawnParticles(state, attacker.x, attacker.y, ENEMIES[attacker.type].color, 12);
@@ -395,7 +399,7 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
     if (p.secondWind && p.secondWind > 0) {
       p.secondWind--;
       p.hp = Math.floor(p.maxHp / 2);
-      p.iframes = 1.5;
+      p.iframes = TIMING.IFRAME_RESPAWN;
       spawnParticles(state, p.x, p.y, '#ffcc44', 20);
       spawnText(state, p.x, p.y - 25, 'SECOND WIND', '#ffcc44');
       sfx(SfxName.Pickup);
@@ -408,7 +412,7 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
     spawnShockwave(state, p.x, p.y, 70, 'rgba(255,100,50,.5)');
     sfx(SfxName.Boom);
     shake(state, 10);
-    flashScreen(state, 0.3, '255,100,50');
+    flashScreen(state, TIMING.FLASH_SCREEN_ULT, '255,100,50');
 
     if (state.players.every(pl => !pl.alive)) {
       state.gamePhase = GamePhase.GameOver;
@@ -499,7 +503,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
   p.mana -= def.mana;
   // Warlock Dark Pact: refund 30% mana cost but pay HP instead
   if (p.clsKey === 'warlock' && def.mana > 0) {
-    const refund = Math.floor(def.mana * 0.3);
+    const refund = Math.floor(def.mana * COMBAT.WARLOCK_MANA_REFUND);
     p.mana += refund;
     p.hp -= 1;
     if (p.hp <= 0) p.hp = 1; // don't let Dark Pact kill you
@@ -522,7 +526,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       for (let i = 0; i < 3; i++) {
         const ox = rand(-40, 40);
         const oy = rand(-40, 40);
-        const meteorDelay = 0.5 + i * 0.25;
+        const meteorDelay = TIMING.ZONE_TICK + i * TIMING.METEOR_DELAY_STEP;
         state.aoeMarkers.push({
           x: wp.x + ox, y: wp.y + oy, radius: 50, delay: meteorDelay,
           dmg: 2, color: '#ff2200', owner: p.idx, stun: 0, age: 0,
@@ -532,7 +536,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
           state.zones.push({
             x: wp.x + ox, y: wp.y + oy, radius: 35, duration: 2,
             dmg: 1, color: '#ff4400', owner: p.idx,
-            slow: 0, tickRate: 0.5, tickTimer: 0, age: 0,
+            slow: 0, tickRate: TIMING.ZONE_TICK, tickTimer: 0, age: 0,
             drain: 0, heal: 0, pull: 0, freezeAfter: 0,
           });
         }, meteorDelay * 1000);
@@ -562,18 +566,18 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
           if (!nearest) break;
           hitEnemies.push(nearest);
           damageEnemy(state, nearest, 2, p.idx);
-          nearest.stunTimer = (nearest.stunTimer || 0) + 0.5;
+          nearest.stunTimer = (nearest.stunTimer || 0) + TIMING.STUN_DURATION;
           state.beams.push({
             x: lastX, y: lastY,
             angle: Math.atan2(nearest.y - lastY, nearest.x - lastX),
-            range: nd, width: 3, color: '#ffcc44', life: 0.25,
+            range: nd, width: 3, color: '#ffcc44', life: TIMING.BEAM_LIFE,
           });
-          spawnParticles(state, nearest.x, nearest.y, '#ffcc44', 5, 0.3);
+          spawnParticles(state, nearest.x, nearest.y, '#ffcc44', 5, TIMING.PARTICLE_LIFE_SHORT);
           lastX = nearest.x;
           lastY = nearest.y;
         }
         if (hitEnemies.length > 0) sfx(SfxName.Zap);
-      }, (def.delay || 0.5) * 1000);
+      }, (def.delay || TIMING.SPELL_DEFAULT_DELAY) * 1000);
       sfx(SfxName.Arcane);
       return;
     }
@@ -584,7 +588,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
         x: wp.x, y: wp.y, radius: def.radius, duration: def.duration,
         dmg: def.dmg, color: def.color, owner: p.idx,
         slow: 0.95, tickRate: def.tickRate, tickTimer: 0, age: 0,
-        drain: 0, heal: 0, pull: 0, freezeAfter: 1.5,
+        drain: 0, heal: 0, pull: 0, freezeAfter: TIMING.FREEZE_DURATION,
       });
       sfx(SfxName.Ice);
       return;
@@ -642,7 +646,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       spawnText(state, p.x, p.y - 20, '+3 HP', '#88ff88');
       // Knockback all enemies in range
       const knockR = 80;
-      const knockForce = 300;
+      const knockForce = COMBAT.KNOCKBACK_FORCE;
       for (const e of state.enemies) {
         if (!e.alive) continue;
         const d = dist(p.x, p.y, e.x, e.y);
@@ -907,14 +911,14 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
   p.ultReady = false;
   sfx(SfxName.Boom);
   shake(state, 12);
-  flashScreen(state, 0.3);
-  spawnParticles(state, p.x, p.y, p.cls.color, 30, 1.5);
-  spawnShockwave(state, p.x, p.y, 120, p.cls.color);
+  flashScreen(state, TIMING.FLASH_SCREEN);
+  spawnParticles(state, p.x, p.y, p.cls.color, 30, TIMING.SPAWN_PARTICLE_SCALE);
+  spawnShockwave(state, p.x, p.y, ULTIMATE.SHOCKWAVE_RADIUS, p.cls.color);
   spawnText(state, p.x, p.y - 35, 'ULTIMATE!', p.cls.color);
 
   // ultHeal: heal 50% max HP on cast
   if (p.ultHeal) {
-    p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * 0.5));
+    p.hp = Math.min(p.maxHp, p.hp + Math.round(p.maxHp * ULTIMATE.HEAL_FRACTION));
     spawnText(state, p.x, p.y - 25, '+50% HP', '#88ff88');
   }
 
@@ -927,7 +931,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
       const my = rand(60, ROOM_HEIGHT - 60);
       setTimeout(() => {
         state.aoeMarkers.push({
-          x: mx, y: my, radius: 80, delay: 0.3, dmg: Math.round(5 * pw), color: '#ff2200',
+          x: mx, y: my, radius: 80, delay: ULTIMATE.METEOR_DELAY, dmg: Math.round(5 * pw), color: '#ff2200',
           owner: p.idx, stun: 0, age: 0,
         });
         sfx(SfxName.Fire);
@@ -936,10 +940,10 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
           state.zones.push({
             x: mx, y: my, radius: 40, duration: 3,
             dmg: 1, color: '#ff4400', owner: p.idx,
-            slow: 0, tickRate: 0.5, tickTimer: 0, age: 0,
+            slow: 0, tickRate: ULTIMATE.BURN_ZONE_TICK, tickTimer: 0, age: 0,
             drain: 0, heal: 0, pull: 0, freezeAfter: 0,
           });
-        }, 300);
+        }, ULTIMATE.BURN_ZONE_LINGER);
       }, i * 200);
     }
   } else if (p.clsKey === 'cryomancer') {
@@ -968,22 +972,22 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
         hitSet.add(current);
       }
       // Chain to 7 more targets
-      for (let i = 0; i < 7 && current; i++) {
+      for (let i = 0; i < ULTIMATE.CHAIN_TARGETS && current; i++) {
         let next: Enemy | null = null;
         let nextD = Infinity;
-        // Try to find an un-hit enemy within 200px
+        // Try to find an un-hit enemy within range
         for (const e of alive) {
           if (!e.alive) continue;
           if (hitSet.has(e)) continue;
           const d = dist(current.x, current.y, e.x, e.y);
-          if (d < 200 && d < nextD) { nextD = d; next = e; }
+          if (d < ULTIMATE.CHAIN_RANGE && d < nextD) { nextD = d; next = e; }
         }
         // If no un-hit enemies, wrap around to already-hit ones
         if (!next) {
           for (const e of alive) {
             if (!e.alive || e === current) continue;
             const d = dist(current.x, current.y, e.x, e.y);
-            if (d < 200 && d < nextD) { nextD = d; next = e; }
+            if (d < ULTIMATE.CHAIN_RANGE && d < nextD) { nextD = d; next = e; }
           }
         }
         if (next) {
@@ -995,7 +999,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
         }
       }
       // Apply damage and draw beams between chain targets
-      const chainDmg = Math.round(3 * pw);
+      const chainDmg = Math.round(ULTIMATE.CHAIN_DMG_MULT * pw);
       // Draw beam from player to first target
       if (chainTargets.length > 0) {
         const first = chainTargets[0];
@@ -1003,7 +1007,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
           x: p.x, y: p.y,
           angle: Math.atan2(first.y - p.y, first.x - p.x),
           range: dist(p.x, p.y, first.x, first.y),
-          width: 4, color: '#ffcc44', life: 0.3,
+          width: 4, color: '#ffcc44', life: ULTIMATE.CHAIN_BEAM_LIFE,
         });
       }
       for (let i = 0; i < chainTargets.length; i++) {
@@ -1012,7 +1016,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
           setTimeout(() => {
             if (t.alive) {
               damageEnemy(state, t, chainDmg, p.idx);
-              spawnParticles(state, t.x, t.y, '#ffcc44', 6, 0.4);
+              spawnParticles(state, t.x, t.y, '#ffcc44', 6, ULTIMATE.CHAIN_PARTICLE_SCALE);
               sfx(SfxName.Zap);
               shake(state, 2);
             }
@@ -1023,10 +1027,10 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
                 x: t.x, y: t.y,
                 angle: Math.atan2(next.y - t.y, next.x - t.x),
                 range: dist(t.x, t.y, next.x, next.y),
-                width: 4, color: '#ffcc44', life: 0.3,
+                width: 4, color: '#ffcc44', life: ULTIMATE.CHAIN_BEAM_LIFE,
               });
             }
-          }, idx * 80);
+          }, idx * ULTIMATE.CHAIN_DELAY_STEP);
         })(i, target);
       }
     }
@@ -1036,8 +1040,8 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
       const sa = p.angle + (i / 20) * Math.PI * 4;
       setTimeout(() => {
         state.spells.push({
-          type: SpellType.Homing, dmg: Math.round(2 * pw), speed: 250, radius: 6, life: 2.5,
-          homing: 3, color: '#ff55aa', trail: '#dd3388',
+          type: SpellType.Homing, dmg: Math.round(2 * pw), speed: 250, radius: 6, life: ULTIMATE.HOMING_MISSILE_LIFE,
+          homing: ULTIMATE.HOMING_FACTOR, color: '#ff55aa', trail: '#dd3388',
           x: p.x + Math.cos(sa) * 20, y: p.y + Math.sin(sa) * 20,
           vx: Math.cos(sa) * 200, vy: Math.sin(sa) * 200,
           owner: p.idx, age: 0, zapTimer: 0, pierceLeft: 0,
@@ -1045,7 +1049,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
           stun: 0, clsKey: p.clsKey, _reversed: false, _bounces: 0,
         });
         sfx(SfxName.Arcane);
-      }, i * 50);
+      }, i * ULTIMATE.ARCANE_STORM_TIMEOUT);
     }
   } else if (p.clsKey === 'necromancer') {
     // Army of Dead: summon 6 friendly skeletons
@@ -1058,31 +1062,31 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
     }
   } else if (p.clsKey === 'chronomancer') {
     // Time Stop: freeze all enemies for 3s, player moves at 1.5x speed
-    const freezeDur = 3 * pw;
+    const freezeDur = ULTIMATE.TIME_STOP_DURATION * pw;
     for (const e of state.enemies) {
       if (!e.alive) continue;
       e.stunTimer = (e.stunTimer || 0) + freezeDur;
     }
-    p.moveSpeed *= 1.5;
+    p.moveSpeed *= ULTIMATE.TIME_STOP_SPEED_MULT;
     p._timeStopTimer = freezeDur;
     spawnShockwave(state, p.x, p.y, ROOM_WIDTH, 'rgba(255,200,60,.2)');
   } else if (p.clsKey === 'knight') {
     // Shield Wall: become invulnerable for 3s + reflect all damage
-    const shieldDur = 3 * pw;
+    const shieldDur = ULTIMATE.TIME_STOP_DURATION * pw;
     p.iframes = shieldDur;
     p._shieldWall = shieldDur;
     spawnShockwave(state, p.x, p.y, 80, 'rgba(200,200,255,.4)');
   } else if (p.clsKey === 'berserker') {
     // Blood Rage: 2x damage, 2x speed, take 2x damage for 5s
-    const rageDur = 5 * pw;
+    const rageDur = ULTIMATE.BLOOD_RAGE_DURATION * pw;
     p._rage = rageDur;
-    p._rageDmgMul = 2;
+    p._rageDmgMul = ULTIMATE.BLOOD_RAGE_DMG_MULT;
     spawnParticles(state, p.x, p.y, '#ff3333', 25, 1.2);
   } else if (p.clsKey === 'paladin') {
     // Holy Light: heal both players for 75% max HP + damage all enemies for 3
     for (const pl of state.players) {
       if (pl.alive) {
-        pl.hp = Math.min(pl.maxHp, pl.hp + Math.round(pl.maxHp * 0.75));
+        pl.hp = Math.min(pl.maxHp, pl.hp + Math.round(pl.maxHp * ULTIMATE.PALADIN_HEAL_FRACTION));
         spawnParticles(state, pl.x, pl.y, '#ffffaa', 15);
         spawnText(state, pl.x, pl.y - 20, 'HEAL 75%', '#ffffaa');
       }
@@ -1096,19 +1100,19 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
     // Volley: fire 20 arrows in a spread cone in the aimed direction
     const cos0 = Math.cos(angle);
     const sin0 = Math.sin(angle);
-    const spreadHalf = 0.4;
+    const spreadHalf = ULTIMATE.RANGER_SPREAD_BASE;
     for (let i = 0; i < 20; i++) {
-      const aOff = -spreadHalf + (spreadHalf * 2) * (i / 19) + rand(-0.05, 0.05);
+      const aOff = -spreadHalf + (spreadHalf * 2) * (i / 19) + rand(-ULTIMATE.RANGER_SPREAD_STEP, ULTIMATE.RANGER_SPREAD_STEP);
       const sa = angle + aOff;
       const aCos = Math.cos(sa);
       const aSin = Math.sin(sa);
       setTimeout(() => {
         state.spells.push({
-          type: SpellType.Projectile, dmg: Math.round(2 * pw), speed: 400, radius: 5, life: 1.0,
+          type: SpellType.Projectile, dmg: Math.round(2 * pw), speed: 400, radius: 5, life: ULTIMATE.RANGER_ARROW_LIFE,
           color: '#88cc44', trail: '#668833',
           x: p.x + cos0 * WIZARD_SIZE, y: p.y + sin0 * WIZARD_SIZE,
           vx: aCos * 400, vy: aSin * 400,
-          owner: p.idx, age: 0, zapTimer: 0, pierceLeft: 2,
+          owner: p.idx, age: 0, zapTimer: 0, pierceLeft: ULTIMATE.RANGER_ARROW_PIERCE,
           homing: 0, zap: 0, zapRate: 0, slow: 0, drain: 0, explode: 0, burn: 0,
           stun: 0, clsKey: p.clsKey, _reversed: false, _bounces: 0,
         });
@@ -1125,20 +1129,20 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
       state.zones.push({
         x: zx, y: zy, radius: 40, duration: 4,
         dmg: Math.round(2 * pw), color: '#66aa44', owner: p.idx,
-        slow: 0.5, tickRate: 0.5, tickTimer: 0, age: 0,
+        slow: ULTIMATE.DRUID_ZONE_SLOW, tickRate: ULTIMATE.DRUID_ZONE_TICK, tickTimer: 0, age: 0,
         drain: 0, heal: 0, pull: 0, freezeAfter: 0,
       });
-      spawnParticles(state, zx, zy, '#88aa66', 6, 0.5);
+      spawnParticles(state, zx, zy, '#88aa66', 6, TIMING.PARTICLE_LIFE_MEDIUM);
     }
     // Summon 2 treant allies
     for (let i = 0; i < 2; i++) {
-      const ta = angle + (i === 0 ? -0.5 : 0.5);
+      const ta = angle + (i === 0 ? -ULTIMATE.DRUID_TREANT_ANGLE : ULTIMATE.DRUID_TREANT_ANGLE);
       const tx = p.x + Math.cos(ta) * 50;
       const ty = p.y + Math.sin(ta) * 50;
       const treant = createFriendlyEnemy(tx, ty, p.idx);
       treant.hp = 8;
       treant.maxHp = 8;
-      treant._lifespan = 10;
+      treant._lifespan = ULTIMATE.DRUID_TREANT_LIFE;
       state.enemies.push(treant);
       spawnParticles(state, tx, ty, '#88aa66', 10);
     }
@@ -1153,7 +1157,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
     setTimeout(() => {
       for (const e of marked) {
         if (!e.alive) continue;
-        const doomDmg = Math.max(1, Math.ceil(e.maxHp * 0.35 * pw));
+        const doomDmg = Math.max(1, Math.ceil(e.maxHp * ULTIMATE.DOOM_DMG_FRACTION * pw));
         damageEnemy(state, e, doomDmg, pIdx);
         spawnParticles(state, e.x, e.y, '#662288', 10);
       }
@@ -1162,7 +1166,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
     }, 3000);
   } else if (p.clsKey === 'monk') {
     // Thousand Fists: 20 rapid melee hits in a cone with knockback
-    p.iframes = 0.8;
+    p.iframes = TIMING.IFRAME_MONK_ULT;
     const monkDmg = Math.round(1 * pw);
     for (let i = 0; i < 20; i++) {
       setTimeout(() => {
@@ -1172,14 +1176,14 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
           if (d > 60) continue;
           const a2 = Math.atan2(e.y - p.y, e.x - p.x);
           const diff = Math.abs(((a2 - angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
-          if (diff <= 0.8) {
+          if (diff <= ULTIMATE.MONK_CONE_ANGLE) {
             damageEnemy(state, e, monkDmg, p.idx);
             // Knockback: push enemy away from player
             if (d > 0) {
               const nx = (e.x - p.x) / d;
               const ny = (e.y - p.y) / d;
-              e.vx = nx * 30;
-              e.vy = ny * 30;
+              e.vx = nx * ULTIMATE.MONK_KNOCKBACK;
+              e.vy = ny * ULTIMATE.MONK_KNOCKBACK;
             }
           }
         }
@@ -1193,12 +1197,12 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
     turret.type = '_ally';
     turret.hp = 20;
     turret.maxHp = 20;
-    turret._lifespan = 12;
+    turret._lifespan = ULTIMATE.TURRET_LIFE;
     state.enemies.push(turret);
     spawnParticles(state, turret.x, turret.y, '#dd8833', 15);
     // Also create a high-damage zone around the turret
     state.zones.push({
-      x: turret.x, y: turret.y, radius: 100, duration: 12,
+      x: turret.x, y: turret.y, radius: ULTIMATE.TURRET_RADIUS, duration: ULTIMATE.TURRET_LIFE,
       dmg: Math.round(3 * pw), color: '#dd8833', owner: p.idx,
       slow: 0, tickRate: 0.7, tickTimer: 0, age: 0,
       drain: 0, heal: 0, pull: 0, freezeAfter: 0,

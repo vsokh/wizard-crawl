@@ -1,5 +1,5 @@
 import { GameState, dist, rand, wrapAngle, spawnParticles, spawnShockwave, spawnText, shake, flashScreen } from '../state';
-import { ENEMIES, ROOM_WIDTH, ROOM_HEIGHT, WALL_THICKNESS } from '../constants';
+import { ENEMIES, ROOM_WIDTH, ROOM_HEIGHT, WALL_THICKNESS, WAVE_PHYSICS, TIMING, RANGES } from '../constants';
 import { SfxName } from '../types';
 import { sfx } from '../audio';
 import { damageEnemy } from './combat';
@@ -34,7 +34,7 @@ export function updateSpells(state: GameState, dt: number): void {
     }
 
     // Boomerang: reverse projectile at half lifetime
-    if (!s._reversed && state.players[s.owner]?.boomerang && s.age > s.life * 0.5) {
+    if (!s._reversed && state.players[s.owner]?.boomerang && s.age > s.life * WAVE_PHYSICS.BOOMERANG_RETURN) {
       s.vx = -s.vx;
       s.vy = -s.vy;
       s._reversed = true;
@@ -49,7 +49,7 @@ export function updateSpells(state: GameState, dt: number): void {
     const wR = ROOM_WIDTH - WALL_THICKNESS;
     const wT = WALL_THICKNESS;
     const wB = ROOM_HEIGHT - WALL_THICKNESS;
-    const maxBounces = 3 + (state.players[s.owner]?.ricochet || 0);
+    const maxBounces = WAVE_PHYSICS.MAX_BOUNCES + (state.players[s.owner]?.ricochet || 0);
     if (s._bounces < maxBounces) {
       if (s.x < wL)  { s.x = wL + (wL - s.x);  s.vx = Math.abs(s.vx);  s._bounces++; }
       if (s.x > wR)  { s.x = wR - (s.x - wR);  s.vx = -Math.abs(s.vx); s._bounces++; }
@@ -71,8 +71,8 @@ export function updateSpells(state: GameState, dt: number): void {
     }
 
     // Trail particles
-    if (s.trail && Math.random() > 0.3) {
-      state.trails.push({ x: s.x + rand(-3, 3), y: s.y + rand(-3, 3), life: 1, r: s.radius * 0.5, color: s.trail });
+    if (s.trail && Math.random() > WAVE_PHYSICS.TRAIL_CHANCE) {
+      state.trails.push({ x: s.x + rand(-3, 3), y: s.y + rand(-3, 3), life: 1, r: s.radius * WAVE_PHYSICS.TRAIL_PARTICLE_SCALE, color: s.trail });
     }
 
     // Zap aura (Ball Zap)
@@ -100,7 +100,7 @@ export function updateSpells(state: GameState, dt: number): void {
         if (firstTarget && chainCount > 0) {
           const zapped = new Set([firstTarget]);
           let prev = firstTarget;
-          const chainRange = 120;
+          const chainRange = WAVE_PHYSICS.CHAIN_RANGE;
           for (let i = 0; i < chainCount; i++) {
             let nearest: typeof state.enemies[0] | null = null;
             let nearestDist = Infinity;
@@ -146,7 +146,7 @@ export function updateSpells(state: GameState, dt: number): void {
         damageEnemy(state, e, s.dmg, s.owner);
         if (s.slow) e.slowTimer = (e.slowTimer || 0) + s.slow;
         if (s.stun) e.stunTimer = (e.stunTimer || 0) + s.stun;
-        if (state.players[s.owner]?.frozenTouch && Math.random() < 0.25) {
+        if (state.players[s.owner]?.frozenTouch && Math.random() < WAVE_PHYSICS.FROZEN_TOUCH_CHANCE) {
           e.stunTimer = (e.stunTimer || 0) + 1;
           spawnText(state, e.x, e.y - 15, 'FREEZE', '#88ddff');
         }
@@ -165,7 +165,7 @@ export function updateSpells(state: GameState, dt: number): void {
 
     if (hitP || hitE || s.age > s.life || s.x < -30 || s.x > ROOM_WIDTH + 30 || s.y < -30 || s.y > ROOM_HEIGHT + 30) {
       if ((hitP || hitE) && s.explode) {
-        spawnParticles(state, s.x, s.y, s.color, 15, 0.8);
+        spawnParticles(state, s.x, s.y, s.color, 15, TIMING.PARTICLE_LIFE_LONG);
         spawnShockwave(state, s.x, s.y, s.explode, s.color);
         sfx(SfxName.Boom);
         shake(state, 3);
@@ -184,7 +184,7 @@ export function updateSpells(state: GameState, dt: number): void {
               life: 1, r: 1 + Math.random() * 2, color: '#ff8833',
             });
           }
-          spawnShockwave(state, s.x, s.y, s.explode * 0.7, '#ff8833');
+          spawnShockwave(state, s.x, s.y, s.explode * WAVE_PHYSICS.EXPLOSION_SHOCKWAVE_SCALE, '#ff8833');
         } else if (c.includes('22cc') || c.includes('88cc') || c.includes('44aa')) {
           // Ice: extra large particles + brief screen flash
           spawnParticles(state, s.x, s.y, s.color, 8, 1.2);
@@ -211,10 +211,10 @@ export function updateSpells(state: GameState, dt: number): void {
               y: s.y + Math.sin(a) * d,
               vx: -Math.cos(a) * 60,
               vy: -Math.sin(a) * 60,
-              life: 1, r: 1.5 + Math.random() * 2, color: s.color,
+              life: 1, r: WAVE_PHYSICS.EXPLOSION_PARTICLE_SCALE + Math.random() * 2, color: s.color,
             });
           }
-          spawnShockwave(state, s.x, s.y, s.explode * 0.8, '#6622aa');
+          spawnShockwave(state, s.x, s.y, s.explode * WAVE_PHYSICS.MAGIC_EXPLOSION_SHOCKWAVE, '#6622aa');
         }
 
         for (const e of state.enemies) {
@@ -224,11 +224,11 @@ export function updateSpells(state: GameState, dt: number): void {
           }
         }
       } else if (hitP || hitE) {
-        spawnParticles(state, s.x, s.y, s.color, 6, 0.3);
+        spawnParticles(state, s.x, s.y, s.color, 6, WAVE_PHYSICS.HIT_PARTICLE_LIFE);
         shake(state, 1);
       } else if (!hitP && !hitE && state.players[s.owner]?.volatile) {
         // Volatile: explode on expiry
-        spawnParticles(state, s.x, s.y, s.color, 12, 0.6);
+        spawnParticles(state, s.x, s.y, s.color, 12, WAVE_PHYSICS.ZONE_HIT_PARTICLE_LIFE);
         spawnShockwave(state, s.x, s.y, 40, s.color);
         for (const e of state.enemies) {
           if (!e.alive) continue;

@@ -1,6 +1,6 @@
 import { GameState, dist, clamp, rand, spawnParticles, spawnShockwave, shake } from '../state';
 import { EnemyAI, SfxName, PickupType } from '../types';
-import { ENEMIES, ROOM_WIDTH, ROOM_HEIGHT, WIZARD_SIZE, WALL_THICKNESS } from '../constants';
+import { ENEMIES, ROOM_WIDTH, ROOM_HEIGHT, WIZARD_SIZE, WALL_THICKNESS, TIMING, ENEMY_AI } from '../constants';
 import { sfx } from '../audio';
 import { damageEnemy, damagePlayer } from './combat';
 
@@ -49,7 +49,7 @@ export function updateEnemies(state: GameState, dt: number): void {
         e.y += (dy / dd) * 80 * dt;
         e.atkTimer -= dt;
         if (e.atkTimer <= 0 && dd < 25) {
-          e.atkTimer = 0.8;
+          e.atkTimer = TIMING.ANIM_ATTACK;
           damageEnemy(state, nt, 2, e._owner);
         }
       }
@@ -66,12 +66,12 @@ export function updateEnemies(state: GameState, dt: number): void {
       e._burnTimer -= dt;
       e._burnTick = (e._burnTick || 0) - dt;
       if (e._burnTick <= 0) {
-        e._burnTick = 0.5;
+        e._burnTick = TIMING.BURN_TICK;
         damageEnemy(state, e, 1, e._burnOwner || 0);
       }
     }
 
-    const slow = e.slowTimer > 0 ? 0.4 : 1;
+    const slow = e.slowTimer > 0 ? ENEMY_AI.SLOW_MULT : 1;
     const spdMul = e._spdMul || 1;
 
     // Target selection
@@ -112,18 +112,18 @@ export function updateEnemies(state: GameState, dt: number): void {
     const d = Math.max(1, Math.sqrt(dx * dx + dy * dy));
 
     // Movement AI
-    const enrageMul = et.enrage ? 1 + (1 - e.hp / e.maxHp) * 1.5 : 1;
+    const enrageMul = et.enrage ? 1 + (1 - e.hp / e.maxHp) * ENEMY_AI.ENRAGE_MULT : 1;
     const spd = et.speed * spdMul * slow * enrageMul;
     if (et.ai === EnemyAI.Chase) {
-      if (d > et.atkR * 0.8) {
+      if (d > et.atkR * ENEMY_AI.KITING_SLOW) {
         e.vx = (dx / d) * spd;
         e.vy = (dy / d) * spd;
       } else {
-        e.vx *= 0.8;
-        e.vy *= 0.8;
+        e.vx *= ENEMY_AI.KITING_SLOW;
+        e.vy *= ENEMY_AI.KITING_SLOW;
       }
     } else if (et.ai === EnemyAI.Ranged) {
-      if (d > et.atkR * 0.6) {
+      if (d > et.atkR * ENEMY_AI.BACK_AWAY_SLOW) {
         e.vx = (dx / d) * spd;
         e.vy = (dy / d) * spd;
       } else if (d < et.atkR * 0.3) {
@@ -157,7 +157,7 @@ export function updateEnemies(state: GameState, dt: number): void {
     e.atkTimer -= dt;
     if (e.atkTimer <= 0 && d < et.atkR) {
       e.atkTimer = et.atkCd;
-      e._atkAnim = 0.2;
+      e._atkAnim = TIMING.ANIM_ATTACK_WIND;
       if (et.ai === EnemyAI.Chase) {
         if (target.iframes <= 0) damagePlayer(state, target, Math.ceil(et.dmg * (e._dmgMul || 1)), e);
       } else if (et.projSpd) {
@@ -213,8 +213,8 @@ export function updateEProj(state: GameState, dt: number): void {
       if (p.y > wB)  { p.y = wB - (p.y - wB);  p.vy = -Math.abs(p.vy); p._bounces++; }
     }
 
-    if (Math.random() > 0.5) {
-      state.trails.push({ x: p.x, y: p.y, life: 0.5, r: 2, color: p.color });
+    if (Math.random() > ENEMY_AI.TRAIL_SPAWN_CHANCE) {
+      state.trails.push({ x: p.x, y: p.y, life: ENEMY_AI.TRAIL_SPAWN_CHANCE, r: 2, color: p.color });
     }
 
     let hit = false;

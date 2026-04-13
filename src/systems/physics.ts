@@ -8,6 +8,11 @@ import {
   getXpStep,
   healthPickupAmount,
   HP_LEVEL_INTERVAL,
+  COMBAT,
+  TIMING,
+  RANGES,
+  WAVE_PHYSICS,
+  DUNGEON_TIMING,
 } from '../constants';
 import { Enemy, PickupType, SfxName } from '../types';
 import { sfx } from '../audio';
@@ -28,7 +33,7 @@ export function updatePlayers(state: GameState, dt: number): void {
     if (!p.alive) continue;
     const input = getInput(state, p.idx);
     if (p.stunTimer > 0) { p.stunTimer -= dt; continue; }
-    const slow = p.slowTimer > 0 ? 0.5 : 1;
+    const slow = p.slowTimer > 0 ? WAVE_PHYSICS.SLOW_MOVE_MULT : 1;
     if (p.slowTimer > 0) p.slowTimer -= dt;
 
     // Aim follows mouse instantly
@@ -75,13 +80,13 @@ export function updatePlayers(state: GameState, dt: number): void {
     // Storm Shield: lightning strikes random nearby enemy every 1s
     if (p.stormShield) {
       p._stormTimer = (p._stormTimer || 0) + dt;
-      if (p._stormTimer >= 1.0) {
+      if (p._stormTimer >= TIMING.STORM_SHIELD_TIME) {
         p._stormTimer = 0;
-        // Find all enemies within 120px
+        // Find all enemies within range
         const nearby: Enemy[] = [];
         for (const e of state.enemies) {
           if (!e.alive) continue;
-          if (dist(p.x, p.y, e.x, e.y) <= 120) nearby.push(e);
+          if (dist(p.x, p.y, e.x, e.y) <= RANGES.STORM_SHIELD) nearby.push(e);
         }
         if (nearby.length > 0) {
           const target = nearby[Math.floor(Math.random() * nearby.length)];
@@ -101,7 +106,7 @@ export function updatePlayers(state: GameState, dt: number): void {
 
     // Rewind snapshot (save every 3s)
     p._snapTimer = (p._snapTimer || 0) + dt;
-    if (p._snapTimer >= 3) {
+    if (p._snapTimer >= DUNGEON_TIMING.REWIND_SNAPSHOT_INTERVAL) {
       p._snapTimer = 0;
       p._rewindSnap = { hp: p.hp, mana: p.mana };
     }
@@ -112,11 +117,11 @@ export function updatePlayers(state: GameState, dt: number): void {
     // Primary (LMB)
     if (input.shoot && p.cd[0] <= 0 && p.mana >= sd[0].mana) {
       castSpell(state, p, 0, input.angle);
-      p._animCastFlash = 0.25;
+      p._animCastFlash = TIMING.ANIM_CAST;
       // Split shot: extra bolts at angles
       if (p.splitShot) {
         for (let ss = 1; ss <= p.splitShot; ss++) {
-          const off = Math.ceil(ss / 2) * 0.26 * (ss % 2 === 0 ? 1 : -1);
+          const off = Math.ceil(ss / 2) * WAVE_PHYSICS.SPLIT_SHOT_ANGLE * (ss % 2 === 0 ? 1 : -1);
           castSpellSilent(state, p, 0, input.angle + off);
         }
       }
@@ -131,24 +136,24 @@ export function updatePlayers(state: GameState, dt: number): void {
     // Secondary (RMB)
     if (input.shoot2 && p.cd[1] <= 0 && p.mana >= sd[1].mana) {
       castSpell(state, p, 1, input.angle);
-      p._animCastFlash = 0.25;
+      p._animCastFlash = TIMING.ANIM_CAST;
     }
 
     // Ability (Q) - only trigger once per press
     if (input.ability && p.cd[2] <= 0 && p.mana >= sd[2].mana && !state.keys[`_q${p.idx}`]) {
       state.keys[`_q${p.idx}`] = true;
       castSpell(state, p, 2, input.angle);
-      p._animCastFlash = 0.25;
+      p._animCastFlash = TIMING.ANIM_CAST;
     }
     if (!input.ability) state.keys[`_q${p.idx}`] = false;
 
     // Ultimate (R) - needs full charge
-    const ultThreshold = p.ultOverflow ? 200 : 100;
+    const ultThreshold = p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD;
     if (input.ult && p.ultCharge >= ultThreshold && !state.keys[`_r${p.idx}`]) {
       state.keys[`_r${p.idx}`] = true;
-      const wasOverflowed = p.ultOverflow && p.ultCharge >= 200;
+      const wasOverflowed = p.ultOverflow && p.ultCharge >= COMBAT.ULT_THRESHOLD_OVERFLOW;
       castUltimate(state, p, input.angle);
-      p._animCastFlash = 0.25;
+      p._animCastFlash = TIMING.ANIM_CAST;
       if (wasOverflowed) {
         // Overflow: cast a second time
         castUltimate(state, p, input.angle);
@@ -186,16 +191,16 @@ export function updatePlayers(state: GameState, dt: number): void {
 
     // Monk: Inner Peace - 20% dodge naturally (added at creation, stacks with Dodge upgrade)
     // Applied via dodgeChance in damagePlayer, set below
-    if (p.clsKey === 'monk' && p.dodgeChance < 0.2) {
-      p.dodgeChance = 0.2;
+    if (p.clsKey === 'monk' && p.dodgeChance < COMBAT.MONK_DODGE_CHANCE) {
+      p.dodgeChance = COMBAT.MONK_DODGE_CHANCE;
     }
 
     // Paladin: aura of light - heal nearby ally 2 HP/s
     if (p.clsKey === 'paladin') {
       const ally = state.players[1 - p.idx];
-      if (ally && ally.alive && dist(p.x, p.y, ally.x, ally.y) < 120) {
+      if (ally && ally.alive && dist(p.x, p.y, ally.x, ally.y) < RANGES.AURA) {
         p._auraTick = (p._auraTick || 0) + dt;
-        if (p._auraTick >= 0.5) {
+        if (p._auraTick >= TIMING.AURA_HEAL_TICK) {
           p._auraTick = 0;
           if (ally.hp < ally.maxHp) {
             ally.hp = Math.min(ally.maxHp, ally.hp + 1);
@@ -233,11 +238,11 @@ export function updatePlayers(state: GameState, dt: number): void {
         const dx = input.mx || 0;
         const dy = input.my || 0;
         const dLen = Math.sqrt(dx * dx + dy * dy) || 1;
-        p.x += (dx / dLen) * 120;
-        p.y += (dy / dLen) * 120;
+        p.x += (dx / dLen) * RANGES.DASH_DISTANCE;
+        p.y += (dy / dLen) * RANGES.DASH_DISTANCE;
         p.x = clamp(p.x, WIZARD_SIZE, ROOM_WIDTH - WIZARD_SIZE);
         p.y = clamp(p.y, WIZARD_SIZE, ROOM_HEIGHT - WIZARD_SIZE);
-        p.iframes = Math.max(p.iframes, 0.2);
+        p.iframes = Math.max(p.iframes, TIMING.IFRAME_DASH);
         sfx(SfxName.Blink);
         spawnParticles(state, p.x, p.y, p.cls.color, 10);
       }
@@ -250,7 +255,7 @@ export function updatePlayers(state: GameState, dt: number): void {
       if (pk.type !== PickupType.Xp && pk.type !== PickupType.Gold) continue;
       const md = dist(p.x, p.y, pk.x, pk.y);
       if (md < p.magnetRange && md > 1) {
-        const pull = 300 * dt;
+        const pull = RANGES.MAGNET_PULL * dt;
         const nx = (p.x - pk.x) / md;
         const ny = (p.y - pk.y) / md;
         pk.x += nx * Math.min(pull, md);

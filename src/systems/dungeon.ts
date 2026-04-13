@@ -13,6 +13,7 @@ import {
   PILLAR_CENTER_EXCLUSION,
   PILLAR_SPAWN_TRIES,
   waveClearGold,
+  DUNGEON_TIMING,
 } from '../constants';
 import { openShop } from './shop';
 import { sfx } from '../audio';
@@ -213,7 +214,7 @@ export function startWave(state: GameState): void {
     }
     // Queue remainder for trickle spawning
     state.waveSpawnQueue = count - immediateCount;
-    state.waveSpawnTimer = 1.5;
+    state.waveSpawnTimer = DUNGEON_TIMING.WAVE_SPAWN_TIMER;
     spawnText(state, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 60, `WAVE ${wave}`, '#bbaa44');
 
     // Horde event: 15% chance starting wave 5
@@ -319,14 +320,14 @@ export function updateWaves(state: GameState, dt: number): void {
       state.waveSpawnTimer -= dt;
       if (state.waveSpawnTimer <= 0) {
         const hpScale = 1 + Math.floor(state.wave / 4);
-        const spdScale = 1 + state.wave * 0.02;
+        const spdScale = 1 + state.wave * DUNGEON_TIMING.TRICKLE_SPEED_SCALE;
         const timeMul = 1 + (state.time / 60) * 0.05;
         const batch = Math.min(2 + Math.floor(Math.random() * 2), state.waveSpawnQueue); // 2-3
         for (let i = 0; i < batch; i++) {
           spawnEnemy(state, pickWaveEnemy(state.wave), hpScale, spdScale, timeMul);
         }
         state.waveSpawnQueue -= batch;
-        state.waveSpawnTimer = 1.5;
+        state.waveSpawnTimer = DUNGEON_TIMING.WAVE_SPAWN_TIMER;
       }
     }
     checkWaveComplete(state);
