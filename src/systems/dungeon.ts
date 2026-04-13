@@ -120,7 +120,7 @@ export function startWave(state: GameState): void {
   state.shopTempDmg = 0; // reset temporary damage boost each wave
   const wave = state.wave;
   const isBoss = wave % 5 === 0;
-  const hpScale = wave <= 10 ? 1 + Math.floor(wave / 4) : 2 + Math.floor(wave / 3);
+  const hpScale = 1 + Math.floor(wave * 0.6);
   const spdScale = 1 + wave * 0.03;
   const timeMul = 1 + (state.time / 60) * 0.05;
 
@@ -321,7 +321,7 @@ export function updateWaves(state: GameState, dt: number): void {
     if (state.waveSpawnQueue > 0) {
       state.waveSpawnTimer -= dt;
       if (state.waveSpawnTimer <= 0) {
-        const hpScale = 1 + Math.floor(state.wave / 4);
+        const hpScale = 1 + Math.floor(state.wave * 0.6);
         const spdScale = 1 + state.wave * DUNGEON_TIMING.TRICKLE_SPEED_SCALE;
         const timeMul = 1 + (state.time / 60) * 0.05;
         const batch = Math.min(2 + Math.floor(Math.random() * 2), state.waveSpawnQueue); // 2-3
