@@ -174,6 +174,7 @@ export interface Player {
   ultReady: boolean;
   hitCounter: number;
   killCount: number;
+  takenUpgrades: Set<number>;
 
   // Upgrade-applied properties
   vampirism: number;
@@ -451,6 +452,8 @@ export interface UpgradeDef {
   forClass?: string;
   /** Color hint for UI */
   color?: string;
+  /** If true, can be picked multiple times (stacks) */
+  stackable?: boolean;
 }
 
 // ── Network message types ──

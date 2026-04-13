@@ -228,6 +228,7 @@ export function createPlayer(idx: number, clsKey: string): Player {
     ultReady: false,
     hitCounter: 0,
     killCount: 0,
+    takenUpgrades: new Set<number>(),
     vampirism: 0,
     vampKillReq: 5,
     pierce: 0,
