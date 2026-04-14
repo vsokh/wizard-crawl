@@ -1,5 +1,5 @@
 import { GameState, dist, rand, wrapAngle, spawnParticles, spawnShockwave, spawnText, shake, flashScreen } from '../state';
-import { ENEMIES, ROOM_WIDTH, ROOM_HEIGHT, WALL_THICKNESS, WAVE_PHYSICS, TIMING, RANGES } from '../constants';
+import { ENEMIES, ROOM_WIDTH, ROOM_HEIGHT, WALL_THICKNESS, WAVE_PHYSICS, TIMING, RANGES, MAX_TRAILS } from '../constants';
 import { SfxName } from '../types';
 import { sfx } from '../audio';
 import { damageEnemy } from './combat';
@@ -71,7 +71,7 @@ export function updateSpells(state: GameState, dt: number): void {
     }
 
     // Trail particles
-    if (s.trail && Math.random() > WAVE_PHYSICS.TRAIL_CHANCE) {
+    if (s.trail && Math.random() > WAVE_PHYSICS.TRAIL_CHANCE && state.trails.length < MAX_TRAILS) {
       state.trails.push({ x: s.x + rand(-3, 3), y: s.y + rand(-3, 3), life: 1, r: s.radius * WAVE_PHYSICS.TRAIL_PARTICLE_SCALE, color: s.trail });
     }
 

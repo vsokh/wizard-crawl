@@ -1,6 +1,6 @@
 import { GameState, dist, clamp, rand, spawnParticles, spawnShockwave, shake } from '../state';
 import { EnemyAI, SfxName, PickupType } from '../types';
-import { ENEMIES, ROOM_WIDTH, ROOM_HEIGHT, WIZARD_SIZE, WALL_THICKNESS, TIMING, ENEMY_AI } from '../constants';
+import { ENEMIES, ROOM_WIDTH, ROOM_HEIGHT, WIZARD_SIZE, WALL_THICKNESS, TIMING, ENEMY_AI, MAX_TRAILS } from '../constants';
 import { sfx } from '../audio';
 import { damageEnemy, damagePlayer } from './combat';
 
@@ -222,7 +222,7 @@ export function updateEProj(state: GameState, dt: number): void {
       if (p.y > wB)  { p.y = wB - (p.y - wB);  p.vy = -Math.abs(p.vy); p._bounces++; }
     }
 
-    if (Math.random() > ENEMY_AI.TRAIL_SPAWN_CHANCE) {
+    if (Math.random() > ENEMY_AI.TRAIL_SPAWN_CHANCE && state.trails.length < MAX_TRAILS) {
       state.trails.push({ x: p.x, y: p.y, life: ENEMY_AI.TRAIL_SPAWN_CHANCE, r: 2, color: p.color });
     }
 

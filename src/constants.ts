@@ -299,6 +299,8 @@ export const DUNGEON_TIMING = {
   BOSS_MINION_SPAWN_DURATION: 10,
 } as const;
 
+export const MAX_TRAILS = 300;
+
 export const WAVE_PHYSICS = {
   BOOMERANG_RETURN: 0.5,
   MAX_BOUNCES: 3,
