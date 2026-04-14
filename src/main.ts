@@ -27,7 +27,8 @@ import { setupInput, getInput } from './input';
 import { setNetworkCallbacks, sendState, sendInput, flushOutbox, getAdaptiveInterval } from './network';
 import { setChestPickupHandler } from './systems/physics';
 import { updatePlayers } from './systems/physics';
-import { updateEnemies, updateEProj } from './systems/enemies';
+import { enemyTimers, enemyStatus, enemyAI, enemyPhysics, enemyAttack, enemyTraps } from './systems/enemies';
+import { updateEProj } from './systems/enemies';
 import { updateSpells, updateAoe, updateZones } from './systems/waves';
 import { rebuildEnemyGrid } from './systems/spatial';
 import { generateArena, updateWaves } from './systems/dungeon';
@@ -57,7 +58,12 @@ runner
   .add('updateSpells', 20, updateSpells)
   .add('updateAoe', 30, updateAoe)
   .add('updateZones', 40, updateZones)
-  .add('updateEnemies', 50, updateEnemies)
+  .add('enemyTimers', 50, enemyTimers)
+  .add('enemyStatus', 51, enemyStatus)
+  .add('enemyAI', 52, enemyAI)
+  .add('enemyPhysics', 53, enemyPhysics)
+  .add('enemyAttack', 54, enemyAttack)
+  .add('enemyTraps', 55, enemyTraps)
   .add('updateEProj', 60, updateEProj)
   .add('updateWaves', 70, updateWaves);
 
