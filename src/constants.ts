@@ -637,7 +637,7 @@ export const UPGRADE_POOL: UpgradeDef[] = [
 
   // -- WILD / FUN --
   { name: 'Chaos Bolts', desc: 'Primary damage randomized between 1 and 4 per hit', apply: (p: Player) => { p.chaosDmg = true; } },
-  { name: 'Magnet', desc: 'Pickup attraction range doubled', apply: (p: Player) => { p.magnetRange = (p.magnetRange || 30) + 60; } },
+  { name: 'Magnet', desc: '+60 pickup range', apply: (p: Player) => { p.magnetRange = (p.magnetRange || 30) + 60; } },
   { name: 'Gold Rush', desc: 'Enemies drop 2x gold', apply: (p: Player) => { p.goldMul = (p.goldMul || 1) * 2; } },
   { name: 'XP Boost', desc: 'Gain upgrades 30% more often', apply: (p: Player) => { p.xpBoost = hyperStack(p, 'xpBoost', 0.3); } },
   { name: 'Friendly Fire', desc: '+2 dmg but your spells can hurt you', apply: (p: Player) => { for (const s of p.cls.spells) s.dmg = (s.dmg || 0) + 2; p.selfDmg = true; } },
