@@ -2,6 +2,7 @@ import { GameState } from '../state';
 import { ENEMIES, WIZARD_SIZE, TIMING } from '../constants';
 import { PickupType } from '../types';
 import { rgba } from './rgba-cache';
+import { radGrad, linGrad } from './gradient-cache';
 
 // ═══════════════════════════════════
 //       GRADIENT & EFFECT CACHES
@@ -346,11 +347,11 @@ function drawUltimateAnim(ctx: CanvasRenderingContext2D, x: number, y: number, c
       ctx.globalAlpha = alpha;
       const vortexR = S * 2 * (0.5 + (1 - progress) * 0.5);
       // Dark portal
-      const grad = ctx.createRadialGradient(x, y, 0, x, y, vortexR);
-      grad.addColorStop(0, '#220044');
-      grad.addColorStop(0.6, '#662288');
-      grad.addColorStop(1, 'transparent');
-      ctx.fillStyle = grad;
+      ctx.fillStyle = radGrad(ctx, x, y, 0, x, y, vortexR, [
+        [0, '#220044'],
+        [0.6, '#662288'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.arc(x, y, vortexR, 0, Math.PI * 2);
       ctx.fill();
@@ -467,12 +468,12 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
   if (clsKey === 'pyromancer') {
     // ── PYROMANCER: organic dancing flames with white-hot core ──
     // Radial gradient body for depth
-    const bodyG = ctx.createRadialGradient(x - S * 0.2, y - S * 0.2, S * 0.15, x, y, S);
-    bodyG.addColorStop(0, '#ffffcc');
-    bodyG.addColorStop(0.3, '#ff8833');
-    bodyG.addColorStop(0.7, '#cc3300');
-    bodyG.addColorStop(1, '#881100');
-    ctx.fillStyle = bodyG;
+    ctx.fillStyle = radGrad(ctx, x - S * 0.2, y - S * 0.2, S * 0.15, x, y, S, [
+      [0, '#ffffcc'],
+      [0.3, '#ff8833'],
+      [0.7, '#cc3300'],
+      [1, '#881100'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, S, 0, Math.PI * 2); ctx.fill();
 
     // Organic flame crown (5 points with perlin-like wobble)
@@ -501,11 +502,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
     }
 
     // White-hot inner core
-    const coreG = ctx.createRadialGradient(x, y, 0, x, y, S * 0.5);
-    coreG.addColorStop(0, 'rgba(255,255,240,0.9)');
-    coreG.addColorStop(0.5, 'rgba(255,200,100,0.4)');
-    coreG.addColorStop(1, 'transparent');
-    ctx.fillStyle = coreG;
+    ctx.fillStyle = radGrad(ctx, x, y, 0, x, y, S * 0.5, [
+      [0, 'rgba(255,255,240,0.9)'],
+      [0.5, 'rgba(255,200,100,0.4)'],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, S * 0.5, 0, Math.PI * 2); ctx.fill();
 
     // Outline glow
@@ -516,12 +517,12 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
   } else if (clsKey === 'cryomancer') {
     // ── CRYOMANCER: crystal with refraction lines and frost particles ──
     // Crystal body with gradient
-    const iceG = ctx.createLinearGradient(x - S * 0.8, y - S * 1.2, x + S * 0.8, y + S * 1.2);
-    iceG.addColorStop(0, '#cceeFF');
-    iceG.addColorStop(0.3, '#66bbee');
-    iceG.addColorStop(0.6, '#44aadd');
-    iceG.addColorStop(1, '#2288bb');
-    ctx.fillStyle = iceG;
+    ctx.fillStyle = linGrad(ctx, x - S * 0.8, y - S * 1.2, x + S * 0.8, y + S * 1.2, [
+      [0, '#cceeFF'],
+      [0.3, '#66bbee'],
+      [0.6, '#44aadd'],
+      [1, '#2288bb'],
+    ]);
     ctx.beginPath();
     ctx.moveTo(x, y - S * 1.2); ctx.lineTo(x + S * 0.8, y);
     ctx.lineTo(x, y + S * 1.2); ctx.lineTo(x - S * 0.8, y);
@@ -566,12 +567,12 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
     // ── STORMCALLER: pulsing orb with jittery lightning ──
     const pulse = 0.85 + 0.15 * Math.sin(time * 6);
     // Inner orb gradient
-    const orbG = ctx.createRadialGradient(x, y, 0, x, y, S * pulse);
-    orbG.addColorStop(0, '#eeddff');
-    orbG.addColorStop(0.4, '#bb77ee');
-    orbG.addColorStop(0.8, '#8844cc');
-    orbG.addColorStop(1, '#553399');
-    ctx.fillStyle = orbG;
+    ctx.fillStyle = radGrad(ctx, x, y, 0, x, y, S * pulse, [
+      [0, '#eeddff'],
+      [0.4, '#bb77ee'],
+      [0.8, '#8844cc'],
+      [1, '#553399'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, S * 0.9 * pulse, 0, Math.PI * 2); ctx.fill();
 
     // Jittery lightning bolts (randomized endpoints each frame via noise)
@@ -604,11 +605,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
 
   } else if (clsKey === 'arcanist') {
     // ── ARCANIST: floating orb with rune ring and trailing particles ──
-    const bodyG = ctx.createRadialGradient(x - S * 0.15, y - S * 0.15, S * 0.1, x, y, S * 0.8);
-    bodyG.addColorStop(0, '#ffaadd');
-    bodyG.addColorStop(0.5, '#ee55aa');
-    bodyG.addColorStop(1, '#aa2277');
-    ctx.fillStyle = bodyG;
+    ctx.fillStyle = radGrad(ctx, x - S * 0.15, y - S * 0.15, S * 0.1, x, y, S * 0.8, [
+      [0, '#ffaadd'],
+      [0.5, '#ee55aa'],
+      [1, '#aa2277'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, S * 0.8, 0, Math.PI * 2); ctx.fill();
 
     // Rune ring with actual "rune" marks
@@ -655,11 +656,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
   } else if (clsKey === 'necromancer') {
     // ── NECROMANCER: skull with green flame eyes and bobbing jaw ──
     // Skull with gradient
-    const skullG = ctx.createRadialGradient(x, y - S * 0.1, S * 0.2, x, y - S * 0.1, S * 0.9);
-    skullG.addColorStop(0, '#66cc66');
-    skullG.addColorStop(0.6, '#44aa44');
-    skullG.addColorStop(1, '#227722');
-    ctx.fillStyle = skullG;
+    ctx.fillStyle = radGrad(ctx, x, y - S * 0.1, S * 0.2, x, y - S * 0.1, S * 0.9, [
+      [0, '#66cc66'],
+      [0.6, '#44aa44'],
+      [1, '#227722'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y - S * 0.1, S * 0.9, 0, Math.PI * 2); ctx.fill();
 
     // Bobbing jaw
@@ -683,11 +684,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
       const ey = y - S * 0.15;
       const flameH = S * 0.35 + Math.sin(time * 10 + side * 2) * S * 0.08;
       // Flame body
-      const fG = ctx.createRadialGradient(ex, ey, 0, ex, ey - flameH * 0.3, S * 0.2);
-      fG.addColorStop(0, '#aaffaa');
-      fG.addColorStop(0.5, '#44ff44');
-      fG.addColorStop(1, 'transparent');
-      ctx.fillStyle = fG;
+      ctx.fillStyle = radGrad(ctx, ex, ey, 0, ex, ey - flameH * 0.3, S * 0.2, [
+        [0, '#aaffaa'],
+        [0.5, '#44ff44'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.moveTo(ex - S * 0.12, ey + S * 0.05);
       ctx.quadraticCurveTo(ex + noise(time * 12 + side * 30) * 2, ey - flameH, ex + S * 0.12, ey + S * 0.05);
@@ -705,11 +706,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
   } else if (clsKey === 'chronomancer') {
     // ── CHRONOMANCER: clock with tick marks and smoothly sweeping hands ──
     // Clock face gradient
-    const clockG = ctx.createRadialGradient(x, y, S * 0.1, x, y, S);
-    clockG.addColorStop(0, '#fff5d4');
-    clockG.addColorStop(0.7, '#ddbb55');
-    clockG.addColorStop(1, '#aa8822');
-    ctx.fillStyle = clockG;
+    ctx.fillStyle = radGrad(ctx, x, y, S * 0.1, x, y, S, [
+      [0, '#fff5d4'],
+      [0.7, '#ddbb55'],
+      [1, '#aa8822'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, S, 0, Math.PI * 2); ctx.fill();
 
     // Tick marks around edge (12 total)
@@ -753,13 +754,13 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
   } else if (clsKey === 'knight') {
     // ── KNIGHT: bulky shield with metallic sheen and glowing cross ──
     // Shield body with metallic gradient
-    const shieldG = ctx.createLinearGradient(x - S * 0.9, y - S * 1.1, x + S * 0.9, y + S * 1.1);
-    shieldG.addColorStop(0, '#d0dde8');
-    shieldG.addColorStop(0.3, '#a0b5c8');
-    shieldG.addColorStop(0.5, '#c8d5e0');
-    shieldG.addColorStop(0.7, '#8899aa');
-    shieldG.addColorStop(1, '#667788');
-    ctx.fillStyle = shieldG;
+    ctx.fillStyle = linGrad(ctx, x - S * 0.9, y - S * 1.1, x + S * 0.9, y + S * 1.1, [
+      [0, '#d0dde8'],
+      [0.3, '#a0b5c8'],
+      [0.5, '#c8d5e0'],
+      [0.7, '#8899aa'],
+      [1, '#667788'],
+    ]);
     ctx.beginPath();
     ctx.moveTo(x, y - S * 1.1);
     ctx.lineTo(x + S * 0.9, y - S * 0.3);
@@ -808,11 +809,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
 
     // Body gradient (redder at low HP)
     const redMix = furyActive ? 0.8 : Math.max(0, 1 - hpRatio);
-    const bodyG = ctx.createRadialGradient(x, y, S * 0.2, x, y, S * 1.2 * throb);
-    bodyG.addColorStop(0, `rgb(${255}, ${Math.floor(80 - redMix * 40)}, ${Math.floor(80 - redMix * 40)})`);
-    bodyG.addColorStop(0.6, '#cc2222');
-    bodyG.addColorStop(1, '#771111');
-    ctx.fillStyle = bodyG;
+    ctx.fillStyle = radGrad(ctx, x, y, S * 0.2, x, y, S * 1.2 * throb, [
+      [0, `rgb(${255}, ${Math.floor(80 - redMix * 40)}, ${Math.floor(80 - redMix * 40)})`],
+      [0.6, '#cc2222'],
+      [1, '#771111'],
+    ]);
     ctx.beginPath();
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2;
@@ -828,10 +829,10 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
         const a = (i * 2 / 8) * Math.PI * 2;
         const tipX = x + Math.cos(a) * S * 1.2 * spikePulse;
         const tipY = y + Math.sin(a) * S * 1.2 * spikePulse;
-        const tG = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, 4);
-        tG.addColorStop(0, 'rgba(255,200,50,0.8)');
-        tG.addColorStop(1, 'transparent');
-        ctx.fillStyle = tG;
+        ctx.fillStyle = radGrad(ctx, tipX, tipY, 0, tipX, tipY, 4, [
+          [0, 'rgba(255,200,50,0.8)'],
+          [1, 'transparent'],
+        ]);
         ctx.beginPath(); ctx.arc(tipX, tipY, 4, 0, Math.PI * 2); ctx.fill();
       }
     }
@@ -861,19 +862,19 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
   } else if (clsKey === 'paladin') {
     // ── PALADIN: warm glowing body with halo light rays ──
     // Body with warm light gradient
-    const bodyG = ctx.createRadialGradient(x, y, S * 0.1, x, y, S);
-    bodyG.addColorStop(0, '#fffff0');
-    bodyG.addColorStop(0.4, '#ffeecc');
-    bodyG.addColorStop(0.8, '#ddbb88');
-    bodyG.addColorStop(1, '#bb9955');
-    ctx.fillStyle = bodyG;
+    ctx.fillStyle = radGrad(ctx, x, y, S * 0.1, x, y, S, [
+      [0, '#fffff0'],
+      [0.4, '#ffeecc'],
+      [0.8, '#ddbb88'],
+      [1, '#bb9955'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, S, 0, Math.PI * 2); ctx.fill();
 
     // Warm light emission
-    const warmG = ctx.createRadialGradient(x, y, S * 0.5, x, y, S * 2.0);
-    warmG.addColorStop(0, 'rgba(255,230,180,0.1)');
-    warmG.addColorStop(1, 'transparent');
-    ctx.fillStyle = warmG;
+    ctx.fillStyle = radGrad(ctx, x, y, S * 0.5, x, y, S * 2.0, [
+      [0, 'rgba(255,230,180,0.1)'],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, S * 2.0, 0, Math.PI * 2); ctx.fill();
 
     // Halo with light rays
@@ -905,11 +906,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
   } else if (clsKey === 'ranger') {
     // ── RANGER: hooded figure with depth shading and quiver ──
     // Hood with depth gradient
-    const hoodG = ctx.createLinearGradient(x - S * 0.9, y - S * 1.2, x + S * 0.9, y + S * 0.8);
-    hoodG.addColorStop(0, '#88aa44');
-    hoodG.addColorStop(0.4, '#668833');
-    hoodG.addColorStop(1, '#445522');
-    ctx.fillStyle = hoodG;
+    ctx.fillStyle = linGrad(ctx, x - S * 0.9, y - S * 1.2, x + S * 0.9, y + S * 0.8, [
+      [0, '#88aa44'],
+      [0.4, '#668833'],
+      [1, '#445522'],
+    ]);
     ctx.beginPath();
     ctx.moveTo(x, y - S * 1.2);
     ctx.lineTo(x + S * 0.9, y + S * 0.8);
@@ -917,10 +918,10 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
     ctx.closePath(); ctx.fill();
 
     // Face with gradient
-    const faceG = ctx.createRadialGradient(x - S * 0.1, y, S * 0.15, x, y + S * 0.1, S * 0.5);
-    faceG.addColorStop(0, '#aadd66');
-    faceG.addColorStop(1, '#77aa33');
-    ctx.fillStyle = faceG;
+    ctx.fillStyle = radGrad(ctx, x - S * 0.1, y, S * 0.15, x, y + S * 0.1, S * 0.5, [
+      [0, '#aadd66'],
+      [1, '#77aa33'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y + S * 0.1, S * 0.5, 0, Math.PI * 2); ctx.fill();
 
     // Shadow under hood
@@ -974,11 +975,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
     ctx.closePath(); ctx.fill();
 
     // Front leaf layer with gradient
-    const leafG = ctx.createRadialGradient(x + sway2, y - S * 0.2, S * 0.2, x, y, S * 1.0);
-    leafG.addColorStop(0, '#66dd44');
-    leafG.addColorStop(0.6, '#44aa33');
-    leafG.addColorStop(1, '#337722');
-    ctx.fillStyle = leafG;
+    ctx.fillStyle = radGrad(ctx, x + sway2, y - S * 0.2, S * 0.2, x, y, S * 1.0, [
+      [0, '#66dd44'],
+      [0.6, '#44aa33'],
+      [1, '#337722'],
+    ]);
     ctx.beginPath();
     ctx.moveTo(x + sway2, y - S * 1.2);
     ctx.quadraticCurveTo(x + S * 1.2 + sway2, y - S * 0.3, x + S * 0.3 + sway2 * 0.5, y + S * 1.0);
@@ -1025,11 +1026,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
   } else if (clsKey === 'warlock') {
     // ── WARLOCK: dark robe with energy wisps and trailing eyes ──
     // Robe with dark gradient
-    const robeG = ctx.createLinearGradient(x, y - S * 1.3, x, y + S * 1.0);
-    robeG.addColorStop(0, '#5a1980');
-    robeG.addColorStop(0.5, '#3d0d5c');
-    robeG.addColorStop(1, '#1a0630');
-    ctx.fillStyle = robeG;
+    ctx.fillStyle = linGrad(ctx, x, y - S * 1.3, x, y + S * 1.0, [
+      [0, '#5a1980'],
+      [0.5, '#3d0d5c'],
+      [1, '#1a0630'],
+    ]);
     ctx.beginPath();
     ctx.moveTo(x, y - S * 1.3);
     ctx.lineTo(x + S * 0.7, y - S * 0.2);
@@ -1044,10 +1045,10 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
       const wd = S * 0.9 + Math.sin(time * 2.5 + i * 1.7) * S * 0.3;
       const wx = x + Math.cos(wa) * wd * 0.6;
       const wy = y + Math.sin(wa) * wd * 0.4;
-      const wG = ctx.createRadialGradient(wx, wy, 0, wx, wy, S * 0.25);
-      wG.addColorStop(0, 'rgba(120,40,180,0.4)');
-      wG.addColorStop(1, 'transparent');
-      ctx.fillStyle = wG;
+      ctx.fillStyle = radGrad(ctx, wx, wy, 0, wx, wy, S * 0.25, [
+        [0, 'rgba(120,40,180,0.4)'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath(); ctx.arc(wx, wy, S * 0.25, 0, Math.PI * 2); ctx.fill();
     }
 
@@ -1066,10 +1067,10 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
       ctx.fillStyle = '#bb55ff';
       ctx.beginPath(); ctx.arc(eyeX, eyeY, 2.5, 0, Math.PI * 2); ctx.fill();
       // Eye glow
-      const eG = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, 5);
-      eG.addColorStop(0, 'rgba(170,68,255,0.5)');
-      eG.addColorStop(1, 'transparent');
-      ctx.fillStyle = eG;
+      ctx.fillStyle = radGrad(ctx, eyeX, eyeY, 0, eyeX, eyeY, 5, [
+        [0, 'rgba(170,68,255,0.5)'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath(); ctx.arc(eyeX, eyeY, 5, 0, Math.PI * 2); ctx.fill();
     }
 
@@ -1103,11 +1104,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
     }
 
     // Body circle with gradient
-    const bodyG = ctx.createRadialGradient(x, y, S * 0.1, x, y, S);
-    bodyG.addColorStop(0, '#fff5cc');
-    bodyG.addColorStop(0.5, '#eedd88');
-    bodyG.addColorStop(1, '#ccaa44');
-    ctx.fillStyle = bodyG;
+    ctx.fillStyle = radGrad(ctx, x, y, S * 0.1, x, y, S, [
+      [0, '#fff5cc'],
+      [0.5, '#eedd88'],
+      [1, '#ccaa44'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, S, 0, Math.PI * 2); ctx.fill();
 
     // Rotating yin-yang
@@ -1141,11 +1142,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
   } else if (clsKey === 'engineer') {
     // ── ENGINEER: goggled figure with lens flare and sparking gear ──
     // Body with gradient
-    const bodyG = ctx.createRadialGradient(x - S * 0.2, y - S * 0.2, S * 0.1, x, y, S);
-    bodyG.addColorStop(0, '#ffaa55');
-    bodyG.addColorStop(0.5, '#dd8833');
-    bodyG.addColorStop(1, '#aa6622');
-    ctx.fillStyle = bodyG;
+    ctx.fillStyle = radGrad(ctx, x - S * 0.2, y - S * 0.2, S * 0.1, x, y, S, [
+      [0, '#ffaa55'],
+      [0.5, '#dd8833'],
+      [1, '#aa6622'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, S, 0, Math.PI * 2); ctx.fill();
 
     // Goggles with lens flare
@@ -1205,11 +1206,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
 
   } else {
     // Default fallback (gradient body)
-    const defG = ctx.createRadialGradient(x - S * 0.2, y - S * 0.2, S * 0.1, x, y, S);
-    defG.addColorStop(0, '#ffffff33');
-    defG.addColorStop(0.3, color);
-    defG.addColorStop(1, glow);
-    ctx.fillStyle = defG;
+    ctx.fillStyle = radGrad(ctx, x - S * 0.2, y - S * 0.2, S * 0.1, x, y, S, [
+      [0, '#ffffff33'],
+      [0.3, color],
+      [1, glow],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, S, 0, Math.PI * 2); ctx.fill();
   }
 }
@@ -1299,10 +1300,10 @@ export function drawWeapon(ctx: CanvasRenderingContext2D, x: number, y: number, 
       const perpY = Math.sin(angle + Math.PI / 2) * side;
       const fx = x + Math.cos(angle) * S * 0.8 + perpX * S * 0.5;
       const fy = y + Math.sin(angle) * S * 0.8 + perpY * S * 0.5;
-      const chiG = ctx.createRadialGradient(fx, fy, 0, fx, fy, 5);
-      chiG.addColorStop(0, 'rgba(255,240,150,0.6)');
-      chiG.addColorStop(1, 'transparent');
-      ctx.fillStyle = chiG;
+      ctx.fillStyle = radGrad(ctx, fx, fy, 0, fx, fy, 5, [
+        [0, 'rgba(255,240,150,0.6)'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath(); ctx.arc(fx, fy, 5, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#eedd88';
       ctx.beginPath(); ctx.arc(fx, fy, 2, 0, Math.PI * 2); ctx.fill();
@@ -1344,11 +1345,11 @@ export function drawWeapon(ctx: CanvasRenderingContext2D, x: number, y: number, 
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
     // Orb on tip
-    const orbG = ctx.createRadialGradient(ex, ey, 0, ex, ey, 5);
-    orbG.addColorStop(0, '#ffffff');
-    orbG.addColorStop(0.4, color);
-    orbG.addColorStop(1, 'transparent');
-    ctx.fillStyle = orbG;
+    ctx.fillStyle = radGrad(ctx, ex, ey, 0, ex, ey, 5, [
+      [0, '#ffffff'],
+      [0.4, color],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath(); ctx.arc(ex, ey, 5, 0, Math.PI * 2); ctx.fill();
     // Glow
     ctx.fillStyle = color;
@@ -1396,10 +1397,10 @@ export function drawWizard(ctx: CanvasRenderingContext2D, state: GameState): voi
     }
 
     // ── Aura glow (at actual position, no bob) ──
-    const ag = ctx.createRadialGradient(p.x, p.y, WIZARD_SIZE * 0.5, p.x, p.y, WIZARD_SIZE * 2.5);
-    ag.addColorStop(0, cls.glow + '22');
-    ag.addColorStop(1, 'transparent');
-    ctx.fillStyle = ag;
+    ctx.fillStyle = radGrad(ctx, p.x, p.y, WIZARD_SIZE * 0.5, p.x, p.y, WIZARD_SIZE * 2.5, [
+      [0, cls.glow + '22'],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath();
     ctx.arc(p.x, p.y, WIZARD_SIZE * 2.5, 0, Math.PI * 2);
     ctx.fill();
@@ -1423,10 +1424,10 @@ export function drawWizard(ctx: CanvasRenderingContext2D, state: GameState): voi
     // ── Cast flash (at actual position) ──
     if (p._animCastFlash > 0) {
       const castAlpha = Math.min(1, p._animCastFlash * 4); // quick fade
-      const cg = ctx.createRadialGradient(p.x, p.y, WIZARD_SIZE * 0.3, p.x, p.y, WIZARD_SIZE * 3);
-      cg.addColorStop(0, cls.color + Math.floor(castAlpha * 100).toString(16).padStart(2, '0'));
-      cg.addColorStop(1, 'transparent');
-      ctx.fillStyle = cg;
+      ctx.fillStyle = radGrad(ctx, p.x, p.y, WIZARD_SIZE * 0.3, p.x, p.y, WIZARD_SIZE * 3, [
+        [0, cls.color + Math.floor(castAlpha * 100).toString(16).padStart(2, '0')],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.arc(p.x, p.y, WIZARD_SIZE * 3, 0, Math.PI * 2);
       ctx.fill();
@@ -1524,11 +1525,11 @@ export function drawTurret(ctx: CanvasRenderingContext2D, x: number, y: number, 
     // Energy shield: translucent pulsing circle with glowing edge
     const shieldPulse = 0.12 + 0.06 * Math.sin(time * 3.5);
     const shieldRadius = s * 1.3;
-    const shieldG = ctx.createRadialGradient(x, y, shieldRadius * 0.7, x, y, shieldRadius);
-    shieldG.addColorStop(0, 'rgba(255,170,50,0)');
-    shieldG.addColorStop(0.8, rgba(255, 180, 60, shieldPulse * 0.3));
-    shieldG.addColorStop(1, rgba(255, 200, 80, shieldPulse));
-    ctx.fillStyle = shieldG;
+    ctx.fillStyle = radGrad(ctx, x, y, shieldRadius * 0.7, x, y, shieldRadius, [
+      [0, 'rgba(255,170,50,0)'],
+      [0.8, rgba(255, 180, 60, shieldPulse * 0.3)],
+      [1, rgba(255, 200, 80, shieldPulse)],
+    ]);
     ctx.beginPath();
     ctx.arc(x, y, shieldRadius, 0, Math.PI * 2);
     ctx.fill();
@@ -1552,10 +1553,10 @@ export function drawTurret(ctx: CanvasRenderingContext2D, x: number, y: number, 
   ctx.stroke();
 
   // Center dome with gradient
-  const domeG = ctx.createRadialGradient(x, y - s * 0.1, s * 0.1, x, y, s * 0.5);
-  domeG.addColorStop(0, isMega ? '#ffcc44' : '#ddaa33');
-  domeG.addColorStop(1, isMega ? '#aa6611' : '#775511');
-  ctx.fillStyle = domeG;
+  ctx.fillStyle = radGrad(ctx, x, y - s * 0.1, s * 0.1, x, y, s * 0.5, [
+    [0, isMega ? '#ffcc44' : '#ddaa33'],
+    [1, isMega ? '#aa6611' : '#775511'],
+  ]);
   ctx.beginPath();
   ctx.arc(x, y, s * 0.5, 0, Math.PI * 2);
   ctx.fill();
@@ -1584,20 +1585,20 @@ export function drawTurret(ctx: CanvasRenderingContext2D, x: number, y: number, 
     if (zoneActive) {
       const flashPhase = (time * 5 + i * 2.1) % 1;
       if (flashPhase < 0.15) {
-        const flashG = ctx.createRadialGradient(ex, ey, 0, ex, ey, 6);
-        flashG.addColorStop(0, 'rgba(255,240,180,0.9)');
-        flashG.addColorStop(0.5, 'rgba(255,180,50,0.5)');
-        flashG.addColorStop(1, 'transparent');
-        ctx.fillStyle = flashG;
+        ctx.fillStyle = radGrad(ctx, ex, ey, 0, ex, ey, 6, [
+          [0, 'rgba(255,240,180,0.9)'],
+          [0.5, 'rgba(255,180,50,0.5)'],
+          [1, 'transparent'],
+        ]);
         ctx.beginPath(); ctx.arc(ex, ey, 6, 0, Math.PI * 2); ctx.fill();
       }
     }
 
     // Barrel tip glow
-    const tipG = ctx.createRadialGradient(ex, ey, 0, ex, ey, 4);
-    tipG.addColorStop(0, isMega ? '#ffdd66' : '#ffaa33');
-    tipG.addColorStop(1, 'transparent');
-    ctx.fillStyle = tipG;
+    ctx.fillStyle = radGrad(ctx, ex, ey, 0, ex, ey, 4, [
+      [0, isMega ? '#ffdd66' : '#ffaa33'],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath();
     ctx.arc(ex, ey, 4, 0, Math.PI * 2);
     ctx.fill();
@@ -1631,11 +1632,11 @@ export function drawTurret(ctx: CanvasRenderingContext2D, x: number, y: number, 
   if (isMega) {
     // Larger pulsing power core for mega turret
     const corePulse = 0.18 + 0.04 * Math.sin(time * 4);
-    const coreG = ctx.createRadialGradient(x, y, 0, x, y, s * corePulse * 2);
-    coreG.addColorStop(0, '#ffee66');
-    coreG.addColorStop(0.5, '#ff6622');
-    coreG.addColorStop(1, 'rgba(255,100,30,0)');
-    ctx.fillStyle = coreG;
+    ctx.fillStyle = radGrad(ctx, x, y, 0, x, y, s * corePulse * 2, [
+      [0, '#ffee66'],
+      [0.5, '#ff6622'],
+      [1, 'rgba(255,100,30,0)'],
+    ]);
     ctx.beginPath();
     ctx.arc(x, y, s * corePulse * 2, 0, Math.PI * 2);
     ctx.fill();
@@ -1670,10 +1671,10 @@ function drawWolf(ctx: CanvasRenderingContext2D, x: number, y: number, size: num
   ctx.rotate(angle);
 
   // Body (elongated) with gradient
-  const bodyG = ctx.createRadialGradient(-size * 0.1, 0, size * 0.2, 0, 0, size * 1.2);
-  bodyG.addColorStop(0, '#88cc66');
-  bodyG.addColorStop(1, '#557744');
-  ctx.fillStyle = bodyG;
+  ctx.fillStyle = radGrad(ctx, -size * 0.1, 0, size * 0.2, 0, 0, size * 1.2, [
+    [0, '#88cc66'],
+    [1, '#557744'],
+  ]);
   ctx.beginPath();
   ctx.ellipse(0, 0, size * 1.2, size * 0.7, 0, 0, Math.PI * 2);
   ctx.fill();
@@ -1762,13 +1763,12 @@ function drawImp(ctx: CanvasRenderingContext2D, x: number, y: number, size: numb
 
   // Wing membrane (semi-transparent with gradient)
   for (const side of [-1, 1]) {
-    const wingG = ctx.createRadialGradient(
+    ctx.fillStyle = radGrad(ctx,
       x + side * size * 0.6, y - size * 0.2, size * 0.1,
-      x + side * size * 0.6, y - size * 0.2, size * 0.8
-    );
-    wingG.addColorStop(0, 'rgba(130,40,160,0.5)');
-    wingG.addColorStop(1, 'rgba(80,20,100,0.15)');
-    ctx.fillStyle = wingG;
+      x + side * size * 0.6, y - size * 0.2, size * 0.8, [
+      [0, 'rgba(130,40,160,0.5)'],
+      [1, 'rgba(80,20,100,0.15)'],
+    ]);
     ctx.beginPath();
     ctx.ellipse(x + side * size * 0.6, y - size * 0.2, size * 0.8, size * 0.45, side * (-0.3 + flap), 0, Math.PI * 2);
     ctx.fill();
@@ -1782,10 +1782,10 @@ function drawImp(ctx: CanvasRenderingContext2D, x: number, y: number, size: numb
   }
 
   // Body with gradient
-  const impG = ctx.createRadialGradient(x - size * 0.1, y - size * 0.1, size * 0.1, x, y, size * 0.7);
-  impG.addColorStop(0, '#aa44cc');
-  impG.addColorStop(1, '#662288');
-  ctx.fillStyle = impG;
+  ctx.fillStyle = radGrad(ctx, x - size * 0.1, y - size * 0.1, size * 0.1, x, y, size * 0.7, [
+    [0, '#aa44cc'],
+    [1, '#662288'],
+  ]);
   ctx.beginPath();
   ctx.arc(x, y, size * 0.7, 0, Math.PI * 2);
   ctx.fill();
@@ -1820,11 +1820,11 @@ function drawImp(ctx: CanvasRenderingContext2D, x: number, y: number, size: numb
   for (const side of [-1, 1]) {
     const eyeX = x + side * size * 0.2;
     const eyeY = y - size * 0.1;
-    const eG = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, 4);
-    eG.addColorStop(0, '#ff6644');
-    eG.addColorStop(0.5, '#ff2222');
-    eG.addColorStop(1, 'transparent');
-    ctx.fillStyle = eG;
+    ctx.fillStyle = radGrad(ctx, eyeX, eyeY, 0, eyeX, eyeY, 4, [
+      [0, '#ff6644'],
+      [0.5, '#ff2222'],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath(); ctx.arc(eyeX, eyeY, 4, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#ffccaa';
     ctx.beginPath(); ctx.arc(eyeX, eyeY, 1.2, 0, Math.PI * 2); ctx.fill();
@@ -1857,11 +1857,11 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     ctx.closePath(); ctx.fill();
 
     // Glossy highlight
-    const gloss = ctx.createRadialGradient(x - size * 0.25, y - size * 0.3, size * 0.05, x, y, size);
-    gloss.addColorStop(0, 'rgba(255,255,255,0.45)');
-    gloss.addColorStop(0.3, 'rgba(255,255,255,0.1)');
-    gloss.addColorStop(1, 'transparent');
-    ctx.fillStyle = gloss;
+    ctx.fillStyle = radGrad(ctx, x - size * 0.25, y - size * 0.3, size * 0.05, x, y, size, [
+      [0, 'rgba(255,255,255,0.45)'],
+      [0.3, 'rgba(255,255,255,0.1)'],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
 
     // Drip particle
@@ -2003,11 +2003,11 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
   } else if (eType === 'golem') {
     // ── GOLEM (boss): chunky rock segments with glowing cracks ──
     // Main body (chunky, angular)
-    const rockG = ctx.createRadialGradient(x - size * 0.2, y - size * 0.2, size * 0.2, x, y, size);
-    rockG.addColorStop(0, '#aa8866');
-    rockG.addColorStop(0.5, '#886644');
-    rockG.addColorStop(1, '#664422');
-    ctx.fillStyle = rockG;
+    ctx.fillStyle = radGrad(ctx, x - size * 0.2, y - size * 0.2, size * 0.2, x, y, size, [
+      [0, '#aa8866'],
+      [0.5, '#886644'],
+      [1, '#664422'],
+    ]);
     // Chunky angular shape
     ctx.beginPath();
     const segments = 8;
@@ -2050,11 +2050,11 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
   } else if (eType === 'demon') {
     // ── DEMON (boss): horns, wings, fire eyes, menacing aura ──
     // Menacing aura
-    const auraG = ctx.createRadialGradient(x, y, size * 0.5, x, y, size * 2.2);
-    auraG.addColorStop(0, 'rgba(200,30,30,0.08)');
-    auraG.addColorStop(0.5, 'rgba(150,0,0,0.04)');
-    auraG.addColorStop(1, 'transparent');
-    ctx.fillStyle = auraG;
+    ctx.fillStyle = radGrad(ctx, x, y, size * 0.5, x, y, size * 2.2, [
+      [0, 'rgba(200,30,30,0.08)'],
+      [0.5, 'rgba(150,0,0,0.04)'],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, size * 2.2, 0, Math.PI * 2); ctx.fill();
 
     // Wings (dark, spread)
@@ -2068,11 +2068,11 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     }
 
     // Body
-    const demonG = ctx.createRadialGradient(x, y, size * 0.2, x, y, size);
-    demonG.addColorStop(0, '#ee4444');
-    demonG.addColorStop(0.6, '#cc3333');
-    demonG.addColorStop(1, '#881111');
-    ctx.fillStyle = demonG;
+    ctx.fillStyle = radGrad(ctx, x, y, size * 0.2, x, y, size, [
+      [0, '#ee4444'],
+      [0.6, '#cc3333'],
+      [1, '#881111'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
 
     // Horns
@@ -2091,11 +2091,11 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
       const eyeY = y - size * 0.15;
       // Flame from eye
       const fh = size * 0.4 + Math.sin(time * 10 + side) * size * 0.1;
-      const fG = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY - fh * 0.5, size * 0.3);
-      fG.addColorStop(0, '#ffff88');
-      fG.addColorStop(0.4, '#ff6622');
-      fG.addColorStop(1, 'transparent');
-      ctx.fillStyle = fG;
+      ctx.fillStyle = radGrad(ctx, eyeX, eyeY, 0, eyeX, eyeY - fh * 0.5, size * 0.3, [
+        [0, '#ffff88'],
+        [0.4, '#ff6622'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.moveTo(eyeX - size * 0.15, eyeY);
       ctx.quadraticCurveTo(eyeX, eyeY - fh, eyeX + size * 0.15, eyeY);
@@ -2157,10 +2157,10 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
 
     // Dark aura (pulsing)
     const auraPulse = 1 + Math.sin(time * 1.5) * 0.1;
-    const nAura = ctx.createRadialGradient(x, fy, size * 0.3, x, fy, size * 1.6 * auraPulse);
-    nAura.addColorStop(0, 'rgba(50,100,70,0.12)');
-    nAura.addColorStop(1, 'transparent');
-    ctx.fillStyle = nAura;
+    ctx.fillStyle = radGrad(ctx, x, fy, size * 0.3, x, fy, size * 1.6 * auraPulse, [
+      [0, 'rgba(50,100,70,0.12)'],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath(); ctx.arc(x, fy, size * 1.6 * auraPulse, 0, Math.PI * 2); ctx.fill();
 
     // Hood
@@ -2202,11 +2202,11 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     const bSize = size * breathe;
 
     // Body (armored)
-    const armorG = ctx.createRadialGradient(x, y, bSize * 0.2, x, y, bSize);
-    armorG.addColorStop(0, '#99aacc');
-    armorG.addColorStop(0.5, '#7788aa');
-    armorG.addColorStop(1, '#556677');
-    ctx.fillStyle = armorG;
+    ctx.fillStyle = radGrad(ctx, x, y, bSize * 0.2, x, y, bSize, [
+      [0, '#99aacc'],
+      [0.5, '#7788aa'],
+      [1, '#556677'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, bSize, 0, Math.PI * 2); ctx.fill();
 
     // Armor plates (lines across body)
@@ -2222,16 +2222,15 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     const shieldY = y + Math.sin(eyeAngle) * shieldDist;
     const shieldPerp = eyeAngle + Math.PI / 2;
     const shimmer = 0.5 + Math.sin(time * 5) * 0.15; // shield shimmer
-    const shG = ctx.createLinearGradient(
+    ctx.fillStyle = linGrad(ctx,
       shieldX - Math.cos(shieldPerp) * bSize * 0.5,
       shieldY - Math.sin(shieldPerp) * bSize * 0.5,
       shieldX + Math.cos(shieldPerp) * bSize * 0.5,
-      shieldY + Math.sin(shieldPerp) * bSize * 0.5
-    );
-    shG.addColorStop(0, '#8899bb');
-    shG.addColorStop(shimmer, '#ccddff');
-    shG.addColorStop(1, '#8899bb');
-    ctx.fillStyle = shG;
+      shieldY + Math.sin(shieldPerp) * bSize * 0.5, [
+      [0, '#8899bb'],
+      [shimmer, '#ccddff'],
+      [1, '#8899bb'],
+    ]);
     ctx.beginPath();
     ctx.moveTo(shieldX - Math.cos(shieldPerp) * bSize * 0.6, shieldY - Math.sin(shieldPerp) * bSize * 0.6);
     ctx.lineTo(shieldX + Math.cos(eyeAngle) * bSize * 0.3, shieldY + Math.sin(eyeAngle) * bSize * 0.3);
@@ -2304,10 +2303,10 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     ctx.arc(x, y, size * pulse, 0, Math.PI * 2);
     ctx.fill();
     // Warning glow
-    const glow = ctx.createRadialGradient(x, y, size * 0.3, x, y, size * 1.5);
-    glow.addColorStop(0, 'rgba(255,120,0,0.3)');
-    glow.addColorStop(1, 'transparent');
-    ctx.fillStyle = glow;
+    ctx.fillStyle = radGrad(ctx, x, y, size * 0.3, x, y, size * 1.5, [
+      [0, 'rgba(255,120,0,0.3)'],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath();
     ctx.arc(x, y, size * 1.5, 0, Math.PI * 2);
     ctx.fill();
@@ -2336,10 +2335,10 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     ctx.arc(x, y, size, 0, Math.PI * 2);
     ctx.fill();
     // Inner glow
-    const tpGlow = ctx.createRadialGradient(x, y, 0, x, y, size);
-    tpGlow.addColorStop(0, 'rgba(170,51,204,0.5)');
-    tpGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = tpGlow;
+    ctx.fillStyle = radGrad(ctx, x, y, 0, x, y, size, [
+      [0, 'rgba(170,51,204,0.5)'],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath();
     ctx.arc(x, y, size * 1.3, 0, Math.PI * 2);
     ctx.fill();
@@ -2433,10 +2432,10 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     ctx.fill();
     // Rage aura
     if (rage > 0.3) {
-      const rageGlow = ctx.createRadialGradient(x, y, r * 0.3, x, y, r * 2);
-      rageGlow.addColorStop(0, rgba(255, 0, 0, rage * 0.3));
-      rageGlow.addColorStop(1, 'transparent');
-      ctx.fillStyle = rageGlow;
+      ctx.fillStyle = radGrad(ctx, x, y, r * 0.3, x, y, r * 2, [
+        [0, rgba(255, 0, 0, rage * 0.3)],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.arc(x, y, r * 2, 0, Math.PI * 2);
       ctx.fill();
@@ -2491,19 +2490,19 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     }
 
     // Dark aura gradient
-    const lordAura = ctx.createRadialGradient(x, y, size * 0.4, x, y, size * 2.2);
-    lordAura.addColorStop(0, 'rgba(80,30,10,0.15)');
-    lordAura.addColorStop(0.5, 'rgba(200,100,20,0.06)');
-    lordAura.addColorStop(1, 'transparent');
-    ctx.fillStyle = lordAura;
+    ctx.fillStyle = radGrad(ctx, x, y, size * 0.4, x, y, size * 2.2, [
+      [0, 'rgba(80,30,10,0.15)'],
+      [0.5, 'rgba(200,100,20,0.06)'],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, size * 2.2, 0, Math.PI * 2); ctx.fill();
 
     // Body (dark imposing form)
-    const lordG = ctx.createRadialGradient(x, y - size * 0.2, size * 0.2, x, y, size);
-    lordG.addColorStop(0, '#553300');
-    lordG.addColorStop(0.4, '#331100');
-    lordG.addColorStop(1, '#110000');
-    ctx.fillStyle = lordG;
+    ctx.fillStyle = radGrad(ctx, x, y - size * 0.2, size * 0.2, x, y, size, [
+      [0, '#553300'],
+      [0.4, '#331100'],
+      [1, '#110000'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
     // Rim lighting
     ctx.strokeStyle = rgba(255, 170, 0, 0.3 + Math.sin(time * 2) * 0.15);
@@ -2551,11 +2550,11 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
 
   } else {
     // ── DEFAULT ENEMY: gradient circle with eyes ──
-    const defG = ctx.createRadialGradient(x - size * 0.2, y - size * 0.2, size * 0.1, x, y, size);
-    defG.addColorStop(0, '#ffffff22');
-    defG.addColorStop(0.2, color);
-    defG.addColorStop(1, 'rgba(0,0,0,0.3)');
-    ctx.fillStyle = defG;
+    ctx.fillStyle = radGrad(ctx, x - size * 0.2, y - size * 0.2, size * 0.1, x, y, size, [
+      [0, '#ffffff22'],
+      [0.2, color],
+      [1, 'rgba(0,0,0,0.3)'],
+    ]);
     ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,.3)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.stroke();
@@ -2648,10 +2647,10 @@ export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): vo
 
     // Boss aura
     if (et.boss) {
-      const bg2 = ctx.createRadialGradient(e.x, e.y, et.size * 0.5, e.x, e.y, et.size * 2);
-      bg2.addColorStop(0, 'rgba(200,80,40,.08)');
-      bg2.addColorStop(1, 'transparent');
-      ctx.fillStyle = bg2;
+      ctx.fillStyle = radGrad(ctx, e.x, e.y, et.size * 0.5, e.x, e.y, et.size * 2, [
+        [0, 'rgba(200,80,40,.08)'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.arc(e.x, e.y, et.size * 2, 0, Math.PI * 2);
       ctx.fill();
@@ -2660,11 +2659,11 @@ export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): vo
     // Elite golden glow
     if (e._elite && !et.boss) {
       const pulse = 0.8 + 0.2 * Math.sin(state.time * 4);
-      const eg = ctx.createRadialGradient(e.x, e.y, et.size * 0.2, e.x, e.y, et.size * 1.8);
-      eg.addColorStop(0, rgba(255, 200, 60, 0.18 * pulse));
-      eg.addColorStop(0.5, rgba(220, 170, 40, 0.08 * pulse));
-      eg.addColorStop(1, 'transparent');
-      ctx.fillStyle = eg;
+      ctx.fillStyle = radGrad(ctx, e.x, e.y, et.size * 0.2, e.x, e.y, et.size * 1.8, [
+        [0, rgba(255, 200, 60, 0.18 * pulse)],
+        [0.5, rgba(220, 170, 40, 0.08 * pulse)],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.arc(e.x, e.y, et.size * 1.8, 0, Math.PI * 2);
       ctx.fill();
@@ -2680,11 +2679,11 @@ export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): vo
       ctx.arc(e.x, e.y, et.size * 1.5, 0, Math.PI * 2);
       ctx.stroke();
       // Inner glow
-      const sg = ctx.createRadialGradient(e.x, e.y, et.size * 0.3, e.x, e.y, et.size * 1.6);
-      sg.addColorStop(0, rgba(100, 150, 255, 0.12 * pulse));
-      sg.addColorStop(0.6, rgba(80, 120, 220, 0.06 * pulse));
-      sg.addColorStop(1, 'transparent');
-      ctx.fillStyle = sg;
+      ctx.fillStyle = radGrad(ctx, e.x, e.y, et.size * 0.3, e.x, e.y, et.size * 1.6, [
+        [0, rgba(100, 150, 255, 0.12 * pulse)],
+        [0.6, rgba(80, 120, 220, 0.06 * pulse)],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.arc(e.x, e.y, et.size * 1.6, 0, Math.PI * 2);
       ctx.fill();
@@ -2818,12 +2817,12 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       ctx.translate(s.x, s.y);
       ctx.rotate(spinRate);
       // Outer rim - steel blue
-      const shieldGrad = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, r * 1.2);
-      shieldGrad.addColorStop(0, '#ddeeff');
-      shieldGrad.addColorStop(0.5, '#aabbcc');
-      shieldGrad.addColorStop(0.8, '#8899aa');
-      shieldGrad.addColorStop(1, '#667788');
-      ctx.fillStyle = shieldGrad;
+      ctx.fillStyle = radGrad(ctx, 0, 0, r * 0.3, 0, 0, r * 1.2, [
+        [0, '#ddeeff'],
+        [0.5, '#aabbcc'],
+        [0.8, '#8899aa'],
+        [1, '#667788'],
+      ]);
       ctx.beginPath(); ctx.arc(0, 0, r * 1.2, 0, Math.PI * 2); ctx.fill();
       // Inner shield emblem - cross pattern
       ctx.strokeStyle = '#ccddee';
@@ -2861,18 +2860,18 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
         ctx.stroke();
       }
       // Warm golden glow halo
-      const holyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 2.0);
-      holyGrad.addColorStop(0, 'rgba(255,240,200,0.5)');
-      holyGrad.addColorStop(0.5, 'rgba(255,220,150,0.2)');
-      holyGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = holyGrad;
+      ctx.fillStyle = radGrad(ctx, 0, 0, 0, 0, 0, r * 2.0, [
+        [0, 'rgba(255,240,200,0.5)'],
+        [0.5, 'rgba(255,220,150,0.2)'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath(); ctx.arc(0, 0, r * 2.0, 0, Math.PI * 2); ctx.fill();
       // Teardrop body - bright golden/white
-      const bodyGrad = ctx.createRadialGradient(r * 0.2, 0, r * 0.1, 0, 0, r * 1.0);
-      bodyGrad.addColorStop(0, '#ffffee');
-      bodyGrad.addColorStop(0.4, '#ffddaa');
-      bodyGrad.addColorStop(1, '#ccaa66');
-      ctx.fillStyle = bodyGrad;
+      ctx.fillStyle = radGrad(ctx, r * 0.2, 0, r * 0.1, 0, 0, r * 1.0, [
+        [0, '#ffffee'],
+        [0.4, '#ffddaa'],
+        [1, '#ccaa66'],
+      ]);
       ctx.beginPath();
       ctx.moveTo(r * 1.3, 0);
       ctx.quadraticCurveTo(r * 0.2, -r * 0.8, -r * 1.0, 0);
@@ -2956,11 +2955,11 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       }
       // Irregular organic body
       const pulseR = r * (1.0 + 0.1 * Math.sin(t * 10));
-      const bodyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, pulseR * 1.3);
-      bodyGrad.addColorStop(0, '#66cc44');
-      bodyGrad.addColorStop(0.5, '#44aa33');
-      bodyGrad.addColorStop(1, '#337722');
-      ctx.fillStyle = bodyGrad;
+      ctx.fillStyle = radGrad(ctx, 0, 0, 0, 0, 0, pulseR * 1.3, [
+        [0, '#66cc44'],
+        [0.5, '#44aa33'],
+        [1, '#337722'],
+      ]);
       // Draw irregular shape
       ctx.beginPath();
       for (let i = 0; i < 8; i++) {
@@ -3047,11 +3046,11 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
         ctx.beginPath(); ctx.arc(0, 0, ringR, 0, Math.PI * 2); ctx.stroke();
       }
       // Golden/amber glow
-      const timeGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.5);
-      timeGrad.addColorStop(0, '#ffffcc');
-      timeGrad.addColorStop(0.4, '#ffcc44');
-      timeGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = timeGrad;
+      ctx.fillStyle = radGrad(ctx, 0, 0, 0, 0, 0, r * 1.5, [
+        [0, '#ffffcc'],
+        [0.4, '#ffcc44'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath(); ctx.arc(0, 0, r * 1.5, 0, Math.PI * 2); ctx.fill();
       // Clock face circle
       ctx.strokeStyle = 'rgba(255,220,100,0.6)';
@@ -3112,11 +3111,11 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       }
 
       // Outer flame
-      const fGrad = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r * 1.8);
-      fGrad.addColorStop(0, '#ffcc33');
-      fGrad.addColorStop(0.4, '#ff6600');
-      fGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = fGrad;
+      ctx.fillStyle = radGrad(ctx, 0, 0, r * 0.2, 0, 0, r * 1.8, [
+        [0, '#ffcc33'],
+        [0.4, '#ff6600'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.moveTo(r * 1.3, 0);
       ctx.quadraticCurveTo(r * 0.3, -r * 1.0, -r * 1.5, 0);
@@ -3192,10 +3191,10 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       ctx.translate(s.x, s.y);
       const spinAngle = t * 10;
       // Outer glow
-      const hGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.8);
-      hGrad.addColorStop(0, s.color);
-      hGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = hGrad;
+      ctx.fillStyle = radGrad(ctx, 0, 0, 0, 0, 0, r * 1.8, [
+        [0, s.color],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.arc(0, 0, r * 1.8, 0, Math.PI * 2);
       ctx.fill();
@@ -3233,11 +3232,11 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       ctx.stroke();
 
       // Core with brighter gradient
-      const bGrad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r);
-      bGrad.addColorStop(0, '#ffffff');
-      bGrad.addColorStop(0.3, '#eeccff');
-      bGrad.addColorStop(1, '#7744bb');
-      ctx.fillStyle = bGrad;
+      ctx.fillStyle = radGrad(ctx, s.x, s.y, 0, s.x, s.y, r, [
+        [0, '#ffffff'],
+        [0.3, '#eeccff'],
+        [1, '#7744bb'],
+      ]);
       ctx.beginPath();
       ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
       ctx.fill();
@@ -3267,11 +3266,11 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       ctx.translate(s.x, s.y);
       ctx.rotate(a);
       // Ghost body
-      const sGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.3);
-      sGrad.addColorStop(0, '#88ff88');
-      sGrad.addColorStop(0.5, '#44aa44');
-      sGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = sGrad;
+      ctx.fillStyle = radGrad(ctx, 0, 0, 0, 0, 0, r * 1.3, [
+        [0, '#88ff88'],
+        [0.5, '#44aa44'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.arc(0, 0, r * 1.3, 0, Math.PI * 2);
       ctx.fill();
@@ -3406,10 +3405,10 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
 
     } else {
       // ── DEFAULT: glowing orb (for any unmatched spell) ──
-      const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r * 1.5);
-      g.addColorStop(0, s.color);
-      g.addColorStop(1, 'transparent');
-      ctx.fillStyle = g;
+      ctx.fillStyle = radGrad(ctx, s.x, s.y, 0, s.x, s.y, r * 1.5, [
+        [0, s.color],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.arc(s.x, s.y, r * 1.5, 0, Math.PI * 2);
       ctx.fill();
@@ -3433,11 +3432,11 @@ export function drawEProj(ctx: CanvasRenderingContext2D, state: GameState): void
     ctx.lineTo(p.x - Math.cos(a) * p.radius * 2, p.y - Math.sin(a) * p.radius * 2);
     ctx.stroke();
     // Body
-    const epG = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
-    epG.addColorStop(0, '#ffffff88');
-    epG.addColorStop(0.4, p.color);
-    epG.addColorStop(1, 'transparent');
-    ctx.fillStyle = epG;
+    ctx.fillStyle = radGrad(ctx, p.x, p.y, 0, p.x, p.y, p.radius, [
+      [0, '#ffffff88'],
+      [0.4, p.color],
+      [1, 'transparent'],
+    ]);
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -3464,10 +3463,10 @@ export function drawPickups(ctx: CanvasRenderingContext2D, state: GameState): vo
       ctx.textAlign = 'center';
       ctx.fillText('?', pk.x, pk.y + 5);
     } else if (pk.type === PickupType.Health) {
-      const g = ctx.createRadialGradient(pk.x, pk.y, 3, pk.x, pk.y, 12 + pulse * 4);
-      g.addColorStop(0, 'rgba(50,255,120,.3)');
-      g.addColorStop(1, 'transparent');
-      ctx.fillStyle = g;
+      ctx.fillStyle = radGrad(ctx, pk.x, pk.y, 3, pk.x, pk.y, 12 + pulse * 4, [
+        [0, 'rgba(50,255,120,.3)'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.arc(pk.x, pk.y, 12 + pulse * 4, 0, Math.PI * 2);
       ctx.fill();
@@ -3479,10 +3478,10 @@ export function drawPickups(ctx: CanvasRenderingContext2D, state: GameState): vo
       // XP gem: glowing blue-white diamond, bobbing, size based on value
       const bob = Math.sin(state.time * 4) * 3;
       const gemSize = Math.min(4 + pk.value * 0.5, 10);
-      const gx = ctx.createRadialGradient(pk.x, pk.y + bob, 1, pk.x, pk.y + bob, gemSize + 4);
-      gx.addColorStop(0, 'rgba(140,200,255,.5)');
-      gx.addColorStop(1, 'transparent');
-      ctx.fillStyle = gx;
+      ctx.fillStyle = radGrad(ctx, pk.x, pk.y + bob, 1, pk.x, pk.y + bob, gemSize + 4, [
+        [0, 'rgba(140,200,255,.5)'],
+        [1, 'transparent'],
+      ]);
       ctx.beginPath();
       ctx.arc(pk.x, pk.y + bob, gemSize + 4, 0, Math.PI * 2);
       ctx.fill();

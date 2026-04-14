@@ -5,6 +5,7 @@ import {
   WALL_THICKNESS,
 } from '../constants';
 import { GamePhase } from '../types';
+import { radGrad } from './gradient-cache';
 
 // ═══════════════════════════════════
 //       AMBIENT PARTICLES
@@ -521,11 +522,11 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
     const g = Math.round((40 * purpleWeight + 130 * amberWeight + 40 * blueWeight) / totalWeight);
     const b = Math.round((160 * purpleWeight + 50 * amberWeight + 140 * blueWeight) / totalWeight);
     const ambientAlpha = 0.012 + 0.008 * Math.sin(t * 0.15);
-    const ambientGrad = ctx.createRadialGradient(cx, cy, 50, cx, cy, Math.max(ROOM_WIDTH, ROOM_HEIGHT) * 0.6);
-    ambientGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${ambientAlpha})`);
-    ambientGrad.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, ${ambientAlpha * 0.5})`);
-    ambientGrad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-    ctx.fillStyle = ambientGrad;
+    ctx.fillStyle = radGrad(ctx, cx, cy, 50, cx, cy, Math.max(ROOM_WIDTH, ROOM_HEIGHT) * 0.6, [
+      [0, `rgba(${r}, ${g}, ${b}, ${ambientAlpha})`],
+      [0.7, `rgba(${r}, ${g}, ${b}, ${ambientAlpha * 0.5})`],
+      [1, `rgba(${r}, ${g}, ${b}, 0)`],
+    ]);
     ctx.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
   }
 
@@ -533,11 +534,11 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
 
   // Soft radial gradient glow beneath rings (pulsing fill)
   const pulseAlpha = 0.03 + 0.02 * Math.sin(t * 0.6);
-  const runeGlowGrad = ctx.createRadialGradient(cx, cy, 60, cx, cy, 200);
-  runeGlowGrad.addColorStop(0, `rgba(100, 60, 180, ${pulseAlpha})`);
-  runeGlowGrad.addColorStop(0.6, `rgba(80, 50, 160, ${pulseAlpha * 0.5})`);
-  runeGlowGrad.addColorStop(1, 'rgba(60, 30, 120, 0)');
-  ctx.fillStyle = runeGlowGrad;
+  ctx.fillStyle = radGrad(ctx, cx, cy, 60, cx, cy, 200, [
+    [0, `rgba(100, 60, 180, ${pulseAlpha})`],
+    [0.6, `rgba(80, 50, 160, ${pulseAlpha * 0.5})`],
+    [1, 'rgba(60, 30, 120, 0)'],
+  ]);
   ctx.beginPath(); ctx.arc(cx, cy, 200, 0, Math.PI * 2); ctx.fill();
 
   // Animated ring strokes
@@ -554,10 +555,10 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
     const rx = cx + Math.cos(a) * 150;
     const ry = cy + Math.sin(a) * 150;
     const glowR = 8 + 3 * Math.sin(t * 1.2 + i * 0.8);
-    const symGlow = ctx.createRadialGradient(rx, ry, 0, rx, ry, glowR);
-    symGlow.addColorStop(0, `rgba(130, 90, 220, ${0.06 + 0.03 * Math.sin(t * 1.5 + i)})`);
-    symGlow.addColorStop(1, 'rgba(130, 90, 220, 0)');
-    ctx.fillStyle = symGlow;
+    ctx.fillStyle = radGrad(ctx, rx, ry, 0, rx, ry, glowR, [
+      [0, `rgba(130, 90, 220, ${0.06 + 0.03 * Math.sin(t * 1.5 + i)})`],
+      [1, 'rgba(130, 90, 220, 0)'],
+    ]);
     ctx.beginPath(); ctx.arc(rx, ry, glowR, 0, Math.PI * 2); ctx.fill();
   }
 
@@ -580,10 +581,10 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
   for (const fog of fogPatches) {
     const fx = fog.baseX + Math.sin(t * fog.speedX + fog.phaseX) * 80;
     const fy = fog.baseY + Math.cos(t * fog.speedY + fog.phaseY) * 60;
-    const fogGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, fog.radius);
-    fogGrad.addColorStop(0, `hsla(${fog.hue}, 30%, 12%, ${fog.alpha})`);
-    fogGrad.addColorStop(1, `hsla(${fog.hue}, 30%, 12%, 0)`);
-    ctx.fillStyle = fogGrad;
+    ctx.fillStyle = radGrad(ctx, fx, fy, 0, fx, fy, fog.radius, [
+      [0, `hsla(${fog.hue}, 30%, 12%, ${fog.alpha})`],
+      [1, `hsla(${fog.hue}, 30%, 12%, 0)`],
+    ]);
     ctx.fillRect(fx - fog.radius, fy - fog.radius, fog.radius * 2, fog.radius * 2);
   }
 
@@ -591,11 +592,11 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
   for (const gf of groundFogBlobs) {
     const fogX = gf.baseX + Math.sin(t * gf.driftSpeed + gf.phase) * gf.driftAmplitude;
     const fogY = gf.y + Math.cos(t * gf.driftSpeed * 0.7 + gf.phase) * 20;
-    const gfGrad = ctx.createRadialGradient(fogX, fogY, 0, fogX, fogY, gf.radius);
-    gfGrad.addColorStop(0, `hsla(${gf.hue}, 35%, 15%, ${gf.alpha})`);
-    gfGrad.addColorStop(0.6, `hsla(${gf.hue}, 35%, 12%, ${gf.alpha * 0.5})`);
-    gfGrad.addColorStop(1, `hsla(${gf.hue}, 35%, 10%, 0)`);
-    ctx.fillStyle = gfGrad;
+    ctx.fillStyle = radGrad(ctx, fogX, fogY, 0, fogX, fogY, gf.radius, [
+      [0, `hsla(${gf.hue}, 35%, 15%, ${gf.alpha})`],
+      [0.6, `hsla(${gf.hue}, 35%, 12%, ${gf.alpha * 0.5})`],
+      [1, `hsla(${gf.hue}, 35%, 10%, 0)`],
+    ]);
     ctx.fillRect(fogX - gf.radius, fogY - gf.radius, gf.radius * 2, gf.radius * 2);
   }
 
@@ -608,10 +609,10 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
     else if (torch.side === 'left') lightX += 30;
     else lightX -= 30;
     const lightAlpha = 0.03 + 0.015 * Math.sin(t * 3.5 + torch.phase);
-    const lightGrad = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, 60);
-    lightGrad.addColorStop(0, `rgba(200, 150, 60, ${lightAlpha})`);
-    lightGrad.addColorStop(1, 'rgba(200, 150, 60, 0)');
-    ctx.fillStyle = lightGrad;
+    ctx.fillStyle = radGrad(ctx, lightX, lightY, 0, lightX, lightY, 60, [
+      [0, `rgba(200, 150, 60, ${lightAlpha})`],
+      [1, 'rgba(200, 150, 60, 0)'],
+    ]);
     ctx.beginPath(); ctx.arc(lightX, lightY, 60, 0, Math.PI * 2); ctx.fill();
 
     // Bracket shape
@@ -720,11 +721,11 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
       const [csx, csy] = cornerPositions[ci];
       const shadowRadius = 130 + 20 * Math.sin(t * 0.3 + ci * 1.5);
       const shadowAlpha = 0.06 + 0.02 * Math.sin(t * 0.25 + ci * 1.2);
-      const csGrad = ctx.createRadialGradient(csx, csy, 0, csx, csy, shadowRadius);
-      csGrad.addColorStop(0, `rgba(5, 2, 15, ${shadowAlpha})`);
-      csGrad.addColorStop(0.6, `rgba(5, 2, 15, ${shadowAlpha * 0.4})`);
-      csGrad.addColorStop(1, 'rgba(5, 2, 15, 0)');
-      ctx.fillStyle = csGrad;
+      ctx.fillStyle = radGrad(ctx, csx, csy, 0, csx, csy, shadowRadius, [
+        [0, `rgba(5, 2, 15, ${shadowAlpha})`],
+        [0.6, `rgba(5, 2, 15, ${shadowAlpha * 0.4})`],
+        [1, 'rgba(5, 2, 15, 0)'],
+      ]);
       ctx.fillRect(csx - shadowRadius, csy - shadowRadius, shadowRadius * 2, shadowRadius * 2);
     }
   }
@@ -774,11 +775,11 @@ export function drawPillars(ctx: CanvasRenderingContext2D, state: GameState): vo
     const r = p.radius;
 
     // Gradient ellipse shadow (wider spread)
-    const shadowGrad = ctx.createRadialGradient(p.x + 2, p.y + r * 0.6, 0, p.x + 2, p.y + r * 0.6, r * 1.3);
-    shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.25)');
-    shadowGrad.addColorStop(0.6, 'rgba(0, 0, 0, 0.1)');
-    shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = shadowGrad;
+    ctx.fillStyle = radGrad(ctx, p.x + 2, p.y + r * 0.6, 0, p.x + 2, p.y + r * 0.6, r * 1.3, [
+      [0, 'rgba(0, 0, 0, 0.25)'],
+      [0.6, 'rgba(0, 0, 0, 0.1)'],
+      [1, 'rgba(0, 0, 0, 0)'],
+    ]);
     ctx.beginPath();
     ctx.ellipse(p.x + 2, p.y + r * 0.6, r * 1.2, r * 0.45, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -789,11 +790,11 @@ export function drawPillars(ctx: CanvasRenderingContext2D, state: GameState): vo
     ctx.beginPath(); ctx.arc(p.x, p.y, r + 3, 0, Math.PI * 2); ctx.stroke();
 
     // Pillar body — stone gradient
-    const g = ctx.createRadialGradient(p.x - r * 0.3, p.y - r * 0.3, r * 0.1, p.x, p.y, r);
-    g.addColorStop(0, '#302840');
-    g.addColorStop(0.6, '#1e1530');
-    g.addColorStop(1, '#120e1c');
-    ctx.fillStyle = g;
+    ctx.fillStyle = radGrad(ctx, p.x - r * 0.3, p.y - r * 0.3, r * 0.1, p.x, p.y, r, [
+      [0, '#302840'],
+      [0.6, '#1e1530'],
+      [1, '#120e1c'],
+    ]);
     ctx.beginPath();
     ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
     ctx.fill();

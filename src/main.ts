@@ -39,6 +39,7 @@ import { updateCamera } from './rendering/renderer';
 import { updateFx, drawBeams, drawZones, drawAoe, drawFx, drawCrosshair, drawCountdown, drawSynergyBanner } from './rendering/draw-effects';
 import { drawRoom, drawPillars } from './rendering/draw-room';
 import { drawWizard, drawEnemies, drawSpells, drawEProj, drawPickups } from './rendering/draw-entities';
+import { clearGradCache } from './rendering/gradient-cache';
 import { updateHUD } from './rendering/draw-hud';
 
 import { setupLobby } from './ui/lobby';
@@ -379,6 +380,7 @@ function loop(now: number): void {
   ctx.save();
   ctx.translate(state.camX + state.shakeX, state.camY + state.shakeY);
 
+  clearGradCache();
   drawRoom(ctx, state);
   drawZones(ctx, state);
   drawAoe(ctx, state);
