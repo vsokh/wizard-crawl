@@ -603,8 +603,13 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
   if (p.clsKey === 'warlock' && def.mana > 0) {
     const refund = Math.floor(def.mana * COMBAT.WARLOCK_MANA_REFUND);
     p.mana += refund;
-    p.hp -= 1;
-    if (p.hp <= 0) p.hp = 1; // don't let Dark Pact kill you
+    if (p.soulSiphon) {
+      p.hp = Math.min(p.maxHp, p.hp + 1);
+      spawnText(state, p.x, p.y - 20, '+1 HP', '#44ff88');
+    } else {
+      p.hp -= 1;
+      if (p.hp <= 0) p.hp = 1; // don't let Dark Pact kill you
+    }
   }
   let cd = def.cd;
   // Bloodlust: reduce cooldown based on kill stacks (max +100% attack speed = halve cooldown)
@@ -835,6 +840,8 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     const beamFx = state.beams.acquire();
     if (beamFx) { beamFx.x = p.x; beamFx.y = p.y; beamFx.angle = angle; beamFx.range = def.range; beamFx.width = def.width; beamFx.color = def.color; beamFx.life = 0.15; }
     // Beam hit detection
+    const beamDmg = Math.round(getEffectiveSpellDmg(p, idx) * echoDmgMul);
+    let primaryTarget: EnemyView | null = null;
     for (let d = 0; d < def.range; d += 5) {
       const bx = p.x + cos * d;
       const by = p.y + sin * d;
@@ -846,13 +853,42 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       for (const e of state.enemies) {
         if (!e.alive || e.iframes > 0) continue;
         if (dist(bx, by, e.x, e.y) < ENEMIES[e.type].size + 4) {
-          damageEnemy(state, e, Math.round(getEffectiveSpellDmg(p, idx) * echoDmgMul), p.idx);
+          damageEnemy(state, e, beamDmg, p.idx);
           if (def.drain) {
             p.hp = Math.min(p.maxHp, p.hp + def.drain);
             spawnText(state, p.x, p.y - 20, `+${def.drain}`, '#44ff88');
           }
+          if (!primaryTarget) primaryTarget = e;
           break;
         }
+      }
+    }
+    // Hex Chain: Drain Life chains to additional nearby enemies
+    if (p.hexChain > 0 && primaryTarget) {
+      const hitSet = new Set<EnemyView>([primaryTarget]);
+      let lastHit = primaryTarget;
+      for (let c = 0; c < p.hexChain; c++) {
+        let nearest: EnemyView | null = null;
+        let nd = Infinity;
+        for (const e2 of state.enemies) {
+          if (!e2.alive || hitSet.has(e2)) continue;
+          const d2 = dist(lastHit.x, lastHit.y, e2.x, e2.y);
+          if (d2 < 200 && d2 < nd) { nd = d2; nearest = e2; }
+        }
+        if (!nearest) break;
+        hitSet.add(nearest);
+        damageEnemy(state, nearest, beamDmg, p.idx);
+        if (def.drain) {
+          p.hp = Math.min(p.maxHp, p.hp + def.drain);
+          spawnText(state, p.x, p.y - 20, `+${def.drain}`, '#44ff88');
+        }
+        const chainBeam = state.beams.acquire();
+        if (chainBeam) {
+          chainBeam.x = lastHit.x; chainBeam.y = lastHit.y;
+          chainBeam.angle = Math.atan2(nearest.y - lastHit.y, nearest.x - lastHit.x);
+          chainBeam.range = nd; chainBeam.width = 2; chainBeam.color = def.color; chainBeam.life = 0.12;
+        }
+        lastHit = nearest;
       }
     }
     netSfx(state, SfxName.Zap);
@@ -1052,14 +1088,21 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       netSfx(state, SfxName.Pickup);
     } else if (p.clsKey === 'warlock') {
       // Summon Imp: small ranged demon ally
-      const imp = createFriendlyEnemy(state, p.x + cos * 40, p.y + sin * 40, p.idx);
-      imp.type = '_imp';
-      imp.hp = 5;
-      imp.maxHp = 5;
-      imp._lifespan = 12;
-      state.enemies.push(imp);
-      spawnParticles(state, imp.x, imp.y, '#cc4466', 10);
-      netSfx(state, SfxName.Arcane);
+      let canSpawn = true;
+      if (p.demonicPact) {
+        const impCount = state.enemies.filter(e => e.alive && e._friendly && e.type === '_imp' && e._owner === p.idx).length;
+        if (impCount >= 3) canSpawn = false;
+      }
+      if (canSpawn) {
+        const imp = createFriendlyEnemy(state, p.x + cos * 40, p.y + sin * 40, p.idx);
+        imp.type = '_imp';
+        imp.hp = 5;
+        imp.maxHp = 5;
+        imp._lifespan = p.demonicPact ? 0 : 12;
+        state.enemies.push(imp);
+        spawnParticles(state, imp.x, imp.y, '#cc4466', 10);
+        netSfx(state, SfxName.Arcane);
+      }
     }
   }
 }

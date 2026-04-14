@@ -1621,11 +1621,6 @@ describe('Augment gameplay integration audit', () => {
     'overgrowthHeal',   // [96] Overgrowth — entangle heals allies
     'barkSkinRegen',    // [97] Bark Skin — regen 1 HP every 5s
 
-    // Warlock class-specific
-    'soulSiphon',       // [98] Soul Siphon — Dark Pact heals instead
-    'demonicPact',      // [99] Demonic Pact — permanent imps
-    'hexChain',         // [100] Hex — Drain Life chains to 3 targets
-
     // Monk class-specific
     'zenMana',          // [103] Zen Master — meditation restores mana
 
@@ -1635,8 +1630,8 @@ describe('Augment gameplay integration audit', () => {
     'turretExplode',    // [106] Self-Destruct — turrets explode on expire
   ];
 
-  it('documents all 35 unimplemented augment properties', () => {
-    expect(unimplementedProperties.length).toBe(35);
+  it('documents all 32 unimplemented augment properties', () => {
+    expect(unimplementedProperties.length).toBe(32);
   });
 
   it('all unimplemented properties exist on the Player type', () => {
