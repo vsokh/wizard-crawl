@@ -10,6 +10,7 @@ import {
   PickupType,
   Enemy,
   PlayerInput,
+  EnemyView,
 } from './types';
 import { UPGRADE_POOL, CLASSES, NET_SEND_INTERVAL, NET_SEND_INTERVAL_MAX, NET_CULL_RADIUS, NET_LOD_RADIUS } from './constants';
 import { initAudio } from './audio';
@@ -497,44 +498,45 @@ function applyState(state: GameState, msg: NetStateMessage): void {
   }
 
   // Enemies — match by ID for O(n) reconciliation
+  // With SoA pool, views become invalid after clear(), so extract needed data first.
   if (msg.e) {
-    const oldMap = new Map<number, Enemy>();
-    for (const e of state.enemies) oldMap.set(e.id, e);
-    state.enemies.length = 0;
+    const oldData = new Map<number, { x: number; y: number; _hitFlash: number; _deathTimer: number; _atkAnim: number }>();
+    for (const e of state.enemies) {
+      oldData.set(e.id, { x: e.x, y: e.y, _hitFlash: e._hitFlash, _deathTimer: e._deathTimer, _atkAnim: e._atkAnim });
+    }
+    state.enemies.clear();
 
     for (const ed of msg.e) {
-      const existing = oldMap.get(ed.i);
-      if (existing) {
-        // Reuse matched enemy: set interpolation targets, preserve visual timers
-        existing._prevX = existing.x;
-        existing._prevY = existing.y;
-        existing._targetX = ed.x;
-        existing._targetY = ed.y;
-        existing._lerpT = 0;
-        if (ed.hp !== undefined) existing.hp = ed.hp;
-        if (ed.mhp !== undefined) existing.maxHp = ed.mhp;
-        existing.alive = ed.al;
-        if (ed.tgt !== undefined) existing.target = ed.tgt;
-        state.enemies.push(existing);
+      const old = oldData.get(ed.i);
+      const enemy: any = {
+        id: ed.i,
+        type: ed.t, x: ed.x, y: ed.y, hp: ed.hp ?? 1, maxHp: ed.mhp ?? 1, alive: ed.al, target: ed.tgt ?? 0,
+        vx: 0, vy: 0, atkTimer: 1, iframes: 0, slowTimer: 0, stunTimer: 0,
+        _burnTimer: 0, _burnTick: 0, _burnOwner: 0, _friendly: false, _owner: 0, _lifespan: 0,
+        _spdMul: 1, _dmgMul: 1, _teleportTimer: 0,
+        _hitFlash: 0, _deathTimer: -1, _atkAnim: 0,
+        _elite: false,
+        _dmgReductionActive: false, _dmgReductionTimer: 0, _dmgReductionTriggered: false,
+      };
+      if (old) {
+        // Existing enemy: set up interpolation, preserve visual timers
+        enemy._prevX = old.x;
+        enemy._prevY = old.y;
+        enemy._targetX = ed.x;
+        enemy._targetY = ed.y;
+        enemy._lerpT = 0;
+        enemy._hitFlash = old._hitFlash;
+        enemy._deathTimer = old._deathTimer;
+        enemy._atkAnim = old._atkAnim;
       } else {
-        // New enemy — no interpolation, snap to position
-        const newEnemy: Enemy = {
-          id: ed.i,
-          type: ed.t, x: ed.x, y: ed.y, hp: ed.hp ?? 1, maxHp: ed.mhp ?? 1, alive: ed.al, target: ed.tgt ?? 0,
-          vx: 0, vy: 0, atkTimer: 1, iframes: 0, slowTimer: 0, stunTimer: 0,
-          _burnTimer: 0, _burnTick: 0, _burnOwner: 0, _friendly: false, _owner: 0, _lifespan: 0,
-          _spdMul: 1, _dmgMul: 1, _teleportTimer: 0,
-          _hitFlash: 0, _deathTimer: -1, _atkAnim: 0,
-          _elite: false,
-          _dmgReductionActive: false, _dmgReductionTimer: 0, _dmgReductionTriggered: false,
-        };
-        newEnemy._prevX = ed.x;
-        newEnemy._prevY = ed.y;
-        newEnemy._targetX = ed.x;
-        newEnemy._targetY = ed.y;
-        newEnemy._lerpT = 1;
-        state.enemies.push(newEnemy);
+        // New enemy: snap to position, no interpolation
+        enemy._prevX = ed.x;
+        enemy._prevY = ed.y;
+        enemy._targetX = ed.x;
+        enemy._targetY = ed.y;
+        enemy._lerpT = 1;
       }
+      state.enemies.push(enemy);
     }
   }
 

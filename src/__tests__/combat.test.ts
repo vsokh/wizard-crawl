@@ -28,7 +28,7 @@ describe('damageEnemy()', () => {
       const p = createTestPlayer(0, 'pyromancer');
       state.players = [p];
       const e = createTestEnemy({ hp: 10, maxHp: 10 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 3, 0);
 
@@ -39,7 +39,7 @@ describe('damageEnemy()', () => {
       const p = createTestPlayer(0, 'pyromancer');
       state.players = [p];
       const e = createTestEnemy({ hp: 10, maxHp: 10 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 
@@ -50,7 +50,7 @@ describe('damageEnemy()', () => {
       const p = createTestPlayer(0, 'pyromancer');
       state.players = [p];
       const e = createTestEnemy({ hp: 10, maxHp: 10 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 
@@ -63,7 +63,7 @@ describe('damageEnemy()', () => {
       const p = createTestPlayer(0, 'pyromancer');
       state.players = [p];
       const e = createTestEnemy({ hp: 10, maxHp: 10, iframes: 0.5 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 5, 0);
 
@@ -76,7 +76,7 @@ describe('damageEnemy()', () => {
       const p = createTestPlayer(0, 'pyromancer');
       state.players = [p];
       const e = createTestEnemy({ hp: 3, maxHp: 10, _deathTimer: 0.2 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 5, 0);
 
@@ -90,7 +90,7 @@ describe('damageEnemy()', () => {
       p._furyActive = true;
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 4, 0);
 
@@ -105,7 +105,7 @@ describe('damageEnemy()', () => {
       p._rageDmgMul = 2;
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 3, 0);
 
@@ -120,7 +120,7 @@ describe('damageEnemy()', () => {
       state.players = [p];
       state.shopTempDmg = 2;
       const e = createTestEnemy({ hp: 10, maxHp: 10 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 3, 0);
 
@@ -136,7 +136,7 @@ describe('damageEnemy()', () => {
       p.ultChargeRate = 1;
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 
@@ -149,7 +149,7 @@ describe('damageEnemy()', () => {
       p.ultChargeRate = 1;
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 
@@ -164,7 +164,7 @@ describe('damageEnemy()', () => {
       p.ultOverflow = true;
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 
@@ -178,7 +178,7 @@ describe('damageEnemy()', () => {
       p.ultChargeRate = 2;
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 
@@ -192,7 +192,7 @@ describe('damageEnemy()', () => {
       p.hitCounter = 4; // next hit is 5th
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 
@@ -205,7 +205,7 @@ describe('damageEnemy()', () => {
       p.hitCounter = 2;
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 
@@ -219,7 +219,7 @@ describe('damageEnemy()', () => {
       const p = createTestPlayer(0, 'cryomancer');
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20, slowTimer: 1 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 3, 0);
 
@@ -231,7 +231,7 @@ describe('damageEnemy()', () => {
       const p = createTestPlayer(0, 'cryomancer');
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20, slowTimer: 0 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 3, 0);
 
@@ -244,7 +244,7 @@ describe('damageEnemy()', () => {
       const p = createTestPlayer(0, 'pyromancer');
       state.players = [p];
       const e = createTestEnemy({ hp: 3, maxHp: 5 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 3, 0);
 
@@ -255,7 +255,7 @@ describe('damageEnemy()', () => {
       const p = createTestPlayer(0, 'pyromancer');
       state.players = [p];
       const e = createTestEnemy({ hp: 1, maxHp: 5 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 
@@ -266,7 +266,7 @@ describe('damageEnemy()', () => {
       const p = createTestPlayer(0, 'pyromancer');
       state.players = [p];
       const e = createTestEnemy({ hp: 1, maxHp: 5 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 
@@ -277,7 +277,7 @@ describe('damageEnemy()', () => {
       const p = createTestPlayer(0, 'pyromancer');
       state.players = [p];
       const e = createTestEnemy({ hp: 1, maxHp: 5 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 
@@ -293,7 +293,7 @@ describe('damageEnemy()', () => {
       p.manaOnHit = 3;
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 
@@ -309,7 +309,7 @@ describe('damageEnemy()', () => {
       p.lifeSteal = 0.5;
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 4, 0);
 
@@ -323,7 +323,7 @@ describe('damageEnemy()', () => {
       const p = createTestPlayer(0, 'pyromancer');
       state.players = [p];
       const e = createTestEnemy({ hp: 20, maxHp: 20 });
-      state.enemies = [e];
+      state.enemies.clear(); state.enemies.push(e);
 
       damageEnemy(state, e, 1, 0);
 

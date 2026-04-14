@@ -19,6 +19,7 @@ import {
   SpellDef,
   SpellDefInput,
   NetFxEvent,
+  EnemyPool,
 } from './types';
 import {
   WIZARD_HP,
@@ -82,7 +83,7 @@ export interface GameState {
 
   // Entities
   players: Player[];
-  enemies: Enemy[];
+  enemies: EnemyPool;
   spells: Spell[];
   particles: Pool<Particle>;
   trails: Pool<Trail>;
@@ -182,7 +183,7 @@ export function createInitialState(): GameState {
     mouseDown: false,
     rightDown: false,
     players: [],
-    enemies: [],
+    enemies: new EnemyPool(),
     spells: [],
     particles: new Pool<Particle>(MAX_PARTICLES, () => ({ x: 0, y: 0, vx: 0, vy: 0, life: 0, r: 0, color: '' })),
     trails: new Pool<Trail>(MAX_TRAILS, () => ({ x: 0, y: 0, life: 0, r: 0, color: '' })),

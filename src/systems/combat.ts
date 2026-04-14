@@ -22,6 +22,7 @@ import {
   GamePhase,
   NetworkMode,
   SfxName,
+  EnemyView,
 } from '../types';
 import {
   ENEMIES,
@@ -44,7 +45,7 @@ import { sfx } from '../audio';
 import { createFriendlyEnemy } from './dungeon';
 
 // Pre-allocated scratch array to avoid per-frame filter() allocations
-let _aliveEnemies: Enemy[] = [];
+let _aliveEnemies: EnemyView[] = [];
 
 // ═══════════════════════════════════
 //       BONUS DAMAGE SOFT CAP
@@ -376,7 +377,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
 
     // Chain hit: damage jumps to nearby enemy
     if (p && p.chainHit) {
-      let nearest: Enemy | null = null;
+      let nearest: EnemyView | null = null;
       let nd = Infinity;
       for (const e2 of state.enemies) {
         if (!e2.alive || e2 === e) continue;
@@ -396,7 +397,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
     // Overkill: excess damage chains
     if (p && p.overkill && e.hp < 0) {
       const excess = Math.abs(e.hp);
-      let nearest2: Enemy | null = null;
+      let nearest2: EnemyView | null = null;
       let nd2 = Infinity;
       for (const e2 of state.enemies) {
         if (!e2.alive || e2 === e) continue;
@@ -655,10 +656,10 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       });
       // After detonation, chain to nearby enemies
       setTimeout(() => {
-        const hitEnemies: Enemy[] = [];
+        const hitEnemies: EnemyView[] = [];
         let lastX = wp.x, lastY = wp.y;
         for (let chain = 0; chain < 3; chain++) {
-          let nearest: Enemy | null = null;
+          let nearest: EnemyView | null = null;
           let nd = Infinity;
           for (const e of state.enemies) {
             if (!e.alive || hitEnemies.includes(e)) continue;
@@ -1064,26 +1065,26 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
   } else if (p.clsKey === 'stormcaller') {
     // Chain Lightning: chain from nearest enemy to 7 more
     _aliveEnemies.length = 0;
-    for (let i = 0; i < state.enemies.length; i++) {
-      if (state.enemies[i].alive) _aliveEnemies.push(state.enemies[i]);
+    for (const e2 of state.enemies) {
+      if (e2.alive) _aliveEnemies.push(e2);
     }
     if (_aliveEnemies.length > 0) {
       // Find nearest enemy to start the chain
-      let current: Enemy | null = null;
+      let current: EnemyView | null = null;
       let minD = Infinity;
       for (const e of _aliveEnemies) {
         const d = dist(p.x, p.y, e.x, e.y);
         if (d < minD) { minD = d; current = e; }
       }
-      const chainTargets: Enemy[] = [];
-      const hitSet = new Set<Enemy>();
+      const chainTargets: EnemyView[] = [];
+      const hitSet = new Set<EnemyView>();
       if (current) {
         chainTargets.push(current);
         hitSet.add(current);
       }
       // Chain to 7 more targets
       for (let i = 0; i < ULTIMATE.CHAIN_TARGETS && current; i++) {
-        let next: Enemy | null = null;
+        let next: EnemyView | null = null;
         let nextD = Infinity;
         // Try to find an un-hit enemy within range
         for (const e of _aliveEnemies) {
@@ -1122,7 +1123,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
       }
       for (let i = 0; i < chainTargets.length; i++) {
         const target = chainTargets[i];
-        ((idx: number, t: Enemy) => {
+        ((idx: number, t: EnemyView) => {
           setTimeout(() => {
             if (t.alive) {
               damageEnemy(state, t, chainDmg, p.idx);

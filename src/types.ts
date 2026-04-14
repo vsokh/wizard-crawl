@@ -755,3 +755,7 @@ export interface NetBatchMessage {
 }
 
 export type NetWireMessage = NetMessage | NetBatchMessage;
+
+// Re-export SoA enemy pool types
+export { EnemyPool, EnemyView } from './ecs/enemy-pool';
+export type { EnemyInit } from './ecs/enemy-pool';

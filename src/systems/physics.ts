@@ -15,7 +15,7 @@ import {
   DUNGEON_TIMING,
   GAME_OVER_DELAY_MS,
 } from '../constants';
-import { Enemy, GamePhase, PickupType, SfxName } from '../types';
+import { Enemy, EnemyView, GamePhase, PickupType, SfxName } from '../types';
 import { sfx } from '../audio';
 import { castSpell, castSpellSilent, castUltimate, damageEnemy } from './combat';
 
@@ -125,7 +125,7 @@ export function updatePlayers(state: GameState, dt: number): void {
       if (p._stormTimer >= TIMING.STORM_SHIELD_TIME) {
         p._stormTimer = 0;
         // Find all enemies within range
-        const nearby: Enemy[] = [];
+        const nearby: EnemyView[] = [];
         for (const e of state.enemies) {
           if (!e.alive) continue;
           if (dist(p.x, p.y, e.x, e.y) <= RANGES.STORM_SHIELD) nearby.push(e);

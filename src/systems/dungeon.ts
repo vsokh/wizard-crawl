@@ -31,7 +31,7 @@ import { sfx } from '../audio';
 /** Generate a single arena with scattered pillars (called once at game start) */
 export function generateArena(state: GameState): void {
   state.pillars.length = 0;
-  state.enemies.length = 0;
+  state.enemies.clear();
   state.spells.length = 0;
   state.zones.length = 0;
   state.aoeMarkers.length = 0;

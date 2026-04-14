@@ -312,10 +312,10 @@ function loop(now: number): void {
 
     // Interpolate enemies
     for (const e of state.enemies) {
-      if (e._targetX !== undefined && e._targetY !== undefined) {
-        e._lerpT = Math.min(1, (e._lerpT || 0) + dt * lerpSpeed);
-        e.x = lerp(e._prevX ?? e.x, e._targetX, e._lerpT);
-        e.y = lerp(e._prevY ?? e.y, e._targetY, e._lerpT);
+      if (e._lerpT < 1) {
+        e._lerpT = Math.min(1, e._lerpT + dt * lerpSpeed);
+        e.x = lerp(e._prevX || e.x, e._targetX, e._lerpT);
+        e.y = lerp(e._prevY || e.y, e._targetY, e._lerpT);
       }
       // Decay visual timers on guest (host no longer does this for guest)
       if (e._hitFlash > 0) e._hitFlash -= dt;

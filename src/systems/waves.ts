@@ -1,6 +1,6 @@
 import { GameState, dist, rand, wrapAngle, spawnParticles, spawnShockwave, spawnText, shake, flashScreen } from '../state';
 import { ENEMIES, ROOM_WIDTH, ROOM_HEIGHT, WALL_THICKNESS, WAVE_PHYSICS, TIMING, RANGES } from '../constants';
-import { SfxName } from '../types';
+import { SfxName, EnemyView } from '../types';
 import { sfx } from '../audio';
 import { damageEnemy } from './combat';
 
@@ -84,7 +84,7 @@ export function updateSpells(state: GameState, dt: number): void {
       s.zapTimer -= dt;
       if (s.zapTimer <= 0) {
         s.zapTimer = s.zapRate;
-        let firstTarget: typeof state.enemies[0] | null = null;
+        let firstTarget: EnemyView | null = null;
         for (const e of state.enemies) {
           if (!e.alive) continue;
           if (dist(s.x, s.y, e.x, e.y) < s.zap) {
@@ -106,7 +106,7 @@ export function updateSpells(state: GameState, dt: number): void {
           let prev = firstTarget;
           const chainRange = WAVE_PHYSICS.CHAIN_RANGE;
           for (let i = 0; i < chainCount; i++) {
-            let nearest: typeof state.enemies[0] | null = null;
+            let nearest: EnemyView | null = null;
             let nearestDist = Infinity;
             for (const e of state.enemies) {
               if (!e.alive || zapped.has(e)) continue;
