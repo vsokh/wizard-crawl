@@ -216,6 +216,7 @@ function loop(now: number): void {
     state.gamePhase === GamePhase.GameOver ||
     state.gamePhase === GamePhase.Victory
   ) {
+    flushOutbox();
     requestAnimationFrame(loop);
     return;
   }
