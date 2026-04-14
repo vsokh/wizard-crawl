@@ -1,7 +1,8 @@
 import { GameState, createPlayer } from '../state';
 import { GamePhase, NetworkMode, Player, Particle, Trail, Shockwave, FloatingText, EnemyPool } from '../types';
 import { Pool } from '../systems/pools';
-import { MAX_PARTICLES, MAX_TRAILS, MAX_SHOCKWAVES, MAX_FLOATING_TEXTS } from '../constants';
+import { MAX_PARTICLES, MAX_TRAILS, MAX_SHOCKWAVES, MAX_FLOATING_TEXTS, ROOM_WIDTH, ROOM_HEIGHT } from '../constants';
+import { SpatialGrid } from '../ecs/spatial-grid';
 
 /**
  * Create a GameState-compatible object for testing without window references.
@@ -75,6 +76,7 @@ export function createTestState(): GameState {
     maxLives: 0,
     pendingFx: [],
     _nextEnemyId: 1,
+    enemyGrid: new SpatialGrid(128, ROOM_WIDTH, ROOM_HEIGHT),
   };
 }
 

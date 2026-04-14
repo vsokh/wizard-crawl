@@ -124,9 +124,11 @@ export function updatePlayers(state: GameState, dt: number): void {
       p._stormTimer = (p._stormTimer || 0) + dt;
       if (p._stormTimer >= TIMING.STORM_SHIELD_TIME) {
         p._stormTimer = 0;
-        // Find all enemies within range
+        // Find all enemies within range (using spatial grid for broad phase)
         const nearby: EnemyView[] = [];
-        for (const e of state.enemies) {
+        const shieldCandidates = state.enemyGrid.queryArea(p.x, p.y, RANGES.STORM_SHIELD);
+        for (const idx of shieldCandidates) {
+          const e = state.enemies.at(idx);
           if (!e.alive) continue;
           if (dist(p.x, p.y, e.x, e.y) <= RANGES.STORM_SHIELD) nearby.push(e);
         }

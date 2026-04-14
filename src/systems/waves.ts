@@ -4,6 +4,10 @@ import { SfxName, EnemyView } from '../types';
 import { sfx } from '../audio';
 import { damageEnemy } from './combat';
 
+// Upper bound on enemy collision radius for broad-phase query padding.
+// The largest enemy (archlord) has size 28; 30 provides a safe margin.
+const MAX_ENEMY_SIZE = 30;
+
 // ═══════════════════════════════════
 //       SPELL UPDATE
 // ═══════════════════════════════════
@@ -16,7 +20,9 @@ export function updateSpells(state: GameState, dt: number): void {
     if (s.homing) {
       let nt = null;
       let nd = Infinity;
-      for (const e of state.enemies) {
+      const homingCandidates = state.enemyGrid.queryArea(s.x, s.y, 280);
+      for (const idx of homingCandidates) {
+        const e = state.enemies.at(idx);
         if (!e.alive) continue;
         const d = dist(s.x, s.y, e.x, e.y);
         if (d < nd) { nd = d; nt = e; }
@@ -59,7 +65,9 @@ export function updateSpells(state: GameState, dt: number): void {
 
     // Gravity Well: pull nearby enemies toward projectile path
     if (state.players[s.owner]?.gravityWell) {
-      for (const e of state.enemies) {
+      const gwCandidates = state.enemyGrid.queryArea(s.x, s.y, 60);
+      for (const idx of gwCandidates) {
+        const e = state.enemies.at(idx);
         if (!e.alive) continue;
         const d = dist(s.x, s.y, e.x, e.y);
         if (d < 60 && d > 5) {
@@ -85,7 +93,9 @@ export function updateSpells(state: GameState, dt: number): void {
       if (s.zapTimer <= 0) {
         s.zapTimer = s.zapRate;
         let firstTarget: EnemyView | null = null;
-        for (const e of state.enemies) {
+        const zapCandidates = state.enemyGrid.queryArea(s.x, s.y, s.zap);
+        for (const idx of zapCandidates) {
+          const e = state.enemies.at(idx);
           if (!e.alive) continue;
           if (dist(s.x, s.y, e.x, e.y) < s.zap) {
             state.beams.push({
@@ -108,7 +118,9 @@ export function updateSpells(state: GameState, dt: number): void {
           for (let i = 0; i < chainCount; i++) {
             let nearest: EnemyView | null = null;
             let nearestDist = Infinity;
-            for (const e of state.enemies) {
+            const chainCandidates = state.enemyGrid.queryArea(prev.x, prev.y, chainRange);
+            for (const idx of chainCandidates) {
+              const e = state.enemies.at(idx);
               if (!e.alive || zapped.has(e)) continue;
               const d = dist(prev.x, prev.y, e.x, e.y);
               if (d < chainRange && d < nearestDist) {
@@ -144,7 +156,9 @@ export function updateSpells(state: GameState, dt: number): void {
 
     // Collision with enemies
     let hitE = false;
-    for (const e of state.enemies) {
+    const collCandidates = state.enemyGrid.queryArea(s.x, s.y, MAX_ENEMY_SIZE + s.radius);
+    for (const idx of collCandidates) {
+      const e = state.enemies.at(idx);
       if (!e.alive || e.iframes > 0) continue;
       if (dist(s.x, s.y, e.x, e.y) < ENEMIES[e.type].size + s.radius) {
         damageEnemy(state, e, s.dmg, s.owner);
@@ -221,7 +235,9 @@ export function updateSpells(state: GameState, dt: number): void {
           spawnShockwave(state, s.x, s.y, s.explode * WAVE_PHYSICS.MAGIC_EXPLOSION_SHOCKWAVE, '#6622aa');
         }
 
-        for (const e of state.enemies) {
+        const explodeCandidates = state.enemyGrid.queryArea(s.x, s.y, s.explode);
+        for (const idx of explodeCandidates) {
+          const e = state.enemies.at(idx);
           if (!e.alive) continue;
           if (dist(s.x, s.y, e.x, e.y) < s.explode) {
             damageEnemy(state, e, 1, s.owner);
@@ -234,7 +250,9 @@ export function updateSpells(state: GameState, dt: number): void {
         // Volatile: explode on expiry
         spawnParticles(state, s.x, s.y, s.color, 12, WAVE_PHYSICS.ZONE_HIT_PARTICLE_LIFE);
         spawnShockwave(state, s.x, s.y, 40, s.color);
-        for (const e of state.enemies) {
+        const volatileCandidates = state.enemyGrid.queryArea(s.x, s.y, 40);
+        for (const idx of volatileCandidates) {
+          const e = state.enemies.at(idx);
           if (!e.alive) continue;
           if (dist(s.x, s.y, e.x, e.y) < 40) {
             damageEnemy(state, e, 2, s.owner);
@@ -260,7 +278,9 @@ export function updateAoe(state: GameState, dt: number): void {
       sfx(SfxName.Boom);
       shake(state, 6);
       flashScreen(state, 0.1);
-      for (const e of state.enemies) {
+      const aoeCandidates = state.enemyGrid.queryArea(m.x, m.y, m.radius + MAX_ENEMY_SIZE);
+      for (const idx of aoeCandidates) {
+        const e = state.enemies.at(idx);
         if (!e.alive) continue;
         if (dist(m.x, m.y, e.x, e.y) < m.radius + ENEMIES[e.type].size) {
           damageEnemy(state, e, m.dmg, m.owner);
@@ -284,7 +304,9 @@ export function updateZones(state: GameState, dt: number): void {
     if (z.tickTimer <= 0) {
       z.tickTimer = z.tickRate;
       let zHealed = 0;
-      for (const e of state.enemies) {
+      const zoneCandidates = state.enemyGrid.queryArea(z.x, z.y, z.radius + MAX_ENEMY_SIZE);
+      for (const idx of zoneCandidates) {
+        const e = state.enemies.at(idx);
         if (!e.alive) continue;
         if (dist(z.x, z.y, e.x, e.y) < z.radius + ENEMIES[e.type].size) {
           damageEnemy(state, e, z.dmg, z.owner);
@@ -299,7 +321,8 @@ export function updateZones(state: GameState, dt: number): void {
       }
       // Freeze-after: stun enemies inside zone once age threshold reached
       if (z.freezeAfter && z.age >= z.freezeAfter) {
-        for (const e of state.enemies) {
+        for (const idx of zoneCandidates) {
+          const e = state.enemies.at(idx);
           if (!e.alive) continue;
           if (dist(z.x, z.y, e.x, e.y) < z.radius + ENEMIES[e.type].size) {
             e.stunTimer = Math.max(e.stunTimer || 0, z.duration - z.age);

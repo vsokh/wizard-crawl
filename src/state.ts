@@ -21,6 +21,7 @@ import {
   NetFxEvent,
   EnemyPool,
 } from './types';
+import { SpatialGrid } from './ecs/spatial-grid';
 import {
   WIZARD_HP,
   MAX_MANA,
@@ -145,6 +146,9 @@ export interface GameState {
 
   // Monotonic enemy ID counter (host only)
   _nextEnemyId: number;
+
+  // Spatial grid for broad-phase enemy collision queries
+  enemyGrid: SpatialGrid;
 }
 
 export function createInitialState(): GameState {
@@ -215,6 +219,7 @@ export function createInitialState(): GameState {
     maxLives: 0,
     pendingFx: [],
     _nextEnemyId: 1,
+    enemyGrid: new SpatialGrid(128, ROOM_WIDTH, ROOM_HEIGHT),
   };
 }
 

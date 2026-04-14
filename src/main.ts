@@ -29,6 +29,7 @@ import { setChestPickupHandler } from './systems/physics';
 import { updatePlayers } from './systems/physics';
 import { updateEnemies, updateEProj } from './systems/enemies';
 import { updateSpells, updateAoe, updateZones } from './systems/waves';
+import { rebuildEnemyGrid } from './systems/spatial';
 import { generateArena, updateWaves } from './systems/dungeon';
 import { showUpgradeScreen } from './systems/upgrades';
 import { initShop, openShop } from './systems/shop';
@@ -51,6 +52,7 @@ import { initPerfOverlay, drawPerfOverlay } from './debug/perf-overlay';
 
 const runner = new SystemRunner();
 runner
+  .add('rebuildEnemyGrid', 5, rebuildEnemyGrid)
   .add('updatePlayers', 10, updatePlayers)
   .add('updateSpells', 20, updateSpells)
   .add('updateAoe', 30, updateAoe)
