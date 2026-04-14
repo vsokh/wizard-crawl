@@ -1,5 +1,5 @@
 import { GameState, rand, toWorld, spawnParticles } from '../state';
-import { GamePhase } from '../types';
+import { GamePhase, Trail, Particle, Shockwave } from '../types';
 import { ROOM_WIDTH, ROOM_HEIGHT } from '../constants';
 import { drawTurret } from './draw-entities';
 
@@ -83,12 +83,18 @@ export function updateFx(state: GameState, dt: number): void {
 // ═══════════════════════════════════
 
 export function drawBeams(ctx: CanvasRenderingContext2D, state: GameState): void {
-  for (const b of state.beams) {
+  if (state.beams.length === 0) return;
+
+  // Pre-compute beam endpoints
+  const beamData = state.beams.map(b => {
     const life = b.life / 0.15;
     const ex = b.x + Math.cos(b.angle) * b.range;
     const ey = b.y + Math.sin(b.angle) * b.range;
+    return { b, life, ex, ey };
+  });
 
-    // Layer 1: outer glow
+  // Pass 1: outer glow (all beams)
+  for (const { b, life, ex, ey } of beamData) {
     ctx.globalAlpha = life * 0.3;
     ctx.strokeStyle = b.color;
     ctx.lineWidth = b.width + 8;
@@ -96,24 +102,30 @@ export function drawBeams(ctx: CanvasRenderingContext2D, state: GameState): void
     ctx.moveTo(b.x, b.y);
     ctx.lineTo(ex, ey);
     ctx.stroke();
+  }
 
-    // Layer 2: mid beam
+  // Pass 2: mid beam (all beams)
+  for (const { b, life, ex, ey } of beamData) {
     ctx.globalAlpha = life * 0.6;
+    ctx.strokeStyle = b.color;
     ctx.lineWidth = b.width + 3;
     ctx.beginPath();
     ctx.moveTo(b.x, b.y);
     ctx.lineTo(ex, ey);
     ctx.stroke();
+  }
 
-    // Layer 3: bright core
+  // Pass 3: bright core (all beams, white)
+  ctx.strokeStyle = '#ffffff';
+  for (const { b, life, ex, ey } of beamData) {
     ctx.globalAlpha = life * 0.8;
-    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = b.width * 0.5;
     ctx.beginPath();
     ctx.moveTo(b.x, b.y);
     ctx.lineTo(ex, ey);
     ctx.stroke();
   }
+
   ctx.globalAlpha = 1;
 }
 
@@ -376,40 +388,62 @@ export function drawAoe(ctx: CanvasRenderingContext2D, state: GameState): void {
 }
 
 export function drawFx(ctx: CanvasRenderingContext2D, state: GameState): void {
-  // Trails
+  // Trails - batch by color
+  const trailsByColor = new Map<string, Trail[]>();
   for (const t of state.trails) {
-    const alpha = t.life * t.life * 0.6;
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = t.color;
-    ctx.beginPath();
-    ctx.arc(t.x, t.y, t.r * t.life, 0, Math.PI * 2);
-    ctx.fill();
+    const group = trailsByColor.get(t.color);
+    if (group) group.push(t);
+    else trailsByColor.set(t.color, [t]);
+  }
+  for (const [color, trails] of trailsByColor) {
+    ctx.fillStyle = color;
+    for (const t of trails) {
+      ctx.globalAlpha = t.life * t.life * 0.6;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, t.r * t.life, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
   ctx.globalAlpha = 1;
 
-  // Particles
+  // Particles - batch by color
+  const particlesByColor = new Map<string, Particle[]>();
   for (const p of state.particles) {
-    ctx.globalAlpha = p.life;
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
-    ctx.fill();
+    const group = particlesByColor.get(p.color);
+    if (group) group.push(p);
+    else particlesByColor.set(p.color, [p]);
+  }
+  for (const [color, particles] of particlesByColor) {
+    ctx.fillStyle = color;
+    for (const p of particles) {
+      ctx.globalAlpha = p.life;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
   ctx.globalAlpha = 1;
 
-  // Shockwaves
+  // Shockwaves - batch by color
+  const shocksByColor = new Map<string, Shockwave[]>();
   for (const s of state.shockwaves) {
-    ctx.globalAlpha = s.life * 0.4;
-    ctx.strokeStyle = s.color;
-    ctx.lineWidth = 3 * s.life;
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-    ctx.stroke();
-    // Inner ring for layered look
-    ctx.globalAlpha = s.life * 0.2;
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.radius * 0.7, 0, Math.PI * 2);
-    ctx.stroke();
+    const group = shocksByColor.get(s.color);
+    if (group) group.push(s);
+    else shocksByColor.set(s.color, [s]);
+  }
+  for (const [color, shocks] of shocksByColor) {
+    ctx.strokeStyle = color;
+    for (const s of shocks) {
+      ctx.lineWidth = 3 * s.life;
+      ctx.globalAlpha = s.life * 0.4;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = s.life * 0.2;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.radius * 0.7, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
   ctx.globalAlpha = 1;
 

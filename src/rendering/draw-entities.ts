@@ -1864,11 +1864,17 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     // Eyes
     const ed = size * 0.3;
     ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle - 0.4) * ed, y + Math.sin(eyeAngle - 0.4) * ed - size * 0.1, 2.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle + 0.4) * ed, y + Math.sin(eyeAngle + 0.4) * ed - size * 0.1, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(eyeAngle - 0.4) * ed, y + Math.sin(eyeAngle - 0.4) * ed - size * 0.1, 2.5, 0, Math.PI * 2);
+    ctx.moveTo(x + Math.cos(eyeAngle + 0.4) * ed + 2.5, y + Math.sin(eyeAngle + 0.4) * ed - size * 0.1);
+    ctx.arc(x + Math.cos(eyeAngle + 0.4) * ed, y + Math.sin(eyeAngle + 0.4) * ed - size * 0.1, 2.5, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = '#115511';
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle - 0.4) * ed * 1.1, y + Math.sin(eyeAngle - 0.4) * ed * 1.1 - size * 0.1, 1.2, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle + 0.4) * ed * 1.1, y + Math.sin(eyeAngle + 0.4) * ed * 1.1 - size * 0.1, 1.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(eyeAngle - 0.4) * ed * 1.1, y + Math.sin(eyeAngle - 0.4) * ed * 1.1 - size * 0.1, 1.2, 0, Math.PI * 2);
+    ctx.moveTo(x + Math.cos(eyeAngle + 0.4) * ed * 1.1 + 1.2, y + Math.sin(eyeAngle + 0.4) * ed * 1.1 - size * 0.1);
+    ctx.arc(x + Math.cos(eyeAngle + 0.4) * ed * 1.1, y + Math.sin(eyeAngle + 0.4) * ed * 1.1 - size * 0.1, 1.2, 0, Math.PI * 2);
+    ctx.fill();
 
   } else if (eType === 'bat') {
     // ── BAT: small body with large flapping wings ──
@@ -2224,8 +2230,11 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     // Eyes
     const ed3 = bSize * 0.3;
     ctx.fillStyle = 'rgba(200,220,255,0.8)';
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle - 0.3) * ed3, y + Math.sin(eyeAngle - 0.3) * ed3, 1.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle + 0.3) * ed3, y + Math.sin(eyeAngle + 0.3) * ed3, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(eyeAngle - 0.3) * ed3, y + Math.sin(eyeAngle - 0.3) * ed3, 1.5, 0, Math.PI * 2);
+    ctx.moveTo(x + Math.cos(eyeAngle + 0.3) * ed3 + 1.5, y + Math.sin(eyeAngle + 0.3) * ed3);
+    ctx.arc(x + Math.cos(eyeAngle + 0.3) * ed3, y + Math.sin(eyeAngle + 0.3) * ed3, 1.5, 0, Math.PI * 2);
+    ctx.fill();
 
   } else if (eType === 'assassin') {
     // ── ASSASSIN: shimmer/stealth effect, dagger glint ──
@@ -2269,8 +2278,11 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     // Eyes (only visible feature)
     ctx.fillStyle = 'rgba(255,80,60,0.7)';
     const ed4 = size * 0.25;
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle - 0.3) * ed4, y + Math.sin(eyeAngle - 0.3) * ed4, 1, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle + 0.3) * ed4, y + Math.sin(eyeAngle + 0.3) * ed4, 1, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(eyeAngle - 0.3) * ed4, y + Math.sin(eyeAngle - 0.3) * ed4, 1, 0, Math.PI * 2);
+    ctx.moveTo(x + Math.cos(eyeAngle + 0.3) * ed4 + 1, y + Math.sin(eyeAngle + 0.3) * ed4);
+    ctx.arc(x + Math.cos(eyeAngle + 0.3) * ed4, y + Math.sin(eyeAngle + 0.3) * ed4, 1, 0, Math.PI * 2);
+    ctx.fill();
 
   } else if (eType === 'bomber') {
     // ── BOMBER: pulsing body with fuse spark ──
@@ -2502,19 +2514,28 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     ctx.fillStyle = '#ff3322';
     ctx.beginPath(); ctx.arc(x, crownY - size * 0.4, 2, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#ff6622';
-    ctx.beginPath(); ctx.arc(x - size * 0.35, crownY - size * 0.25, 1.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + size * 0.35, crownY - size * 0.25, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x - size * 0.35, crownY - size * 0.25, 1.5, 0, Math.PI * 2);
+    ctx.moveTo(x + size * 0.35 + 1.5, crownY - size * 0.25);
+    ctx.arc(x + size * 0.35, crownY - size * 0.25, 1.5, 0, Math.PI * 2);
+    ctx.fill();
 
     // Eyes (menacing, glowing)
     const lordEd = size * 0.25;
     const eyeGlow = 0.7 + Math.sin(time * 3) * 0.3;
     ctx.fillStyle = `rgba(255,${Math.floor(120 + eyeGlow * 80)},0,${eyeGlow})`;
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle - 0.3) * lordEd, y + Math.sin(eyeAngle - 0.3) * lordEd, 2.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle + 0.3) * lordEd, y + Math.sin(eyeAngle + 0.3) * lordEd, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(eyeAngle - 0.3) * lordEd, y + Math.sin(eyeAngle - 0.3) * lordEd, 2.5, 0, Math.PI * 2);
+    ctx.moveTo(x + Math.cos(eyeAngle + 0.3) * lordEd + 2.5, y + Math.sin(eyeAngle + 0.3) * lordEd);
+    ctx.arc(x + Math.cos(eyeAngle + 0.3) * lordEd, y + Math.sin(eyeAngle + 0.3) * lordEd, 2.5, 0, Math.PI * 2);
+    ctx.fill();
     // Eye glow halos
     ctx.fillStyle = `rgba(255,170,0,${eyeGlow * 0.2})`;
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle - 0.3) * lordEd, y + Math.sin(eyeAngle - 0.3) * lordEd, 5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle + 0.3) * lordEd, y + Math.sin(eyeAngle + 0.3) * lordEd, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(eyeAngle - 0.3) * lordEd, y + Math.sin(eyeAngle - 0.3) * lordEd, 5, 0, Math.PI * 2);
+    ctx.moveTo(x + Math.cos(eyeAngle + 0.3) * lordEd + 5, y + Math.sin(eyeAngle + 0.3) * lordEd);
+    ctx.arc(x + Math.cos(eyeAngle + 0.3) * lordEd, y + Math.sin(eyeAngle + 0.3) * lordEd, 5, 0, Math.PI * 2);
+    ctx.fill();
 
   } else {
     // ── DEFAULT ENEMY: gradient circle with eyes ──
@@ -2529,12 +2550,20 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     // Eyes
     const eyeD = size * 0.3;
     ctx.fillStyle = 'rgba(255,50,30,.8)';
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle - 0.3) * eyeD, y + Math.sin(eyeAngle - 0.3) * eyeD, 1.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + Math.cos(eyeAngle + 0.3) * eyeD, y + Math.sin(eyeAngle + 0.3) * eyeD, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(eyeAngle - 0.3) * eyeD, y + Math.sin(eyeAngle - 0.3) * eyeD, 1.5, 0, Math.PI * 2);
+    ctx.moveTo(x + Math.cos(eyeAngle + 0.3) * eyeD + 1.5, y + Math.sin(eyeAngle + 0.3) * eyeD);
+    ctx.arc(x + Math.cos(eyeAngle + 0.3) * eyeD, y + Math.sin(eyeAngle + 0.3) * eyeD, 1.5, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
 export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): void {
+  const healthBars: { x: number; y: number; w: number; h: number; ratio: number }[] = [];
+  const lifespanBars: { x: number; y: number; w: number; ratio: number }[] = [];
+  const summonHpBars: { x: number; y: number; w: number; ratio: number }[] = [];
+  const slowIndicators: { x: number; y: number; r: number }[] = [];
+
   for (const e of state.enemies) {
     if (!e.alive) continue;
     const et = ENEMIES[e.type];
@@ -2568,24 +2597,16 @@ export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): vo
         drawTurret(ctx, e.x, e.y, et.size, state.time, isMegaTurret, zoneActive);
       }
 
-      // Lifespan bar
+      // Lifespan bar (batched)
       if (e._lifespan > 0) {
         const bw = et.size * 2;
-        const by2 = e.y + et.size + 4;
-        ctx.fillStyle = 'rgba(0,0,0,.4)';
-        ctx.fillRect(e.x - bw / 2 - 1, by2 - 1, bw + 2, 3);
-        ctx.fillStyle = 'rgba(80,200,100,.5)';
-        ctx.fillRect(e.x - bw / 2, by2, bw * Math.min(1, e._lifespan / 15), 2);
+        lifespanBars.push({ x: e.x, y: e.y + et.size + 4, w: bw, ratio: Math.min(1, e._lifespan / 15) });
       }
 
-      // HP bar for summons
+      // HP bar for summons (batched)
       if (e.hp < e.maxHp) {
         const bw = et.size * 2;
-        const by2 = e.y - et.size - 6;
-        ctx.fillStyle = 'rgba(0,0,0,.5)';
-        ctx.fillRect(e.x - bw / 2 - 1, by2 - 1, bw + 2, 3);
-        ctx.fillStyle = '#44cc66';
-        ctx.fillRect(e.x - bw / 2, by2, bw * (e.hp / e.maxHp), 2);
+        summonHpBars.push({ x: e.x, y: e.y - et.size - 6, w: bw, ratio: e.hp / e.maxHp });
       }
       continue;
     }
@@ -2697,24 +2718,62 @@ export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): vo
 
     if (atkTransformApplied) ctx.restore();
 
-    // Health bar (only when damaged)
+    // Health bar (batched)
     if (e.hp < e.maxHp) {
       const bw = et.size * 2;
-      const bh = 2;
-      const bx = e.x - bw / 2;
-      const by2 = e.y - et.size - 4;
-      ctx.fillStyle = 'rgba(0,0,0,.5)';
-      ctx.fillRect(bx - 1, by2 - 1, bw + 2, bh + 2);
-      ctx.fillStyle = '#cc3333';
-      ctx.fillRect(bx, by2, bw * (e.hp / e.maxHp), bh);
+      healthBars.push({ x: e.x - bw / 2, y: e.y - et.size - 4, w: bw, h: 2, ratio: e.hp / e.maxHp });
     }
 
-    // Slow indicator
+    // Slow indicator (batched)
     if (e.slowTimer > 0) {
-      ctx.strokeStyle = 'rgba(80,200,255,.25)';
-      ctx.lineWidth = 1;
+      slowIndicators.push({ x: e.x, y: e.y, r: et.size + 3 });
+    }
+  }
+
+  // ── Batched health bars ──
+  // Enemy health bar backgrounds
+  if (healthBars.length > 0) {
+    ctx.fillStyle = 'rgba(0,0,0,.5)';
+    for (const bar of healthBars) {
+      ctx.fillRect(bar.x - 1, bar.y - 1, bar.w + 2, bar.h + 2);
+    }
+    ctx.fillStyle = '#cc3333';
+    for (const bar of healthBars) {
+      ctx.fillRect(bar.x, bar.y, bar.w * bar.ratio, bar.h);
+    }
+  }
+
+  // Summon lifespan bar backgrounds
+  if (lifespanBars.length > 0) {
+    ctx.fillStyle = 'rgba(0,0,0,.4)';
+    for (const bar of lifespanBars) {
+      ctx.fillRect(bar.x - bar.w / 2 - 1, bar.y - 1, bar.w + 2, 3);
+    }
+    ctx.fillStyle = 'rgba(80,200,100,.5)';
+    for (const bar of lifespanBars) {
+      ctx.fillRect(bar.x - bar.w / 2, bar.y, bar.w * bar.ratio, 2);
+    }
+  }
+
+  // Summon HP bar backgrounds
+  if (summonHpBars.length > 0) {
+    ctx.fillStyle = 'rgba(0,0,0,.5)';
+    for (const bar of summonHpBars) {
+      ctx.fillRect(bar.x - bar.w / 2 - 1, bar.y - 1, bar.w + 2, 3);
+    }
+    ctx.fillStyle = '#44cc66';
+    for (const bar of summonHpBars) {
+      ctx.fillRect(bar.x - bar.w / 2, bar.y, bar.w * bar.ratio, 2);
+    }
+  }
+
+  // Slow indicators
+  if (slowIndicators.length > 0) {
+    ctx.strokeStyle = 'rgba(80,200,255,.25)';
+    ctx.lineWidth = 1;
+    for (const si of slowIndicators) {
       ctx.beginPath();
-      ctx.arc(e.x, e.y, et.size + 3, 0, Math.PI * 2);
+      ctx.arc(si.x, si.y, si.r, 0, Math.PI * 2);
       ctx.stroke();
     }
   }
@@ -2757,8 +2816,10 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       // Inner shield emblem - cross pattern
       ctx.strokeStyle = '#ccddee';
       ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(-r * 0.5, 0); ctx.lineTo(r * 0.5, 0); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, -r * 0.5); ctx.lineTo(0, r * 0.5); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.5, 0); ctx.lineTo(r * 0.5, 0);
+      ctx.moveTo(0, -r * 0.5); ctx.lineTo(0, r * 0.5);
+      ctx.stroke();
       // Metallic glint that rotates
       const glintAngle = spinRate * 0.3;
       ctx.fillStyle = `rgba(255,255,255,${0.4 + 0.3 * Math.sin(glintAngle)})`;
