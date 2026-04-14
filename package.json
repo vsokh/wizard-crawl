@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "sim": "npx tsx tools/balance_sim.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "screenshots": "npx playwright install chromium && npx tsx tools/capture-screenshots.ts"
   },
   "dependencies": {
     "peerjs": "^1.5.4"
@@ -20,6 +21,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.7.3",
     "vite": "^6.3.1",
+    "playwright": "^1.52.0",
     "vitest": "^4.1.4"
   }
 }

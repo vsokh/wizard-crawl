@@ -31,7 +31,7 @@ import { enemyTimers, enemyStatus, enemyAI, enemyPhysics, enemyAttack, enemyTrap
 import { updateEProj } from './systems/enemies';
 import { updateSpells, updateAoe, updateZones } from './systems/waves';
 import { rebuildEnemyGrid } from './systems/spatial';
-import { generateArena, updateWaves } from './systems/dungeon';
+import { generateArena, updateWaves, spawnEnemy } from './systems/dungeon';
 import { showUpgradeScreen } from './systems/upgrades';
 import { initShop, openShop } from './systems/shop';
 import { applySynergies } from './systems/synergy';
@@ -426,6 +426,61 @@ function loop(now: number): void {
   profiler.countEntities(state);
   profiler.frameEnd();
   requestAnimationFrame(loop);
+}
+
+// Screenshot capture mode
+if (new URLSearchParams(window.location.search).has('screenshots')) {
+  (window as any).__ss = {
+    state,
+    ctx,
+    canvas,
+    createPlayer,
+    generateArena,
+    spawnEnemy,
+    // rendering functions
+    clearGradCache,
+    updateCamera,
+    drawRoom,
+    drawZones,
+    drawAoe,
+    drawPillars,
+    drawPickups,
+    drawEProj,
+    drawSpells,
+    drawBeams,
+    drawEnemies,
+    drawWizard,
+    drawFx,
+    drawCrosshair,
+    updateFx,
+    updateHUD,
+    // enums
+    GamePhase,
+    NetworkMode,
+    // functions for scene setup
+    renderFrame() {
+      updateCamera(state);
+      ctx.fillStyle = '#04030a';
+      ctx.fillRect(0, 0, state.width, state.height);
+      ctx.save();
+      ctx.translate(state.camX + state.shakeX, state.camY + state.shakeY);
+      clearGradCache();
+      drawRoom(ctx, state);
+      drawZones(ctx, state);
+      drawAoe(ctx, state);
+      drawPillars(ctx, state);
+      drawPickups(ctx, state);
+      drawEProj(ctx, state);
+      drawSpells(ctx, state);
+      drawBeams(ctx, state);
+      drawEnemies(ctx, state);
+      drawWizard(ctx, state);
+      drawFx(ctx, state);
+      ctx.restore();
+      updateHUD(state);
+    }
+  };
+  console.log('[screenshot mode] Ready — window.__ss exposed');
 }
 
 requestAnimationFrame(loop);
