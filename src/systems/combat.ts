@@ -122,7 +122,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
     spawnText(state, e.x, e.y - 50, 'HARDENED!', '#6688ff');
   }
 
-  e.iframes = 0.1;
+  e.iframes = TIMING.IFRAME_ENEMY_HIT;
   e._hitFlash = 0.12;
   spawnParticles(state, e.x, e.y, '#ff6644', 5, TIMING.HIT_PARTICLE_SCALE);
   netSfx(state, SfxName.Hit);
@@ -532,7 +532,7 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
       p.y = ROOM_HEIGHT * 0.6;
       p.vx = 0;
       p.vy = 0;
-      p.iframes = 3.0; // generous iframes on respawn
+      p.iframes = TIMING.IFRAME_LIVES_RESPAWN; // generous iframes on respawn
       p.stunTimer = 0;
       p.slowTimer = 0;
       spawnParticles(state, p.x, p.y, '#44ccff', 25, 1.2);
@@ -576,14 +576,7 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
       state.gamePhase = GamePhase.GameOver;
       document.exitPointerLock();
       document.body.classList.remove('in-game');
-      setTimeout(() => {
-        const statsEl = document.getElementById('go-stats');
-        if (statsEl) {
-          statsEl.innerHTML = `Wave Reached: ${state.wave} / 20<br>Kills: ${state.totalKills}<br>Gold: ${state.gold}<br>Lives Used: ${state.maxLives}`;
-        }
-        const goEl = document.getElementById('gameover');
-        if (goEl) goEl.style.display = 'flex';
-      }, GAME_OVER_DELAY_MS);
+      state._gameOverTimer = GAME_OVER_DELAY_MS / 1000;
     }
   }
 }
@@ -1002,7 +995,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     p.x = nx;
     p.y = ny;
     spawnParticles(state, p.x, p.y, def.color, 12);
-    p.iframes = 0.3;
+    p.iframes = TIMING.IFRAME_BLINK;
     netSfx(state, SfxName.Blink);
   } else if (def.type === SpellType.Barrage) {
     // Muzzle flash for barrage
@@ -1089,7 +1082,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     spawnParticles(state, p.x, p.y, def.color, 8);
     p.x = nx;
     p.y = ny;
-    p.iframes = 0.3;
+    p.iframes = TIMING.IFRAME_LEAP;
     // AoE damage on landing
     spawnShockwave(state, p.x, p.y, def.aoeR, def.color);
     spawnParticles(state, p.x, p.y, def.color, 15, 1);
