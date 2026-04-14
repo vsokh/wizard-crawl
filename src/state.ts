@@ -70,6 +70,7 @@ export interface GameState {
   shakeY: number;
   screenFlash: number;
   screenFlashColor: string;
+  _gameOverTimer: number;
 
   // Camera
   camX: number;
@@ -173,6 +174,7 @@ export function createInitialState(): GameState {
     shakeY: 0,
     screenFlash: 0,
     screenFlashColor: '255,255,255',
+    _gameOverTimer: 0,
     camX: 0,
     camY: 0,
     wave: 1,

@@ -15,7 +15,7 @@ import {
   DUNGEON_TIMING,
   GAME_OVER_DELAY_MS,
 } from '../constants';
-import { Enemy, EnemyView, GamePhase, PickupType, SfxName } from '../types';
+import { Enemy, EnemyView, GamePhase, NetworkMode, PickupType, SfxName } from '../types';
 import { castSpell, castSpellSilent, castUltimate, damageEnemy } from './combat';
 
 /** Callback set by main.ts to break circular dep with upgrades module */
@@ -29,6 +29,23 @@ export function setChestPickupHandler(handler: (state: GameState) => void): void
 // ═══════════════════════════════════
 
 export function updatePlayers(state: GameState, dt: number): void {
+  // Synchronous game over timer (replaces setTimeout race condition)
+  if (state._gameOverTimer > 0) {
+    state._gameOverTimer -= dt;
+    if (state._gameOverTimer <= 0) {
+      state._gameOverTimer = 0;
+      if (state.gamePhase === GamePhase.GameOver) {
+        const statsEl = document.getElementById('go-stats');
+        if (statsEl) {
+          const livesInfo = state.mode === NetworkMode.Local ? `<br>Lives Used: ${state.maxLives}` : '';
+          statsEl.innerHTML = `Wave Reached: ${state.wave} / 20<br>Kills: ${state.totalKills}<br>Gold: ${state.gold}${livesInfo}`;
+        }
+        const goEl = document.getElementById('gameover');
+        if (goEl) goEl.style.display = 'flex';
+      }
+    }
+  }
+
   for (const p of state.players) {
     if (!p.alive) {
       if (p.respawnTimer > 0) {
@@ -58,14 +75,7 @@ export function updatePlayers(state: GameState, dt: number): void {
             state.gamePhase = GamePhase.GameOver;
             document.exitPointerLock();
             document.body.classList.remove('in-game');
-            setTimeout(() => {
-              const statsEl = document.getElementById('go-stats');
-              if (statsEl) {
-                statsEl.innerHTML = `Wave Reached: ${state.wave} / 20<br>Kills: ${state.totalKills}<br>Gold: ${state.gold}`;
-              }
-              const goEl = document.getElementById('gameover');
-              if (goEl) goEl.style.display = 'flex';
-            }, GAME_OVER_DELAY_MS);
+            state._gameOverTimer = GAME_OVER_DELAY_MS / 1000;
           }
         }
       }
