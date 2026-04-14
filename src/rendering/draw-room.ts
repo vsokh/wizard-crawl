@@ -725,14 +725,16 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
   if (!state.waveActive && state.waveBreakTimer > 0 && state.gamePhase === GamePhase.Playing) {
     if (!state.shopOpen) {
       const waveAlpha = 0.2 + 0.1 * Math.sin(t * 3);
-      ctx.fillStyle = `rgba(200, 170, 80, ${waveAlpha})`;
+      const waveText = `NEXT WAVE IN ${Math.ceil(state.waveBreakTimer)}`;
       ctx.font = 'bold 28px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.shadowColor = 'rgba(200, 170, 80, 0.3)';
-      ctx.shadowBlur = 15;
-      ctx.fillText(`NEXT WAVE IN ${Math.ceil(state.waveBreakTimer)}`, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 20);
-      ctx.shadowBlur = 0;
+      // Glow layer — lower alpha
+      ctx.fillStyle = `rgba(200, 170, 80, ${waveAlpha * 0.3})`;
+      ctx.fillText(waveText, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 20);
+      // Main text
+      ctx.fillStyle = `rgba(200, 170, 80, ${waveAlpha})`;
+      ctx.fillText(waveText, ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 20);
     }
   }
 

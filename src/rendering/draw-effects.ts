@@ -511,17 +511,22 @@ export function drawSynergyBanner(ctx: CanvasRenderingContext2D, state: GameStat
   const bannerW = 380;
   const bannerH = 70;
 
-  // Dark background with synergy color border glow
+  // Glow layer — slightly larger rect with low-alpha synergy color
+  ctx.fillStyle = syn.color;
+  ctx.globalAlpha = alpha * 0.15;
+  ctx.beginPath();
+  ctx.roundRect(cx - bannerW / 2 - 6, bannerY - 6, bannerW + 12, bannerH + 12, 12);
+  ctx.fill();
+  ctx.globalAlpha = alpha;
+
+  // Dark background with synergy color border
   ctx.fillStyle = 'rgba(10, 6, 20, 0.85)';
   ctx.strokeStyle = syn.color;
   ctx.lineWidth = 2;
-  ctx.shadowColor = syn.color;
-  ctx.shadowBlur = 16;
   ctx.beginPath();
   ctx.roundRect(cx - bannerW / 2, bannerY, bannerW, bannerH, 8);
   ctx.fill();
   ctx.stroke();
-  ctx.shadowBlur = 0;
 
   // "SYNERGY ACTIVE" header
   ctx.fillStyle = syn.color;
