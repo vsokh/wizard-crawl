@@ -633,7 +633,7 @@ export const UPGRADE_POOL: UpgradeDef[] = [
   { name: 'Cooldown Cascade', desc: 'Primary kills reduce secondary cooldown by 1s', apply: (p: Player) => { p.cdCascade = true; } },
   { name: 'Full Rotation', desc: 'Cast all 3 spells within 5s to gain 3x attack speed for 3s', apply: (p: Player) => { p.fullRotation = true; } },
   { name: 'Q Mastery', desc: 'Q skill cooldown -35%, +2 damage', apply: (p: Player) => { if (p.cls.spells[2]) { p.cls.spells[2].cd *= 0.65; p.cls.spells[2].dmg = (p.cls.spells[2].dmg || 0) + 2; } } },
-  { name: 'Skill Reset', desc: 'Using ultimate resets skill and secondary cooldowns', apply: (p: Player) => { p.ultResetCDs = true; } },
+  { name: 'Skill Reset', desc: 'Using ultimate resets Q and secondary cooldowns', apply: (p: Player) => { p.ultResetCDs = true; } },
 
   // -- WILD / FUN --
   { name: 'Chaos Bolts', desc: 'Primary damage randomized between 1 and 4 per hit', apply: (p: Player) => { p.chaosDmg = true; } },
