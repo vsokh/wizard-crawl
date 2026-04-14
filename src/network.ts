@@ -13,7 +13,7 @@ import {
   EnemyView,
   SfxName,
 } from './types';
-import { UPGRADE_POOL, CLASSES, NET_SEND_INTERVAL, NET_SEND_INTERVAL_MAX, NET_CULL_RADIUS, NET_LOD_RADIUS } from './constants';
+import { UPGRADE_POOL, CLASSES, NET_SEND_INTERVAL, NET_SEND_INTERVAL_MAX, NET_CULL_RADIUS, NET_LOD_RADIUS, GAME_OVER_DELAY_MS } from './constants';
 import { initAudio, sfx } from './audio';
 import { showUpgradeFromHost, checkBothPicked, finishUpgrade } from './systems/upgrades';
 
@@ -620,7 +620,30 @@ function applyState(state: GameState, msg: NetStateMessage): void {
   // Globals
   if (msg.g !== undefined) state.gold = msg.g;
   if (msg.tk !== undefined) state.totalKills = msg.tk;
-  if (isGamePhase(msg.gp)) state.gamePhase = msg.gp;
+  if (isGamePhase(msg.gp)) {
+    const prev = state.gamePhase;
+    state.gamePhase = msg.gp;
+    // Show end-game screens on guest (host shows these in its own systems)
+    if (prev !== msg.gp) {
+      if (msg.gp === GamePhase.GameOver || msg.gp === GamePhase.Victory) {
+        document.exitPointerLock();
+        document.body.classList.remove('in-game');
+        const isVictory = msg.gp === GamePhase.Victory;
+        const statsId = isVictory ? 'victory-stats' : 'go-stats';
+        const screenId = isVictory ? 'victory-screen' : 'gameover';
+        setTimeout(() => {
+          const statsEl = document.getElementById(statsId);
+          if (statsEl) {
+            statsEl.innerHTML = isVictory
+              ? `Waves Cleared: ${state.wave}<br>Total Kills: ${state.totalKills}<br>Gold: ${state.gold}`
+              : `Wave Reached: ${state.wave} / 20<br>Kills: ${state.totalKills}<br>Gold: ${state.gold}<br>Lives Used: ${state.maxLives}`;
+          }
+          const screenEl = document.getElementById(screenId);
+          if (screenEl) screenEl.style.display = 'flex';
+        }, GAME_OVER_DELAY_MS);
+      }
+    }
+  }
   if (msg.ct !== undefined) state.countdownTimer = msg.ct;
   if (msg.sc > 0) state.screenFlash = Math.max(state.screenFlash, msg.sc);
   if (msg.sk > 0) shake(state, msg.sk);
