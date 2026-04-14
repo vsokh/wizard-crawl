@@ -346,6 +346,39 @@ export function updateZones(state: GameState, dt: number): void {
     z.tickTimer -= dt;
     if (z.tickTimer <= 0) {
       z.tickTimer = z.tickRate;
+      // Engineer Laser Turret: fire beam at nearest enemy for 2x damage
+      if (z._turret && !z._megaTurret) {
+        const owner = state.players[z.owner];
+        if (owner?.laserTurret) {
+          // Find nearest enemy in range
+          const candidates = state.enemyGrid.queryArea(z.x, z.y, z.radius + MAX_ENEMY_SIZE);
+          let nearest: EnemyView | null = null;
+          let nearestDist = Infinity;
+          for (const idx of candidates) {
+            const e = state.enemies.at(idx);
+            if (!e.alive) continue;
+            const d = dist(z.x, z.y, e.x, e.y);
+            if (d < z.radius + ENEMIES[e.type].size && d < nearestDist) {
+              nearestDist = d;
+              nearest = e;
+            }
+          }
+          if (nearest) {
+            damageEnemy(state, nearest, z.dmg * 2, z.owner);
+            // Spawn beam visual
+            const beam = state.beams.acquire();
+            if (beam) {
+              beam.x = z.x; beam.y = z.y;
+              beam.angle = Math.atan2(nearest.y - z.y, nearest.x - z.x);
+              beam.range = nearestDist;
+              beam.width = 2;
+              beam.color = '#ff6622';
+              beam.life = 0.15;
+            }
+          }
+          continue; // Skip normal AoE tick for this turret
+        }
+      }
       let zHealed = 0;
       const zoneCandidates = state.enemyGrid.queryArea(z.x, z.y, z.radius + MAX_ENEMY_SIZE);
       for (const idx of zoneCandidates) {
@@ -390,6 +423,26 @@ export function updateZones(state: GameState, dt: number): void {
         }
       }
     }
-    if (z.age >= z.duration) state.zones.release(i);
+    if (z.age >= z.duration) {
+      // Engineer Self-Destruct: turrets explode on expiry
+      if (z._turret && !z._megaTurret) {
+        const owner = state.players[z.owner];
+        if (owner?.turretExplode) {
+          const blastRadius = 80;
+          const blastDmg = 6;
+          const blastCandidates = state.enemyGrid.queryArea(z.x, z.y, blastRadius + MAX_ENEMY_SIZE);
+          for (const idx of blastCandidates) {
+            const e = state.enemies.at(idx);
+            if (!e.alive) continue;
+            if (dist(z.x, z.y, e.x, e.y) < blastRadius + ENEMIES[e.type].size) {
+              damageEnemy(state, e, blastDmg, z.owner);
+            }
+          }
+          spawnParticles(state, z.x, z.y, '#ff6622', 20);
+          spawnShockwave(state, z.x, z.y, blastRadius, 'rgba(255,100,30,.5)');
+        }
+      }
+      state.zones.release(i);
+    }
   }
 }

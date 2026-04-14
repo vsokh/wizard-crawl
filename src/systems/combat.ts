@@ -948,6 +948,26 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       if (spellZone._turret) {
         spellZone.tickRate *= 0.8;
       }
+      // Engineer Turret Army: enforce turret count limit
+      if (spellZone._turret && !spellZone._megaTurret) {
+        const maxTurrets = p.turretArmy ? 3 : 1;
+        // Count existing turrets owned by this player (excluding the just-created one)
+        const existing: { idx: number; age: number }[] = [];
+        for (let ti = state.zones.count - 1; ti >= 0; ti--) {
+          const tz = state.zones.get(ti);
+          if (tz === spellZone) continue; // skip the one we just created
+          if (tz._turret && !tz._megaTurret && tz.owner === p.idx) {
+            existing.push({ idx: ti, age: tz.age });
+          }
+        }
+        // Remove oldest turrets until we're within the limit
+        if (existing.length >= maxTurrets) {
+          existing.sort((a, b) => b.age - a.age); // highest age = oldest first
+          for (let ri = 0; ri < existing.length - maxTurrets + 1; ri++) {
+            state.zones.release(existing[ri].idx);
+          }
+        }
+      }
     }
     netSfx(state, SfxName.Ice);
   } else if (def.type === SpellType.Rewind) {
