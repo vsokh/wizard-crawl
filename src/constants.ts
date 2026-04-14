@@ -774,7 +774,7 @@ export const UPGRADE_POOL: UpgradeDef[] = [
   // Evolutions appear when their parent stackable upgrade reaches max stacks.
   // They are NOT offered in the normal upgrade pool.
 
-  { name: 'Spell Mastery', desc: 'Sets total spell damage bonus to +7 and reduces all cooldowns by 30%', isEvolution: true, evolvesFrom: 0, color: '#ffaa00',
+  { name: 'Spell Mastery', desc: 'Caps total spell damage bonus at +7 and reduces all cooldowns by 30%', isEvolution: true, evolvesFrom: 0, color: '#ffaa00',
     apply: (p: Player, _s: number) => {
       const parentStacks = p.takenUpgrades.get(0) || 0;
       let parentTotal = 0;
@@ -783,7 +783,7 @@ export const UPGRADE_POOL: UpgradeDef[] = [
       for (const s of p.cls.spells) { s.dmg = (s.dmg || 0) + bonus; s.cd *= 0.7; }
     } },
 
-  { name: 'Primary Overload', desc: 'Sets primary damage bonus to +10 and adds a 3-damage explosion on hit', isEvolution: true, evolvesFrom: 1, color: '#ffaa00',
+  { name: 'Primary Overload', desc: 'Caps primary damage bonus at +10 and adds a 3-damage explosion on hit', isEvolution: true, evolvesFrom: 1, color: '#ffaa00',
     apply: (p: Player, _s: number) => {
       const parentStacks = p.takenUpgrades.get(1) || 0;
       let parentTotal = 0;
