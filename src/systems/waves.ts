@@ -162,7 +162,14 @@ export function updateSpells(state: GameState, dt: number): void {
       const e = state.enemies.at(idx);
       if (!e.alive || e.iframes > 0) continue;
       if (dist(s.x, s.y, e.x, e.y) < ENEMIES[e.type].size + s.radius) {
-        damageEnemy(state, e, s.dmg, s.owner);
+        // Ranger Eagle Eye: crit at max range (>70% of projectile life)
+        let hitDmg = s.dmg;
+        if (s.clsKey === 'ranger' && s.age > s.life * 0.7) {
+          const p = state.players[s.owner];
+          hitDmg *= (p?.critMul || 2);
+          spawnText(state, e.x, e.y - 25, 'CRIT!', '#ffcc44');
+        }
+        damageEnemy(state, e, hitDmg, s.owner);
         if (s.slow) e.slowTimer = (e.slowTimer || 0) + s.slow;
         if (s.stun) e.stunTimer = (e.stunTimer || 0) + s.stun;
         if (state.players[s.owner]?.frozenTouch && Math.random() < WAVE_PHYSICS.FROZEN_TOUCH_CHANCE) {

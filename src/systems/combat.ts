@@ -548,6 +548,10 @@ export function castSpellSilent(state: GameState, p: Player, idx: number, angle:
     const rt = spellToRuntime(def);
     rt.dmg = getEffectiveSpellDmg(p, idx);
     if (dmgMult !== 1) rt.dmg = Math.ceil(rt.dmg * dmgMult);
+    // Ranger Eagle Eye: +30% primary range
+    if (p.clsKey === 'ranger' && idx === 0) {
+      rt.life *= 1.3;
+    }
     state.spells.push({
       ...rt,
       x: sx, y: sy,
@@ -793,6 +797,10 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       clsKey: p.clsKey,
     };
     spell.dmg = Math.round(getEffectiveSpellDmg(p, idx) * echoDmgMul);
+    // Ranger Eagle Eye: +30% primary range
+    if (p.clsKey === 'ranger' && idx === 0) {
+      spell.life *= 1.3;
+    }
     state.spells.push(spell);
     // Muzzle flash
     spawnParticles(state, p.x + cos * 15, p.y + sin * 15, spell.color, 3, 0.3);
@@ -926,6 +934,10 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       spellZone.slow = def.slow || 0; spellZone.tickRate = def.tickRate; spellZone.tickTimer = 0; spellZone.age = 0;
       spellZone.drain = def.drain || 0; spellZone.heal = def.heal || 0; spellZone.pull = 0; spellZone.freezeAfter = 0;
       spellZone._turret = p.clsKey === 'engineer' && def.name.includes('Turret');
+      // Engineer Overclock: turrets fire 20% faster
+      if (spellZone._turret) {
+        spellZone.tickRate *= 0.8;
+      }
     }
     netSfx(state, SfxName.Ice);
   } else if (def.type === SpellType.Rewind) {
@@ -1337,6 +1349,8 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
       megaZone.slow = 0; megaZone.tickRate = 0.7; megaZone.tickTimer = 0; megaZone.age = 0;
       megaZone.drain = 0; megaZone.heal = 0; megaZone.pull = 0; megaZone.freezeAfter = 0;
       megaZone._turret = true; megaZone._megaTurret = true;
+      // Engineer Overclock: turrets fire 20% faster
+      megaZone.tickRate *= 0.8;
     }
   }
 
