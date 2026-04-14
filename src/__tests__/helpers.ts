@@ -53,7 +53,7 @@ export function createTestState(): GameState {
     shockwaves: new Pool<Shockwave>(MAX_SHOCKWAVES, () => ({ x: 0, y: 0, radius: 0, maxR: 0, life: 0, color: '' })),
     texts: new Pool<FloatingText>(MAX_FLOATING_TEXTS, () => ({ x: 0, y: 0, text: '', color: '', life: 0, vy: 0 })),
     beams: new Pool<Beam>(MAX_BEAMS, () => ({ x: 0, y: 0, angle: 0, range: 0, width: 0, color: '', life: 0 })),
-    zones: new Pool<Zone>(MAX_ZONES, () => ({ x: 0, y: 0, radius: 0, duration: 0, dmg: 0, color: '', owner: 0, slow: 0, tickRate: 0, tickTimer: 0, age: 0, drain: 0, heal: 0, pull: 0, freezeAfter: 0, _turret: false, _megaTurret: false })),
+    zones: new Pool<Zone>(MAX_ZONES, () => ({ x: 0, y: 0, radius: 0, duration: 0, dmg: 0, color: '', owner: 0, slow: 0, tickRate: 0, tickTimer: 0, age: 0, drain: 0, heal: 0, pull: 0, freezeAfter: 0, stun: 0, _turret: false, _megaTurret: false })),
     aoeMarkers: new Pool<AoeMarker>(MAX_AOE_MARKERS, () => ({ x: 0, y: 0, radius: 0, delay: 0, dmg: 0, color: '', owner: 0, stun: 0, age: 0 })),
     eProj: new EProjPool(MAX_EPROJ),
     pillars: [],

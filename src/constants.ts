@@ -425,7 +425,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     spells: [
       { name: 'Smite', key: 'LMB', type: SpellType.Projectile, dmg: 2, speed: 380, radius: 9, mana: 7, cd: 0.35, life: 1.2, color: '#ffddaa', trail: '#ccaa66', explode: 25 },
       { name: 'Holy Shield', key: 'RMB', type: SpellType.AllyShield, mana: 25, cd: 5, duration: 3, color: '#ffffcc' },
-      { name: 'Consecrate', key: 'Q', type: SpellType.Zone, dmg: 2, mana: 30, cd: 7, radius: 80, duration: 3, tickRate: 0.6, slow: 0.3, color: '#ffeeaa', heal: 1 },
+      { name: 'Consecrate', key: 'Q', type: SpellType.Zone, dmg: 2, mana: 30, cd: 7, radius: 100, duration: 3, tickRate: 0.6, slow: 0.3, color: '#ffeeaa', heal: 2 },
       { name: 'Holy Light', key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#ffffcc', mana: 0, cd: 0 },
     ],
   },
@@ -469,7 +469,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     spells: [
       { name: 'Chi Blast', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 500, radius: 8, mana: 3, cd: 0.15, life: 0.5, color: '#eedd88', trail: '#ccaa44' },
       { name: 'Flying Kick', key: 'RMB', type: SpellType.Leap, range: 180, mana: 12, cd: 2, dmg: 4, aoeR: 55, color: '#ccaa44' },
-      { name: 'Meditation', key: 'Q', type: SpellType.Zone, dmg: 0, mana: 15, cd: 6, radius: 40, duration: 3, tickRate: 0.8, heal: 2, color: '#ffffcc' },
+      { name: 'Chi Burst', key: 'Q', type: SpellType.Zone, dmg: 0, mana: 15, cd: 6, radius: 40, duration: 3, tickRate: 0.8, heal: 2, color: '#ffffcc' },
       { name: 'Thousand Fists', key: 'R', type: SpellType.Ultimate, ultCharge: 100, color: '#eedd88', mana: 0, cd: 0 },
     ],
   },

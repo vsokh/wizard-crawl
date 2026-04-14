@@ -300,7 +300,7 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
         if (mineZone) {
           mineZone.x = e.x; mineZone.y = e.y; mineZone.radius = 50; mineZone.duration = 4;
           mineZone.dmg = 3; mineZone.color = '#ff8844'; mineZone.owner = p.idx;
-          mineZone.slow = 0; mineZone.tickRate = 4; mineZone.tickTimer = 0; mineZone.age = 0;
+          mineZone.slow = 0; mineZone.stun = 0; mineZone.tickRate = 4; mineZone.tickTimer = 0; mineZone.age = 0;
           mineZone.drain = 0; mineZone.heal = 0; mineZone.pull = 0; mineZone.freezeAfter = 0;
         }
         spawnParticles(state, e.x, e.y, '#ff8844', 5, TIMING.PARTICLE_LIFE_SHORT);
@@ -647,7 +647,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
           if (burnZone) {
             burnZone.x = wp.x + ox; burnZone.y = wp.y + oy; burnZone.radius = 35; burnZone.duration = 2;
             burnZone.dmg = 1; burnZone.color = '#ff4400'; burnZone.owner = p.idx;
-            burnZone.slow = 0; burnZone.tickRate = TIMING.ZONE_TICK; burnZone.tickTimer = 0; burnZone.age = 0;
+            burnZone.slow = 0; burnZone.stun = 0; burnZone.tickRate = TIMING.ZONE_TICK; burnZone.tickTimer = 0; burnZone.age = 0;
             burnZone.drain = 0; burnZone.heal = 0; burnZone.pull = 0; burnZone.freezeAfter = 0;
           }
         }, meteorDelay * 1000);
@@ -702,7 +702,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       if (frostZone) {
         frostZone.x = wp.x; frostZone.y = wp.y; frostZone.radius = def.radius; frostZone.duration = def.duration;
         frostZone.dmg = def.dmg; frostZone.color = def.color; frostZone.owner = p.idx;
-        frostZone.slow = 0.95; frostZone.tickRate = def.tickRate; frostZone.tickTimer = 0; frostZone.age = 0;
+        frostZone.slow = 0.95; frostZone.stun = 0; frostZone.tickRate = def.tickRate; frostZone.tickTimer = 0; frostZone.age = 0;
         frostZone.drain = 0; frostZone.heal = 0; frostZone.pull = 0; frostZone.freezeAfter = TIMING.FREEZE_DURATION;
       }
       netSfx(state, SfxName.Ice);
@@ -715,7 +715,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       if (deathZone) {
         deathZone.x = wp.x; deathZone.y = wp.y; deathZone.radius = def.radius; deathZone.duration = def.duration;
         deathZone.dmg = def.dmg; deathZone.color = def.color; deathZone.owner = p.idx;
-        deathZone.slow = def.slow || 0; deathZone.tickRate = def.tickRate; deathZone.tickTimer = 0; deathZone.age = 0;
+        deathZone.slow = def.slow || 0; deathZone.stun = 0; deathZone.tickRate = def.tickRate; deathZone.tickTimer = 0; deathZone.age = 0;
         deathZone.drain = 1; deathZone.heal = 0; deathZone.pull = 30; deathZone.freezeAfter = 0;
       }
       netSfx(state, SfxName.Arcane);
@@ -749,7 +749,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       if (healZone) {
         healZone.x = p.x; healZone.y = p.y; healZone.radius = 100; healZone.duration = def.duration;
         healZone.dmg = def.dmg; healZone.color = def.color; healZone.owner = p.idx;
-        healZone.slow = def.slow || 0; healZone.tickRate = def.tickRate; healZone.tickTimer = 0; healZone.age = 0;
+        healZone.slow = def.slow || 0; healZone.stun = 0; healZone.tickRate = def.tickRate; healZone.tickTimer = 0; healZone.age = 0;
         healZone.drain = 0; healZone.heal = 2; healZone.pull = 0; healZone.freezeAfter = 0;
       }
       netSfx(state, SfxName.Pickup);
@@ -841,6 +841,10 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
         if (!e.alive || e.iframes > 0) continue;
         if (dist(bx, by, e.x, e.y) < ENEMIES[e.type].size + 4) {
           damageEnemy(state, e, Math.round(getEffectiveSpellDmg(p, idx) * echoDmgMul), p.idx);
+          if (def.drain) {
+            p.hp = Math.min(p.maxHp, p.hp + def.drain);
+            spawnText(state, p.x, p.y - 20, `+${def.drain}`, '#44ff88');
+          }
           break;
         }
       }
@@ -931,7 +935,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     if (spellZone) {
       spellZone.x = wp.x; spellZone.y = wp.y; spellZone.radius = def.radius; spellZone.duration = def.duration;
       spellZone.dmg = def.dmg; spellZone.color = def.color; spellZone.owner = p.idx;
-      spellZone.slow = def.slow || 0; spellZone.tickRate = def.tickRate; spellZone.tickTimer = 0; spellZone.age = 0;
+      spellZone.slow = def.slow || 0; spellZone.stun = def.stun || 0; spellZone.tickRate = def.tickRate; spellZone.tickTimer = 0; spellZone.age = 0;
       spellZone.drain = def.drain || 0; spellZone.heal = def.heal || 0; spellZone.pull = 0; spellZone.freezeAfter = 0;
       spellZone._turret = p.clsKey === 'engineer' && def.name.includes('Turret');
       // Engineer Overclock: turrets fire 20% faster
@@ -1075,7 +1079,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
           if (ultBurnZone) {
             ultBurnZone.x = mx; ultBurnZone.y = my; ultBurnZone.radius = 40; ultBurnZone.duration = 3;
             ultBurnZone.dmg = 1; ultBurnZone.color = '#ff4400'; ultBurnZone.owner = p.idx;
-            ultBurnZone.slow = 0; ultBurnZone.tickRate = ULTIMATE.BURN_ZONE_TICK; ultBurnZone.tickTimer = 0; ultBurnZone.age = 0;
+            ultBurnZone.slow = 0; ultBurnZone.stun = 0; ultBurnZone.tickRate = ULTIMATE.BURN_ZONE_TICK; ultBurnZone.tickTimer = 0; ultBurnZone.age = 0;
             ultBurnZone.drain = 0; ultBurnZone.heal = 0; ultBurnZone.pull = 0; ultBurnZone.freezeAfter = 0;
           }
         }, ULTIMATE.BURN_ZONE_LINGER);
@@ -1270,7 +1274,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
       if (thornZone) {
         thornZone.x = zx; thornZone.y = zy; thornZone.radius = 40; thornZone.duration = 4;
         thornZone.dmg = Math.round(2 * pw); thornZone.color = '#66aa44'; thornZone.owner = p.idx;
-        thornZone.slow = ULTIMATE.DRUID_ZONE_SLOW; thornZone.tickRate = ULTIMATE.DRUID_ZONE_TICK; thornZone.tickTimer = 0; thornZone.age = 0;
+        thornZone.slow = ULTIMATE.DRUID_ZONE_SLOW; thornZone.stun = 0; thornZone.tickRate = ULTIMATE.DRUID_ZONE_TICK; thornZone.tickTimer = 0; thornZone.age = 0;
         thornZone.drain = 0; thornZone.heal = 0; thornZone.pull = 0; thornZone.freezeAfter = 0;
       }
       spawnParticles(state, zx, zy, '#88aa66', 6, TIMING.PARTICLE_LIFE_MEDIUM);
@@ -1346,7 +1350,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
     if (megaZone) {
       megaZone.x = turret.x; megaZone.y = turret.y; megaZone.radius = ULTIMATE.TURRET_RADIUS; megaZone.duration = ULTIMATE.TURRET_LIFE;
       megaZone.dmg = Math.round(3 * pw); megaZone.color = '#dd8833'; megaZone.owner = p.idx;
-      megaZone.slow = 0; megaZone.tickRate = 0.7; megaZone.tickTimer = 0; megaZone.age = 0;
+      megaZone.slow = 0; megaZone.stun = 0; megaZone.tickRate = 0.7; megaZone.tickTimer = 0; megaZone.age = 0;
       megaZone.drain = 0; megaZone.heal = 0; megaZone.pull = 0; megaZone.freezeAfter = 0;
       megaZone._turret = true; megaZone._megaTurret = true;
       // Engineer Overclock: turrets fire 20% faster

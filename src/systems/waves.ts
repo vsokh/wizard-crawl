@@ -172,6 +172,7 @@ export function updateSpells(state: GameState, dt: number): void {
         damageEnemy(state, e, hitDmg, s.owner);
         if (s.slow) e.slowTimer = (e.slowTimer || 0) + s.slow;
         if (s.stun) e.stunTimer = (e.stunTimer || 0) + s.stun;
+        if (s.burn) { e._burnTimer = (e._burnTimer || 0) + s.burn; e._burnOwner = s.owner; }
         if (state.players[s.owner]?.frozenTouch && Math.random() < WAVE_PHYSICS.FROZEN_TOUCH_CHANCE) {
           e.stunTimer = (e.stunTimer || 0) + 1;
           spawnText(state, e.x, e.y - 15, 'FREEZE', '#88ddff');
@@ -320,6 +321,7 @@ export function updateZones(state: GameState, dt: number): void {
         if (dist(z.x, z.y, e.x, e.y) < z.radius + ENEMIES[e.type].size) {
           damageEnemy(state, e, z.dmg, z.owner);
           if (z.slow) e.slowTimer = (e.slowTimer || 0) + z.slow;
+          if (z.stun) e.stunTimer = (e.stunTimer || 0) + z.stun;
           if (z.drain) zHealed += z.drain;
           if (z.pull) {
             const pullAngle = Math.atan2(z.y - e.y, z.x - e.x);

@@ -470,6 +470,7 @@ export interface Zone {
   heal: number;
   pull: number;
   freezeAfter: number;
+  stun: number;
   _turret?: boolean;
   _megaTurret?: boolean;
 }
