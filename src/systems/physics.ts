@@ -243,16 +243,16 @@ export function updatePlayers(state: GameState, dt: number): void {
         ally._hasteBonus = false;
       }
     }
-    if (p._hasteBonus) p.moveSpeed = Math.max(p.moveSpeed, DEFAULT_MOVE_SPEED * 1.1);
+    if (p._hasteBonus) p.moveSpeed = Math.max(p.moveSpeed, DEFAULT_MOVE_SPEED * 1.15);
 
     // Berserker: fury below 50% HP
     p._furyActive = p.clsKey === 'berserker' && p.hp <= p.maxHp / 2;
     if (p._furyActive) p.moveSpeed = Math.max(p.moveSpeed, DEFAULT_MOVE_SPEED * 1.5);
 
-    // Druid: Regrowth - regen 1 HP every 10 seconds
+    // Druid: Regrowth - regen 1 HP every 5 seconds
     if (p.clsKey === 'druid') {
       p._auraTick = (p._auraTick || 0) + dt;
-      if (p._auraTick >= 10) {
+      if (p._auraTick >= 5) {
         p._auraTick = 0;
         if (p.hp < p.maxHp) {
           p.hp = Math.min(p.maxHp, p.hp + 1);
@@ -285,7 +285,7 @@ export function updatePlayers(state: GameState, dt: number): void {
     // Time stop decay
     if (p._timeStopTimer > 0) {
       p._timeStopTimer -= dt;
-      if (p._timeStopTimer <= 0) p.moveSpeed = DEFAULT_MOVE_SPEED;
+      if (p._timeStopTimer <= 0) p.moveSpeed = p.cls.moveSpeed ?? DEFAULT_MOVE_SPEED;
     }
 
     // Haste zone speed boost decay

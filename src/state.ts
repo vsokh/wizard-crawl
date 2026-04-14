@@ -244,6 +244,10 @@ export function cloneClassDef(key: string): ClassDef {
     desc: src.desc,
     passive: { ...src.passive },
     spells: src.spells.map(s => normalizeSpellDef({ ...s })),
+    hp: src.hp,
+    moveSpeed: src.moveSpeed,
+    maxMana: src.maxMana,
+    manaRegen: src.manaRegen,
   };
 }
 
@@ -287,6 +291,8 @@ function normalizeSpellDef(input: SpellDefInput): SpellDef {
 /** Create a fresh Player from a class key */
 export function createPlayer(idx: number, clsKey: string): Player {
   const cls = cloneClassDef(clsKey);
+  const hp = cls.hp ?? WIZARD_HP;
+  const maxMana = cls.maxMana ?? MAX_MANA;
   return {
     idx,
     cls,
@@ -296,17 +302,17 @@ export function createPlayer(idx: number, clsKey: string): Player {
     vx: 0,
     vy: 0,
     angle: 0,
-    hp: WIZARD_HP,
-    maxHp: WIZARD_HP,
-    mana: MAX_MANA,
-    maxMana: MAX_MANA,
-    manaRegen: MANA_REGEN,
+    hp: hp,
+    maxHp: hp,
+    mana: maxMana,
+    maxMana: maxMana,
+    manaRegen: cls.manaRegen ?? MANA_REGEN,
     alive: true,
     iframes: 1.5,
     slowTimer: 0,
     stunTimer: 0,
     cd: [0, 0, 0, 0],
-    moveSpeed: DEFAULT_MOVE_SPEED,
+    moveSpeed: cls.moveSpeed ?? DEFAULT_MOVE_SPEED,
     ultCharge: 0,
     ultReady: false,
     hitCounter: 0,

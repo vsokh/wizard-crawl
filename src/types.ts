@@ -121,6 +121,11 @@ export interface ClassDef {
   desc: string;
   passive: ClassPassive;
   spells: SpellDef[];
+  // Per-class base stats (optional, fall back to global constants)
+  hp?: number;
+  moveSpeed?: number;
+  maxMana?: number;
+  manaRegen?: number;
 }
 
 /** The shape used in the CLASSES constant (spells are partial) */
@@ -131,6 +136,11 @@ export interface ClassDefInput {
   desc: string;
   passive: ClassPassive;
   spells: SpellDefInput[];
+  // Per-class base stats (optional, fall back to global constants)
+  hp?: number;
+  moveSpeed?: number;
+  maxMana?: number;
+  manaRegen?: number;
 }
 
 export interface EnemyDef {

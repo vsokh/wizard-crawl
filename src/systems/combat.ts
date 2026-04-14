@@ -601,9 +601,9 @@ export function castSpellSilent(state: GameState, p: Player, idx: number, angle:
     const rt = spellToRuntime(def);
     rt.dmg = getEffectiveSpellDmg(p, idx);
     if (dmgMult !== 1) rt.dmg = Math.ceil(rt.dmg * dmgMult);
-    // Ranger Eagle Eye: +30% primary range
+    // Ranger Eagle Eye: +40% primary range
     if (p.clsKey === 'ranger' && idx === 0) {
-      rt.life *= 1.3;
+      rt.life *= 1.4;
     }
     state.spells.push({
       ...rt,
@@ -902,9 +902,9 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       _slot: idx,
     };
     spell.dmg = Math.round(getEffectiveSpellDmg(p, idx) * echoDmgMul);
-    // Ranger Eagle Eye: +30% primary range
+    // Ranger Eagle Eye: +40% primary range
     if (p.clsKey === 'ranger' && idx === 0) {
-      spell.life *= 1.3;
+      spell.life *= 1.4;
     }
     state.spells.push(spell);
     // Muzzle flash
