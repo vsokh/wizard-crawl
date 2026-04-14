@@ -2,6 +2,7 @@ import { GameState, rand, toWorld, spawnParticles } from '../state';
 import { GamePhase, Trail, Particle, Shockwave } from '../types';
 import { ROOM_WIDTH, ROOM_HEIGHT } from '../constants';
 import { drawTurret } from './draw-entities';
+import { rgba } from './rgba-cache';
 
 // ═══════════════════════════════════
 //       EFFECTS UPDATE
@@ -372,7 +373,7 @@ export function drawAoe(ctx: CanvasRenderingContext2D, state: GameState): void {
         ctx.stroke();
       }
       // Ground crackle
-      ctx.strokeStyle = `rgba(255,220,100,${pr * 0.3})`;
+      ctx.strokeStyle = rgba(255, 220, 100, pr * 0.3);
       ctx.lineWidth = 1;
       for (let i = 0; i < 4; i++) {
         const a = t * 3 + (i / 4) * Math.PI * 2;
@@ -510,7 +511,7 @@ export function drawCountdown(ctx: CanvasRenderingContext2D, state: GameState): 
   const n = Math.ceil(state.countdownTimer);
   const f = state.countdownTimer - Math.floor(state.countdownTimer);
   const sc = 1 + f * 0.3;
-  ctx.fillStyle = `rgba(200,180,255,${0.3 + f * 0.5})`;
+  ctx.fillStyle = rgba(200, 180, 255, 0.3 + f * 0.5);
   ctx.font = `bold ${Math.floor(60 * sc)}px Courier New`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';

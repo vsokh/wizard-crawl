@@ -1,10 +1,22 @@
 import { GameState } from '../state';
 import { ENEMIES, WIZARD_SIZE, TIMING } from '../constants';
 import { PickupType } from '../types';
+import { rgba } from './rgba-cache';
 
 // ═══════════════════════════════════
 //       GRADIENT & EFFECT CACHES
 // ═══════════════════════════════════
+
+// Static rgba color constants (all 4 values hardcoded)
+const PYRO_OUTLINE = 'rgba(255,100,0,0.4)';
+const STORM_OUTLINE = 'rgba(170,100,255,0.3)';
+const ARCANIST_OUTLINE = 'rgba(255,80,160,0.3)';
+const WARLOCK_OUTLINE = 'rgba(120,40,180,0.3)';
+const DRUID_OUTLINE = 'rgba(60,180,30,0.25)';
+const ENGINEER_OUTLINE = 'rgba(200,120,30,0.3)';
+
+// Pre-allocated scratch array for barrelTips (turret drawing)
+const _barrelTips: { x: number; y: number }[] = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }];
 
 // Pre-built simple noise table for organic animation (avoids per-frame random calls)
 const NOISE_TABLE: number[] = [];
@@ -472,7 +484,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
       const h = S * 1.6 + flicker;
 
       // Outer flame
-      ctx.fillStyle = i === 2 ? '#ff5500' : `rgba(255,${80 + i * 20},0,0.8)`;
+      ctx.fillStyle = i === 2 ? '#ff5500' : rgba(255, 80 + i * 20, 0, 0.8);
       ctx.beginPath();
       ctx.moveTo(x + Math.cos(baseA - 0.25) * S * 0.5 + wobbleX, y + Math.sin(baseA - 0.25) * S * 0.5);
       ctx.quadraticCurveTo(
@@ -497,7 +509,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
     ctx.beginPath(); ctx.arc(x, y, S * 0.5, 0, Math.PI * 2); ctx.fill();
 
     // Outline glow
-    ctx.strokeStyle = `rgba(255,100,0,0.4)`;
+    ctx.strokeStyle = PYRO_OUTLINE;
     ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(x, y, S, 0, Math.PI * 2); ctx.stroke();
 
@@ -538,7 +550,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
       const px = x + Math.cos(a) * dist;
       const py = y + Math.sin(a) * dist;
       const sz = 1.2 + Math.sin(time * 5 + i) * 0.5;
-      ctx.fillStyle = `rgba(180,230,255,${0.3 + Math.sin(time * 4 + i) * 0.2})`;
+      ctx.fillStyle = rgba(180, 230, 255, 0.3 + Math.sin(time * 4 + i) * 0.2);
       ctx.beginPath(); ctx.arc(px, py, sz, 0, Math.PI * 2); ctx.fill();
     }
 
@@ -566,7 +578,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
     for (let i = 0; i < 5; i++) {
       const baseA = time * 3 + (i / 5) * Math.PI * 2;
       const jitterA = baseA + noise(time * 20 + i * 17) * 0.4;
-      ctx.strokeStyle = `rgba(200,160,255,${0.4 + 0.3 * noise(time * 12 + i * 31)})`;
+      ctx.strokeStyle = rgba(200, 160, 255, 0.4 + 0.3 * noise(time * 12 + i * 31));
       ctx.lineWidth = 1 + noise(time * 15 + i * 7) * 0.8;
       ctx.beginPath();
       const sx = x + Math.cos(jitterA) * S * 0.6;
@@ -586,7 +598,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
     }
 
     // Outline glow
-    ctx.strokeStyle = 'rgba(170,100,255,0.3)';
+    ctx.strokeStyle = STORM_OUTLINE;
     ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(x, y, S * 0.9, 0, Math.PI * 2); ctx.stroke();
 
@@ -601,7 +613,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
 
     // Rune ring with actual "rune" marks
     const runeRot = time * 0.8;
-    ctx.strokeStyle = `rgba(255,100,180,${0.3 + 0.15 * Math.sin(time * 4)})`;
+    ctx.strokeStyle = rgba(255, 100, 180, 0.3 + 0.15 * Math.sin(time * 4));
     ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.arc(x, y, S * 1.3, runeRot, runeRot + Math.PI * 1.5); ctx.stroke();
     // Rune tick marks along the ring
@@ -627,7 +639,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
         const ta = a - t * 0.15;
         const tx = x + Math.cos(ta) * dist;
         const ty = y + Math.sin(ta) * dist;
-        ctx.fillStyle = `rgba(255,136,204,${0.3 - t * 0.08})`;
+        ctx.fillStyle = rgba(255, 136, 204, 0.3 - t * 0.08);
         ctx.beginPath(); ctx.arc(tx, ty, 2.5 - t * 0.5, 0, Math.PI * 2); ctx.fill();
       }
       // Main particle
@@ -636,7 +648,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
     }
 
     // Outline glow
-    ctx.strokeStyle = 'rgba(255,80,160,0.3)';
+    ctx.strokeStyle = ARCANIST_OUTLINE;
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(x, y, S * 0.8, 0, Math.PI * 2); ctx.stroke();
 
@@ -835,7 +847,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
     ctx.fillRect(x + S * 0.2, y - S * 0.15, S * 0.12, S * 0.08);
 
     // Outline glow (red/orange)
-    ctx.strokeStyle = `rgba(255,${furyActive ? 100 : 50},${furyActive ? 50 : 30},0.4)`;
+    ctx.strokeStyle = rgba(255, furyActive ? 100 : 50, furyActive ? 50 : 30, 0.4);
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     for (let i = 0; i < 8; i++) {
@@ -866,7 +878,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
 
     // Halo with light rays
     const haloAlpha = 0.4 + 0.2 * Math.sin(time * 3);
-    ctx.strokeStyle = `rgba(255,255,180,${haloAlpha})`;
+    ctx.strokeStyle = rgba(255, 255, 180, haloAlpha);
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.ellipse(x, y - S * 1.0, S * 0.8, S * 0.25, 0, 0, Math.PI * 2);
@@ -877,7 +889,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
       const rayLen = S * 0.3 + Math.sin(time * 4 + i * 1.5) * S * 0.1;
       const hx = x + Math.cos(ra) * S * 0.8;
       const hy = y - S * 1.0 + Math.sin(ra) * S * 0.25;
-      ctx.strokeStyle = `rgba(255,255,200,${0.15 + Math.sin(time * 5 + i) * 0.1})`;
+      ctx.strokeStyle = rgba(255, 255, 200, 0.15 + Math.sin(time * 5 + i) * 0.1);
       ctx.lineWidth = 0.8;
       ctx.beginPath();
       ctx.moveTo(hx, hy);
@@ -996,12 +1008,12 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
     for (let i = 0; i < 3; i++) {
       const sa = time * 0.8 + (i / 3) * Math.PI * 2;
       const sd = S * 1.6 + Math.sin(time * 2 + i) * 3;
-      ctx.fillStyle = `rgba(150,255,100,${0.2 + Math.sin(time * 3 + i * 2) * 0.1})`;
+      ctx.fillStyle = rgba(150, 255, 100, 0.2 + Math.sin(time * 3 + i * 2) * 0.1);
       ctx.beginPath(); ctx.arc(x + Math.cos(sa) * sd, y + Math.sin(sa) * sd, 1.5, 0, Math.PI * 2); ctx.fill();
     }
 
     // Outline glow
-    ctx.strokeStyle = 'rgba(60,180,30,0.25)';
+    ctx.strokeStyle = DRUID_OUTLINE;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(x + sway2, y - S * 1.2);
@@ -1047,7 +1059,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
       for (let t = 1; t <= 3; t++) {
         const trailX = eyeX - Math.cos(angle) * t * 2;
         const trailY = eyeY - Math.sin(angle) * t * 2;
-        ctx.fillStyle = `rgba(170,68,255,${0.3 - t * 0.08})`;
+        ctx.fillStyle = rgba(170, 68, 255, 0.3 - t * 0.08);
         ctx.beginPath(); ctx.arc(trailX, trailY, 2.5 - t * 0.4, 0, Math.PI * 2); ctx.fill();
       }
       // Main eye
@@ -1062,7 +1074,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
     }
 
     // Outline glow
-    ctx.strokeStyle = 'rgba(120,40,180,0.3)';
+    ctx.strokeStyle = WARLOCK_OUTLINE;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(x, y - S * 1.3);
@@ -1078,7 +1090,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
 
     // Outer chi energy ring
     const chiPulse = 0.2 + 0.15 * Math.sin(time * 4);
-    ctx.strokeStyle = `rgba(238,221,136,${chiPulse})`;
+    ctx.strokeStyle = rgba(238, 221, 136, chiPulse);
     ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(x, y, S * 1.4, 0, Math.PI * 2); ctx.stroke();
     // Chi sparks on ring
@@ -1086,7 +1098,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
       const ca = time * 2 + (i / 6) * Math.PI * 2;
       const cx2 = x + Math.cos(ca) * S * 1.4;
       const cy2 = y + Math.sin(ca) * S * 1.4;
-      ctx.fillStyle = `rgba(255,240,150,${0.3 + Math.sin(time * 6 + i * 2) * 0.2})`;
+      ctx.fillStyle = rgba(255, 240, 150, 0.3 + Math.sin(time * 6 + i * 2) * 0.2);
       ctx.beginPath(); ctx.arc(cx2, cy2, 1.2, 0, Math.PI * 2); ctx.fill();
     }
 
@@ -1150,7 +1162,7 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
 
     // Lens flare (time-based shimmer)
     const flareAlpha = 0.3 + 0.3 * Math.sin(time * 3);
-    ctx.fillStyle = `rgba(200,240,255,${flareAlpha})`;
+    ctx.fillStyle = rgba(200, 240, 255, flareAlpha);
     ctx.beginPath(); ctx.arc(x - S * 0.35, y - S * 0.2, S * 0.08, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(x + S * 0.25, y - S * 0.2, S * 0.06, 0, Math.PI * 2); ctx.fill();
 
@@ -1181,13 +1193,13 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
         const sa = gearA + i * 1.2;
         const sparkX = x + Math.cos(sa) * S * 0.5 + noise(time * 20 + i * 13) * 4;
         const sparkY = gearY2 + Math.sin(sa) * S * 0.5 + noise(time * 18 + i * 19) * 4;
-        ctx.fillStyle = `rgba(255,${200 + Math.floor(noise(time * 25 + i) * 55)},50,${0.8 - sparkPhase * 2})`;
+        ctx.fillStyle = rgba(255, 200 + Math.floor(noise(time * 25 + i) * 55), 50, 0.8 - sparkPhase * 2);
         ctx.beginPath(); ctx.arc(sparkX, sparkY, 1, 0, Math.PI * 2); ctx.fill();
       }
     }
 
     // Outline glow
-    ctx.strokeStyle = 'rgba(200,120,30,0.3)';
+    ctx.strokeStyle = ENGINEER_OUTLINE;
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(x, y, S, 0, Math.PI * 2); ctx.stroke();
 
@@ -1451,7 +1463,7 @@ export function drawWizard(ctx: CanvasRenderingContext2D, state: GameState): voi
 
     // Ult ready glow
     if (p.ultCharge >= 100) {
-      ctx.strokeStyle = `rgba(255,200,60,${0.3 + 0.2 * Math.sin(state.time * 4)})`;
+      ctx.strokeStyle = rgba(255, 200, 60, 0.3 + 0.2 * Math.sin(state.time * 4));
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(p.x, p.y, WIZARD_SIZE + 6, 0, Math.PI * 2);
@@ -1514,8 +1526,8 @@ export function drawTurret(ctx: CanvasRenderingContext2D, x: number, y: number, 
     const shieldRadius = s * 1.3;
     const shieldG = ctx.createRadialGradient(x, y, shieldRadius * 0.7, x, y, shieldRadius);
     shieldG.addColorStop(0, 'rgba(255,170,50,0)');
-    shieldG.addColorStop(0.8, `rgba(255,180,60,${shieldPulse * 0.3})`);
-    shieldG.addColorStop(1, `rgba(255,200,80,${shieldPulse})`);
+    shieldG.addColorStop(0.8, rgba(255, 180, 60, shieldPulse * 0.3));
+    shieldG.addColorStop(1, rgba(255, 200, 80, shieldPulse));
     ctx.fillStyle = shieldG;
     ctx.beginPath();
     ctx.arc(x, y, shieldRadius, 0, Math.PI * 2);
@@ -1550,7 +1562,6 @@ export function drawTurret(ctx: CanvasRenderingContext2D, x: number, y: number, 
 
   // Three barrels (rotating with inertia feel via sin easing)
   const inertiaAngle = barrelAngle + Math.sin(barrelAngle * 0.5) * 0.1;
-  const barrelTips: Array<{ x: number; y: number }> = [];
   for (let i = 0; i < 3; i++) {
     const a = inertiaAngle + (i / 3) * Math.PI * 2;
     const bx2 = x + Math.cos(a) * s * 0.3;
@@ -1558,7 +1569,8 @@ export function drawTurret(ctx: CanvasRenderingContext2D, x: number, y: number, 
     const barrelLen = isMega ? 1.4 : 1.1;
     const ex = x + Math.cos(a) * s * barrelLen;
     const ey = y + Math.sin(a) * s * barrelLen;
-    barrelTips.push({ x: ex, y: ey });
+    _barrelTips[i].x = ex;
+    _barrelTips[i].y = ey;
 
     // Barrel body
     ctx.strokeStyle = isMega ? '#ffbb44' : '#cc9933';
@@ -1596,8 +1608,8 @@ export function drawTurret(ctx: CanvasRenderingContext2D, x: number, y: number, 
     for (let i = 0; i < 3; i++) {
       const flicker = Math.sin(time * 9.3 + i * 5.7);
       if (flicker > 0.1) {
-        const t1 = barrelTips[i];
-        const t2 = barrelTips[(i + 1) % 3];
+        const t1 = _barrelTips[i];
+        const t2 = _barrelTips[(i + 1) % 3];
         const mx = (t1.x + t2.x) / 2;
         const my = (t1.y + t2.y) / 2;
         // Offset midpoint for a curved arc look
@@ -1640,7 +1652,7 @@ export function drawTurret(ctx: CanvasRenderingContext2D, x: number, y: number, 
 
   // Pulsing ring (active indicator)
   const pulse = 0.3 + 0.2 * Math.sin(time * 5);
-  ctx.strokeStyle = `rgba(255,170,50,${pulse})`;
+  ctx.strokeStyle = rgba(255, 170, 50, pulse);
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.arc(x, y, s * 1.1, 0, Math.PI * 2);
@@ -1799,7 +1811,7 @@ function drawImp(ctx: CanvasRenderingContext2D, x: number, y: number, size: numb
       const px = x + Math.cos(breathAngle - Math.PI / 2) * dist;
       const py = y - size * 0.5 + Math.sin(breathAngle) * dist * 0.3 - dist * 0.5;
       const sz = (1.2 - age) * 2;
-      ctx.fillStyle = `rgba(255,${100 + Math.floor(age * 100)},50,${0.5 - age * 0.35})`;
+      ctx.fillStyle = rgba(255, 100 + Math.floor(age * 100), 50, 0.5 - age * 0.35);
       ctx.beginPath(); ctx.arc(px, py, sz, 0, Math.PI * 2); ctx.fill();
     }
   }
@@ -1970,7 +1982,7 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     for (let i = 0; i < 3; i++) {
       const wispA = Math.PI + (i - 1) * 0.4 + Math.sin(time * 2 + i) * 0.3;
       const wispLen = size * (1.5 + Math.sin(time * 3 + i * 2) * 0.5);
-      ctx.strokeStyle = `rgba(136,85,204,${0.2 - i * 0.05})`;
+      ctx.strokeStyle = rgba(136, 85, 204, 0.2 - i * 0.05);
       ctx.lineWidth = 2 - i * 0.5;
       ctx.beginPath();
       ctx.moveTo(x + Math.cos(wispA) * size * 0.5, y + Math.sin(wispA) * size * 0.5);
@@ -2008,7 +2020,7 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     ctx.strokeStyle = '#553311'; ctx.lineWidth = 2; ctx.stroke();
 
     // Glowing cracks between segments
-    ctx.strokeStyle = `rgba(255,${140 + Math.floor(Math.sin(time * 2) * 40)},50,${0.5 + Math.sin(time * 3) * 0.2})`;
+    ctx.strokeStyle = rgba(255, 140 + Math.floor(Math.sin(time * 2) * 40), 50, 0.5 + Math.sin(time * 3) * 0.2);
     ctx.lineWidth = 1.5;
     for (let i = 0; i < 4; i++) {
       const crackA = (i / 4) * Math.PI * 2 + 0.3;
@@ -2025,13 +2037,13 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
       if (dustPhase < 1) {
         const dustX = x + (hash(i * 13 + 5) - 0.5) * size * 2;
         const dustY = y + size * 0.8 + dustPhase * 3;
-        ctx.fillStyle = `rgba(150,120,80,${0.3 - dustPhase * 0.25})`;
+        ctx.fillStyle = rgba(150, 120, 80, 0.3 - dustPhase * 0.25);
         ctx.beginPath(); ctx.arc(dustX, dustY, 2 - dustPhase, 0, Math.PI * 2); ctx.fill();
       }
     }
 
     // Eyes
-    ctx.fillStyle = `rgba(255,${160 + Math.floor(Math.sin(time * 4) * 40)},50,0.9)`;
+    ctx.fillStyle = rgba(255, 160 + Math.floor(Math.sin(time * 4) * 40), 50, 0.9);
     ctx.beginPath(); ctx.arc(x - size * 0.25, y - size * 0.2, 3, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(x + size * 0.25, y - size * 0.2, 3, 0, Math.PI * 2); ctx.fill();
 
@@ -2176,7 +2188,7 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     ctx.fillStyle = '#77cc99';
     ctx.beginPath(); ctx.arc(x + size * 0.8, fy - size * 0.8, orbGlow, 0, Math.PI * 2); ctx.fill();
     // Orb glow halo
-    ctx.fillStyle = `rgba(119,204,153,${0.2 + Math.sin(time * 4) * 0.1})`;
+    ctx.fillStyle = rgba(119, 204, 153, 0.2 + Math.sin(time * 4) * 0.1);
     ctx.beginPath(); ctx.arc(x + size * 0.8, fy - size * 0.8, orbGlow + 3, 0, Math.PI * 2); ctx.fill();
 
     // Eyes
@@ -2246,7 +2258,7 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     ctx.globalAlpha = 1;
 
     // Shimmer distortion lines
-    ctx.strokeStyle = `rgba(50,70,90,${0.1 + Math.sin(time * 6) * 0.05})`;
+    ctx.strokeStyle = rgba(50, 70, 90, 0.1 + Math.sin(time * 6) * 0.05);
     ctx.lineWidth = 0.5;
     for (let i = 0; i < 3; i++) {
       const ly = y - size + (i / 2) * size * 2;
@@ -2261,10 +2273,10 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     if (glintPhase < 0.3) {
       const daggerX = x + Math.cos(eyeAngle) * size * 0.8;
       const daggerY = y + Math.sin(eyeAngle) * size * 0.8;
-      ctx.fillStyle = `rgba(255,255,255,${0.8 - glintPhase * 2})`;
+      ctx.fillStyle = rgba(255, 255, 255, 0.8 - glintPhase * 2);
       ctx.beginPath(); ctx.arc(daggerX, daggerY, 2, 0, Math.PI * 2); ctx.fill();
       // Glint rays
-      ctx.strokeStyle = `rgba(255,255,255,${0.5 - glintPhase * 1.5})`;
+      ctx.strokeStyle = rgba(255, 255, 255, 0.5 - glintPhase * 1.5);
       ctx.lineWidth = 0.5;
       for (let i = 0; i < 4; i++) {
         const ra = (i / 4) * Math.PI * 2;
@@ -2360,14 +2372,14 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     ctx.fill();
 
     // Split line down the middle (pulsing)
-    ctx.strokeStyle = `rgba(102,170,102,${0.4 + splitPulse * 0.6})`;
+    ctx.strokeStyle = rgba(102, 170, 102, 0.4 + splitPulse * 0.6);
     ctx.lineWidth = 1 + splitPulse * 1.5;
     ctx.beginPath();
     ctx.moveTo(x + wobbleX, y - wSize);
     ctx.lineTo(x + wobbleX, y + wSize);
     ctx.stroke();
     // Split line glow
-    ctx.strokeStyle = `rgba(102,170,102,${splitPulse * 0.2})`;
+    ctx.strokeStyle = rgba(102, 170, 102, splitPulse * 0.2);
     ctx.lineWidth = 4 + splitPulse * 2;
     ctx.beginPath();
     ctx.moveTo(x + wobbleX, y - wSize);
@@ -2422,7 +2434,7 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     // Rage aura
     if (rage > 0.3) {
       const rageGlow = ctx.createRadialGradient(x, y, r * 0.3, x, y, r * 2);
-      rageGlow.addColorStop(0, `rgba(255,0,0,${rage * 0.3})`);
+      rageGlow.addColorStop(0, rgba(255, 0, 0, rage * 0.3));
       rageGlow.addColorStop(1, 'transparent');
       ctx.fillStyle = rageGlow;
       ctx.beginPath();
@@ -2474,7 +2486,7 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
       const sx = x + Math.cos(sa) * sd;
       const sy = y + Math.sin(sa) * sd;
       const orbR = 3 + Math.sin(time * 3 + i * 2) * 1;
-      ctx.fillStyle = `rgba(255,170,0,${0.15 + Math.sin(time * 2 + i) * 0.08})`;
+      ctx.fillStyle = rgba(255, 170, 0, 0.15 + Math.sin(time * 2 + i) * 0.08);
       ctx.beginPath(); ctx.arc(sx, sy, orbR, 0, Math.PI * 2); ctx.fill();
     }
 
@@ -2494,7 +2506,7 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     ctx.fillStyle = lordG;
     ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
     // Rim lighting
-    ctx.strokeStyle = `rgba(255,170,0,${0.3 + Math.sin(time * 2) * 0.15})`;
+    ctx.strokeStyle = rgba(255, 170, 0, 0.3 + Math.sin(time * 2) * 0.15);
     ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.stroke();
 
@@ -2523,14 +2535,14 @@ function drawEnemyBody(ctx: CanvasRenderingContext2D, e: { x: number; y: number;
     // Eyes (menacing, glowing)
     const lordEd = size * 0.25;
     const eyeGlow = 0.7 + Math.sin(time * 3) * 0.3;
-    ctx.fillStyle = `rgba(255,${Math.floor(120 + eyeGlow * 80)},0,${eyeGlow})`;
+    ctx.fillStyle = rgba(255, Math.floor(120 + eyeGlow * 80), 0, eyeGlow);
     ctx.beginPath();
     ctx.arc(x + Math.cos(eyeAngle - 0.3) * lordEd, y + Math.sin(eyeAngle - 0.3) * lordEd, 2.5, 0, Math.PI * 2);
     ctx.moveTo(x + Math.cos(eyeAngle + 0.3) * lordEd + 2.5, y + Math.sin(eyeAngle + 0.3) * lordEd);
     ctx.arc(x + Math.cos(eyeAngle + 0.3) * lordEd, y + Math.sin(eyeAngle + 0.3) * lordEd, 2.5, 0, Math.PI * 2);
     ctx.fill();
     // Eye glow halos
-    ctx.fillStyle = `rgba(255,170,0,${eyeGlow * 0.2})`;
+    ctx.fillStyle = rgba(255, 170, 0, eyeGlow * 0.2);
     ctx.beginPath();
     ctx.arc(x + Math.cos(eyeAngle - 0.3) * lordEd, y + Math.sin(eyeAngle - 0.3) * lordEd, 5, 0, Math.PI * 2);
     ctx.moveTo(x + Math.cos(eyeAngle + 0.3) * lordEd + 5, y + Math.sin(eyeAngle + 0.3) * lordEd);
@@ -2649,8 +2661,8 @@ export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): vo
     if (e._elite && !et.boss) {
       const pulse = 0.8 + 0.2 * Math.sin(state.time * 4);
       const eg = ctx.createRadialGradient(e.x, e.y, et.size * 0.2, e.x, e.y, et.size * 1.8);
-      eg.addColorStop(0, `rgba(255,200,60,${0.18 * pulse})`);
-      eg.addColorStop(0.5, `rgba(220,170,40,${0.08 * pulse})`);
+      eg.addColorStop(0, rgba(255, 200, 60, 0.18 * pulse));
+      eg.addColorStop(0.5, rgba(220, 170, 40, 0.08 * pulse));
       eg.addColorStop(1, 'transparent');
       ctx.fillStyle = eg;
       ctx.beginPath();
@@ -2662,15 +2674,15 @@ export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): vo
     if (e._dmgReductionActive) {
       const pulse = 0.8 + 0.2 * Math.sin(state.time * 6);
       // Outer shield ring
-      ctx.strokeStyle = `rgba(100,140,255,${0.5 * pulse})`;
+      ctx.strokeStyle = rgba(100, 140, 255, 0.5 * pulse);
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.arc(e.x, e.y, et.size * 1.5, 0, Math.PI * 2);
       ctx.stroke();
       // Inner glow
       const sg = ctx.createRadialGradient(e.x, e.y, et.size * 0.3, e.x, e.y, et.size * 1.6);
-      sg.addColorStop(0, `rgba(100,150,255,${0.12 * pulse})`);
-      sg.addColorStop(0.6, `rgba(80,120,220,${0.06 * pulse})`);
+      sg.addColorStop(0, rgba(100, 150, 255, 0.12 * pulse));
+      sg.addColorStop(0.6, rgba(80, 120, 220, 0.06 * pulse));
       sg.addColorStop(1, 'transparent');
       ctx.fillStyle = sg;
       ctx.beginPath();
@@ -2681,7 +2693,7 @@ export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): vo
         const segAngle = state.time * 2 + (i * Math.PI / 2);
         const segX = e.x + Math.cos(segAngle) * et.size * 1.3;
         const segY = e.y + Math.sin(segAngle) * et.size * 1.3;
-        ctx.fillStyle = `rgba(120,170,255,${0.3 * pulse})`;
+        ctx.fillStyle = rgba(120, 170, 255, 0.3 * pulse);
         ctx.beginPath();
         ctx.arc(segX, segY, 4, 0, Math.PI * 2);
         ctx.fill();
@@ -2710,7 +2722,7 @@ export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): vo
     // Hit flash: white overlay
     if (e._hitFlash > 0) {
       const flashAlpha = e._hitFlash / 0.12; // 1 -> 0
-      ctx.fillStyle = `rgba(255,255,255,${flashAlpha * 0.6})`;
+      ctx.fillStyle = rgba(255, 255, 255, flashAlpha * 0.6);
       ctx.beginPath();
       ctx.arc(e.x, e.y, et.size * 1.1, 0, Math.PI * 2);
       ctx.fill();
@@ -2799,7 +2811,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
         const trailX = s.x - s.vx * dt2 * i * 2;
         const trailY = s.y - s.vy * dt2 * i * 2;
         const trailAlpha = 0.3 - i * 0.05;
-        ctx.fillStyle = `rgba(200,220,240,${trailAlpha})`;
+        ctx.fillStyle = rgba(200, 220, 240, trailAlpha);
         ctx.beginPath(); ctx.arc(trailX, trailY, r * (1.0 - i * 0.12), 0, Math.PI * 2); ctx.fill();
       }
       ctx.save();
@@ -2822,7 +2834,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       ctx.stroke();
       // Metallic glint that rotates
       const glintAngle = spinRate * 0.3;
-      ctx.fillStyle = `rgba(255,255,255,${0.4 + 0.3 * Math.sin(glintAngle)})`;
+      ctx.fillStyle = rgba(255, 255, 255, 0.4 + 0.3 * Math.sin(glintAngle));
       ctx.beginPath();
       ctx.arc(Math.cos(glintAngle) * r * 0.5, Math.sin(glintAngle) * r * 0.5, r * 0.2, 0, Math.PI * 2);
       ctx.fill();
@@ -2841,7 +2853,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       for (let i = 0; i < rayCount; i++) {
         const rayA = (i / rayCount) * Math.PI * 2 + t * 3;
         const rayLen = r * (1.8 + 0.4 * Math.sin(t * 8 + i * 2));
-        ctx.strokeStyle = `rgba(255,238,170,${0.3 + 0.15 * Math.sin(t * 6 + i)})`;
+        ctx.strokeStyle = rgba(255, 238, 170, 0.3 + 0.15 * Math.sin(t * 6 + i));
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(Math.cos(rayA) * r * 0.4, Math.sin(rayA) * r * 0.4);
@@ -2888,7 +2900,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       // Green glow trail
       for (let i = 1; i <= 4; i++) {
         const gAlpha = 0.2 - i * 0.04;
-        ctx.fillStyle = `rgba(120,200,60,${gAlpha})`;
+        ctx.fillStyle = rgba(120, 200, 60, gAlpha);
         ctx.beginPath(); ctx.arc(-r * i * 0.8, 0, r * (0.6 - i * 0.08), 0, Math.PI * 2); ctx.fill();
       }
       // Speed lines
@@ -2939,7 +2951,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
         const leafX = -r * (1.0 + i * 0.7) + Math.sin(t * 4 + i * 3) * 2;
         const leafY = Math.cos(t * 3 + i * 2) * r * 0.4;
         const leafR2 = r * 0.25 + leafAge * r * 0.1;
-        ctx.fillStyle = `rgba(80,170,50,${0.3 - i * 0.06})`;
+        ctx.fillStyle = rgba(80, 170, 50, 0.3 - i * 0.06);
         ctx.beginPath(); ctx.arc(leafX, leafY, leafR2, 0, Math.PI * 2); ctx.fill();
       }
       // Irregular organic body
@@ -2972,7 +2984,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       }
       // Poison glow pulse
       const poisonAlpha = 0.15 + 0.1 * Math.sin(t * 8);
-      ctx.fillStyle = `rgba(100,255,60,${poisonAlpha})`;
+      ctx.fillStyle = rgba(100, 255, 60, poisonAlpha);
       ctx.beginPath(); ctx.arc(0, 0, pulseR * 1.6, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
 
@@ -2984,7 +2996,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
         const sparkAge = (t * 15 + i * 3.7) % 2;
         const sparkDx = -s.vx / 60 * (i + 1) * 2;
         const sparkDy = -s.vy / 60 * (i + 1) * 2;
-        ctx.fillStyle = `rgba(255,${180 + Math.floor(sparkAge * 40)},50,${0.5 - i * 0.15})`;
+        ctx.fillStyle = rgba(255, 180 + Math.floor(sparkAge * 40), 50, 0.5 - i * 0.15);
         ctx.beginPath();
         ctx.arc(s.x + sparkDx + Math.sin(t * 20 + i * 5) * 3,
                 s.y + sparkDy + Math.cos(t * 18 + i * 4) * 3,
@@ -3012,7 +3024,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       ctx.beginPath(); ctx.arc(0, 0, r * 0.35, 0, Math.PI * 2); ctx.fill();
       // Metallic glint on teeth
       const glintAngle = gearSpin * 0.4;
-      ctx.fillStyle = `rgba(255,255,220,${0.4 + 0.3 * Math.sin(glintAngle)})`;
+      ctx.fillStyle = rgba(255, 255, 220, 0.4 + 0.3 * Math.sin(glintAngle));
       ctx.beginPath();
       ctx.arc(Math.cos(glintAngle) * r * 0.7, Math.sin(glintAngle) * r * 0.7, r * 0.2, 0, Math.PI * 2);
       ctx.fill();
@@ -3030,7 +3042,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
         const ringPhase = (t * 4 + i * 1.2) % 2;
         const ringR = r * (0.8 + ringPhase * 1.2);
         const ringAlpha = 0.3 * (1 - ringPhase / 2);
-        ctx.strokeStyle = `rgba(255,200,60,${ringAlpha})`;
+        ctx.strokeStyle = rgba(255, 200, 60, ringAlpha);
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.arc(0, 0, ringR, 0, Math.PI * 2); ctx.stroke();
       }
@@ -3068,7 +3080,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       for (let i = 0; i < 4; i++) {
         const px = Math.sin(t * 6 + i * 1.5) * r * 0.9;
         const py = Math.cos(t * 6 + i * 1.5) * r * 0.9;
-        ctx.fillStyle = `rgba(255,220,100,${0.3 + 0.2 * Math.sin(t * 10 + i)})`;
+        ctx.fillStyle = rgba(255, 220, 100, 0.3 + 0.2 * Math.sin(t * 10 + i));
         ctx.beginPath(); ctx.arc(px, py, 1.2, 0, Math.PI * 2); ctx.fill();
       }
       ctx.restore();
@@ -3085,7 +3097,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
         const smokeX = -r * (1.5 + i * 0.8) + Math.sin(t * 5 + i * 2) * 2;
         const smokeY = Math.sin(t * 4 + i * 3) * 2;
         const smokeR = r * 0.3 + smokeAge * r * 0.3;
-        ctx.fillStyle = `rgba(80,60,40,${0.25 - i * 0.05})`;
+        ctx.fillStyle = rgba(80, 60, 40, 0.25 - i * 0.05);
         ctx.beginPath(); ctx.arc(smokeX, smokeY, smokeR, 0, Math.PI * 2); ctx.fill();
       }
 
@@ -3095,7 +3107,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
         const sparkDist = r * (1 + hash(Math.floor(t * 15) + i) * 1.5);
         const sparkX = Math.cos(sparkAngle) * sparkDist;
         const sparkY = Math.sin(sparkAngle) * sparkDist;
-        ctx.fillStyle = `rgba(255,${180 + Math.floor(hash(Math.floor(t * 20) + i) * 75)},50,0.7)`;
+        ctx.fillStyle = rgba(255, 180 + Math.floor(hash(Math.floor(t * 20) + i) * 75), 50, 0.7);
         ctx.beginPath(); ctx.arc(sparkX, sparkY, 0.8, 0, Math.PI * 2); ctx.fill();
       }
 
@@ -3129,7 +3141,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
         const mistX = -r * (1.0 + i * 0.6);
         const mistY = Math.sin(t * 6 + i * 2) * r * 0.3;
         const mistR2 = r * 0.3 + i * r * 0.15;
-        ctx.fillStyle = `rgba(150,210,240,${0.15 - i * 0.04})`;
+        ctx.fillStyle = rgba(150, 210, 240, 0.15 - i * 0.04);
         ctx.beginPath(); ctx.arc(mistX, mistY, mistR2, 0, Math.PI * 2); ctx.fill();
       }
 
@@ -3172,7 +3184,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
         const trailY = s.y - s.vy * dt2 * i * 3;
         const trailAlpha = 0.3 - i * 0.06;
         const trailSize = r * (1.2 - i * 0.15);
-        ctx.fillStyle = `rgba(255,136,204,${trailAlpha})`;
+        ctx.fillStyle = rgba(255, 136, 204, trailAlpha);
         ctx.beginPath(); ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2); ctx.fill();
       }
 
@@ -3207,14 +3219,14 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       // ── BALL LIGHTNING: bigger visual presence, arcs reaching outward ──
       // Outer electric field (larger, more visible)
       const fieldAlpha = 0.25 + 0.2 * Math.sin(t * 6);
-      ctx.strokeStyle = `rgba(180,120,255,${fieldAlpha})`;
+      ctx.strokeStyle = rgba(180, 120, 255, fieldAlpha);
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc(s.x, s.y, r * 1.8, 0, Math.PI * 2);
       ctx.stroke();
 
       // Secondary field
-      ctx.strokeStyle = `rgba(200,160,255,${fieldAlpha * 0.5})`;
+      ctx.strokeStyle = rgba(200, 160, 255, fieldAlpha * 0.5);
       ctx.lineWidth = 0.5;
       ctx.beginPath();
       ctx.arc(s.x, s.y, r * 2.2, 0, Math.PI * 2);
@@ -3275,7 +3287,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       const facePhase = Math.sin(t * 2) * 0.5 + 0.5;
       if (facePhase > 0.7) {
         const faceAlpha = (facePhase - 0.7) / 0.3;
-        ctx.fillStyle = `rgba(200,255,200,${faceAlpha * 0.5})`;
+        ctx.fillStyle = rgba(200, 255, 200, faceAlpha * 0.5);
         // Eyes
         ctx.beginPath(); ctx.arc(-r * 0.15, -r * 0.25, r * 0.15, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.arc(r * 0.15, -r * 0.25, r * 0.15, 0, Math.PI * 2); ctx.fill();
@@ -3386,7 +3398,7 @@ export function drawSpells(ctx: CanvasRenderingContext2D, state: GameState): voi
       ctx.stroke();
       // Metallic glint on blade edge
       const glintPos = (Math.sin(spinRate * 0.5) + 1) * 0.5;
-      ctx.fillStyle = `rgba(255,255,255,${0.3 + glintPos * 0.3})`;
+      ctx.fillStyle = rgba(255, 255, 255, 0.3 + glintPos * 0.3);
       ctx.beginPath();
       ctx.arc(r * 0.3 * (1 - glintPos), -r * 0.7 * (1 - glintPos), 1.5, 0, Math.PI * 2);
       ctx.fill();
@@ -3442,7 +3454,7 @@ export function drawPickups(ctx: CanvasRenderingContext2D, state: GameState): vo
     const pulse = 0.5 + 0.5 * Math.sin(state.time * 3);
 
     if (pk.type === PickupType.Chest) {
-      ctx.fillStyle = `rgba(200,170,50,${0.2 + pulse * 0.15})`;
+      ctx.fillStyle = rgba(200, 170, 50, 0.2 + pulse * 0.15);
       ctx.fillRect(pk.x - 12, pk.y - 10, 24, 20);
       ctx.strokeStyle = '#bbaa44';
       ctx.lineWidth = 1;
@@ -3475,7 +3487,7 @@ export function drawPickups(ctx: CanvasRenderingContext2D, state: GameState): vo
       ctx.arc(pk.x, pk.y + bob, gemSize + 4, 0, Math.PI * 2);
       ctx.fill();
       // Diamond shape
-      ctx.fillStyle = `rgba(180,220,255,${0.7 + pulse * 0.3})`;
+      ctx.fillStyle = rgba(180, 220, 255, 0.7 + pulse * 0.3);
       ctx.beginPath();
       ctx.moveTo(pk.x, pk.y + bob - gemSize);
       ctx.lineTo(pk.x + gemSize * 0.6, pk.y + bob);
@@ -3512,7 +3524,7 @@ export function drawPickups(ctx: CanvasRenderingContext2D, state: GameState): vo
       ctx.fill();
       ctx.restore();
     } else if (pk.type === PickupType.Trap) {
-      ctx.strokeStyle = `rgba(170,220,85,${0.3 + pulse * 0.2})`;
+      ctx.strokeStyle = rgba(170, 220, 85, 0.3 + pulse * 0.2);
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 3]);
       ctx.beginPath();

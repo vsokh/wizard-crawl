@@ -43,6 +43,9 @@ import {
 import { sfx } from '../audio';
 import { createFriendlyEnemy } from './dungeon';
 
+// Pre-allocated scratch array to avoid per-frame filter() allocations
+let _aliveEnemies: Enemy[] = [];
+
 // ═══════════════════════════════════
 //       BONUS DAMAGE SOFT CAP
 // ═══════════════════════════════════
@@ -1060,12 +1063,15 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
     spawnShockwave(state, p.x, p.y, ROOM_WIDTH, 'rgba(100,200,255,.3)');
   } else if (p.clsKey === 'stormcaller') {
     // Chain Lightning: chain from nearest enemy to 7 more
-    const alive = state.enemies.filter(e => e.alive);
-    if (alive.length > 0) {
+    _aliveEnemies.length = 0;
+    for (let i = 0; i < state.enemies.length; i++) {
+      if (state.enemies[i].alive) _aliveEnemies.push(state.enemies[i]);
+    }
+    if (_aliveEnemies.length > 0) {
       // Find nearest enemy to start the chain
       let current: Enemy | null = null;
       let minD = Infinity;
-      for (const e of alive) {
+      for (const e of _aliveEnemies) {
         const d = dist(p.x, p.y, e.x, e.y);
         if (d < minD) { minD = d; current = e; }
       }
@@ -1080,7 +1086,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
         let next: Enemy | null = null;
         let nextD = Infinity;
         // Try to find an un-hit enemy within range
-        for (const e of alive) {
+        for (const e of _aliveEnemies) {
           if (!e.alive) continue;
           if (hitSet.has(e)) continue;
           const d = dist(current.x, current.y, e.x, e.y);
@@ -1088,7 +1094,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
         }
         // If no un-hit enemies, wrap around to already-hit ones
         if (!next) {
-          for (const e of alive) {
+          for (const e of _aliveEnemies) {
             if (!e.alive || e === current) continue;
             const d = dist(current.x, current.y, e.x, e.y);
             if (d < ULTIMATE.CHAIN_RANGE && d < nextD) { nextD = d; next = e; }

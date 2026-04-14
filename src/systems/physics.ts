@@ -51,7 +51,10 @@ export function updatePlayers(state: GameState, dt: number): void {
           p.slowTimer = 0;
         } else if (p.respawnTimer <= 0 && state.lives <= 0 && state.gamePhase === GamePhase.Playing) {
           // No lives left -- check if all players dead for game over
-          const allDead = state.players.every(pl => !pl.alive);
+          let allDead = true;
+          for (let i = 0; i < state.players.length; i++) {
+            if (state.players[i].alive) { allDead = false; break; }
+          }
           if (allDead) {
             state.gamePhase = GamePhase.GameOver;
             document.exitPointerLock();
