@@ -18,7 +18,7 @@ interface AmbientMote {
 }
 
 const ambientMotes: AmbientMote[] = [];
-const MOTE_COUNT = 18;
+const MOTE_COUNT = 9;
 
 function ensureMotes(): void {
   while (ambientMotes.length < MOTE_COUNT) {
@@ -362,10 +362,6 @@ const groundFogBlobs: GroundFogBlob[] = [
   { baseX: ROOM_WIDTH * 0.1, y: ROOM_HEIGHT * 0.75, radius: 160, alpha: 0.02, hue: 250, driftSpeed: 0.12, driftAmplitude: 90, phase: 0 },
   { baseX: ROOM_WIDTH * 0.3, y: ROOM_HEIGHT * 0.82, radius: 140, alpha: 0.025, hue: 230, driftSpeed: 0.09, driftAmplitude: 70, phase: 1.2 },
   { baseX: ROOM_WIDTH * 0.5, y: ROOM_HEIGHT * 0.7, radius: 170, alpha: 0.018, hue: 260, driftSpeed: 0.14, driftAmplitude: 100, phase: 2.5 },
-  { baseX: ROOM_WIDTH * 0.7, y: ROOM_HEIGHT * 0.78, radius: 130, alpha: 0.028, hue: 240, driftSpeed: 0.11, driftAmplitude: 80, phase: 3.8 },
-  { baseX: ROOM_WIDTH * 0.9, y: ROOM_HEIGHT * 0.85, radius: 150, alpha: 0.022, hue: 255, driftSpeed: 0.1, driftAmplitude: 85, phase: 5.0 },
-  { baseX: ROOM_WIDTH * 0.15, y: ROOM_HEIGHT * 0.88, radius: 120, alpha: 0.015, hue: 235, driftSpeed: 0.13, driftAmplitude: 95, phase: 0.7 },
-  { baseX: ROOM_WIDTH * 0.55, y: ROOM_HEIGHT * 0.9, radius: 155, alpha: 0.02, hue: 245, driftSpeed: 0.08, driftAmplitude: 75, phase: 4.2 },
 ];
 
 // ═══════════════════════════════════
@@ -459,8 +455,6 @@ interface FogPatch {
 const fogPatches: FogPatch[] = [
   { baseX: ROOM_WIDTH * 0.25, baseY: ROOM_HEIGHT * 0.3, radius: 120, alpha: 0.025, hue: 270, speedX: 0.15, speedY: 0.1, phaseX: 0, phaseY: 0 },
   { baseX: ROOM_WIDTH * 0.7, baseY: ROOM_HEIGHT * 0.6, radius: 140, alpha: 0.03, hue: 220, speedX: 0.12, speedY: 0.08, phaseX: 1.5, phaseY: 2.0 },
-  { baseX: ROOM_WIDTH * 0.5, baseY: ROOM_HEIGHT * 0.8, radius: 100, alpha: 0.02, hue: 260, speedX: 0.18, speedY: 0.12, phaseX: 3.0, phaseY: 1.0 },
-  { baseX: ROOM_WIDTH * 0.8, baseY: ROOM_HEIGHT * 0.25, radius: 110, alpha: 0.025, hue: 250, speedX: 0.1, speedY: 0.15, phaseX: 4.5, phaseY: 3.5 },
 ];
 
 // ═══════════════════════════════════
@@ -628,7 +622,7 @@ export function drawRoom(ctx: CanvasRenderingContext2D, state: GameState): void 
   // Spawn embers for each torch (~2-3 active per torch)
   for (let ti = 0; ti < torches.length; ti++) {
     const torchEmberCount = emberParticles.filter(e => e.torchIndex === ti).length;
-    if (torchEmberCount < 3 && Math.random() < 0.03) {
+    if (torchEmberCount < 2 && Math.random() < 0.015) {
       spawnEmber(ti, torches[ti]);
     }
   }

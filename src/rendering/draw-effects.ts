@@ -140,7 +140,7 @@ export function drawZones(ctx: CanvasRenderingContext2D, state: GameState): void
       // Energy crackle: 3 short jagged line segments
       ctx.strokeStyle = '#ffdd66';
       ctx.lineWidth = 1.5;
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < 1; i++) {
         // Deterministic pseudo-random flicker using sin
         const flicker = Math.sin(t * 7.3 + i * 17.1);
         if (flicker > 0.2) {
@@ -203,7 +203,7 @@ export function drawZones(ctx: CanvasRenderingContext2D, state: GameState): void
       ctx.fill();
 
       // Rotating spark dots orbiting at ~60% radius
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 2; i++) {
         const sparkAngle = t * 1.5 + (i / 4) * Math.PI * 2;
         const sparkDist = z.radius * 0.6;
         const sx = z.x + Math.cos(sparkAngle) * sparkDist;
@@ -242,7 +242,7 @@ export function drawZones(ctx: CanvasRenderingContext2D, state: GameState): void
       // Ice crystal particles
       ctx.fillStyle = '#cceeFF';
       ctx.globalAlpha = 0.5;
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 2; i++) {
         const a = t * 0.5 + (i / 6) * Math.PI * 2;
         const d = z.radius * (0.3 + 0.2 * Math.sin(t + i));
         ctx.beginPath();
@@ -261,7 +261,7 @@ export function drawZones(ctx: CanvasRenderingContext2D, state: GameState): void
       ctx.globalAlpha = 0.25;
       ctx.beginPath(); ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2); ctx.stroke();
       // Rising embers
-      if (Math.random() < 0.15) {
+      if (Math.random() < 0.08) {
         spawnParticles(state, z.x + rand(-z.radius * 0.8, z.radius * 0.8), z.y + rand(-z.radius * 0.8, z.radius * 0.8), '#ff8833', 1, 0.2);
       }
     } else if (isHeal) {
@@ -276,7 +276,7 @@ export function drawZones(ctx: CanvasRenderingContext2D, state: GameState): void
       // Rising + sparkles
       ctx.fillStyle = '#ffffcc';
       ctx.globalAlpha = 0.6;
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < 1; i++) {
         const sx = z.x + Math.sin(t * 2 + i * 2.1) * z.radius * 0.5;
         const sy = z.y - (t * 20 + i * 30) % z.radius;
         ctx.beginPath(); ctx.arc(sx, sy, 1.5, 0, Math.PI * 2); ctx.fill();
@@ -293,7 +293,7 @@ export function drawZones(ctx: CanvasRenderingContext2D, state: GameState): void
     }
     ctx.globalAlpha = 1;
 
-    if (Math.random() < 0.05) {
+    if (Math.random() < 0.025) {
       spawnParticles(state, z.x + rand(-z.radius, z.radius), z.y + rand(-z.radius, z.radius), z.color, 1, 0.15);
     }
   }
