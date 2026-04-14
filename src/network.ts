@@ -542,7 +542,7 @@ function applyState(state: GameState, msg: NetStateMessage): void {
 
   // Spells — use velocity extrapolation between updates (snap position, keep vx/vy for local extrapolation)
   if (msg.sp) {
-    state.spells.length = 0;
+    state.spells.clear();
     for (const sd of msg.sp) {
       state.spells.push({
         x: sd.x, y: sd.y, vx: sd.vx, vy: sd.vy, radius: sd.r, color: sd.c, owner: sd.o,
@@ -558,7 +558,7 @@ function applyState(state: GameState, msg: NetStateMessage): void {
 
   // Enemy projectiles
   if (msg.ep) {
-    state.eProj.length = 0;
+    state.eProj.clear();
     for (const pd of msg.ep) {
       state.eProj.push({ x: pd.x, y: pd.y, vx: 0, vy: 0, radius: pd.r, color: pd.c, life: 1, dmg: 0 });
     }
@@ -566,23 +566,25 @@ function applyState(state: GameState, msg: NetStateMessage): void {
 
   // Zones
   if (msg.zn) {
-    state.zones.length = 0;
+    state.zones.clear();
     for (const zd of msg.zn) {
-      state.zones.push({
-        x: zd.x, y: zd.y, radius: zd.r, color: zd.c, age: zd.age, duration: zd.dur,
-        tickTimer: 1, tickRate: 1, dmg: 0, owner: 0, slow: 0, drain: 0, heal: 0, pull: 0, freezeAfter: 0,
-      });
+      const z = state.zones.acquire();
+      if (z) {
+        z.x = zd.x; z.y = zd.y; z.radius = zd.r; z.color = zd.c; z.age = zd.age; z.duration = zd.dur;
+        z.tickTimer = 1; z.tickRate = 1; z.dmg = 0; z.owner = 0; z.slow = 0; z.drain = 0; z.heal = 0; z.pull = 0; z.freezeAfter = 0;
+      }
     }
   }
 
   // AOE markers
   if (msg.aoe) {
-    state.aoeMarkers.length = 0;
+    state.aoeMarkers.clear();
     for (const ad of msg.aoe) {
-      state.aoeMarkers.push({
-        x: ad.x, y: ad.y, radius: ad.r, color: ad.c, age: ad.age, delay: ad.del,
-        dmg: 0, owner: 0, stun: 0,
-      });
+      const a = state.aoeMarkers.acquire();
+      if (a) {
+        a.x = ad.x; a.y = ad.y; a.radius = ad.r; a.color = ad.c; a.age = ad.age; a.delay = ad.del;
+        a.dmg = 0; a.owner = 0; a.stun = 0;
+      }
     }
   }
 

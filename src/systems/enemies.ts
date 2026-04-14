@@ -18,7 +18,7 @@ export { enemyTraps } from './enemy-trap-system';
 
 export function updateEProj(state: GameState, dt: number): void {
   for (let i = state.eProj.length - 1; i >= 0; i--) {
-    const p = state.eProj[i];
+    const p = state.eProj.at(i);
     p.x += p.vx * dt;
     p.y += p.vy * dt;
     p.life -= dt;
@@ -61,7 +61,7 @@ export function updateEProj(state: GameState, dt: number): void {
 
     if (hit || p.life <= 0 || p.x < -20 || p.x > ROOM_WIDTH + 20 || p.y < -20 || p.y > ROOM_HEIGHT + 20) {
       if (hit) spawnParticles(state, p.x, p.y, p.color, 3, 0.3);
-      state.eProj.splice(i, 1);
+      state.eProj.release(i);
     }
   }
 }

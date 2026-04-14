@@ -303,6 +303,11 @@ export const MAX_PARTICLES = 200;
 export const MAX_SHOCKWAVES = 50;
 export const MAX_FLOATING_TEXTS = 50;
 export const MAX_TRAILS = 300;
+export const MAX_SPELLS = 128;
+export const MAX_EPROJ = 64;
+export const MAX_ZONES = 32;
+export const MAX_AOE_MARKERS = 32;
+export const MAX_BEAMS = 64;
 
 export const WAVE_PHYSICS = {
   BOOMERANG_RETURN: 0.5,

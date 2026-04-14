@@ -52,11 +52,11 @@ export function updateFx(state: GameState, dt: number): void {
   }
 
   // Beams
-  for (let i = state.beams.length - 1; i >= 0; i--) {
-    state.beams[i].life -= dt;
-    if (state.beams[i].life <= 0) {
-      state.beams[i] = state.beams[state.beams.length - 1];
-      state.beams.pop();
+  for (let i = state.beams.count - 1; i >= 0; i--) {
+    const b = state.beams.get(i);
+    b.life -= dt;
+    if (b.life <= 0) {
+      state.beams.release(i);
     }
   }
 
@@ -81,15 +81,17 @@ export function updateFx(state: GameState, dt: number): void {
 // ═══════════════════════════════════
 
 export function drawBeams(ctx: CanvasRenderingContext2D, state: GameState): void {
-  if (state.beams.length === 0) return;
+  if (state.beams.count === 0) return;
 
   // Pre-compute beam endpoints
-  const beamData = state.beams.map(b => {
+  const beamData: Array<{ b: { x: number; y: number; angle: number; range: number; width: number; color: string; life: number }; life: number; ex: number; ey: number }> = [];
+  for (let i = 0; i < state.beams.count; i++) {
+    const b = state.beams.get(i);
     const life = b.life / 0.15;
     const ex = b.x + Math.cos(b.angle) * b.range;
     const ey = b.y + Math.sin(b.angle) * b.range;
-    return { b, life, ex, ey };
-  });
+    beamData.push({ b, life, ex, ey });
+  }
 
   // Pass 1: outer glow (all beams)
   for (const { b, life, ex, ey } of beamData) {

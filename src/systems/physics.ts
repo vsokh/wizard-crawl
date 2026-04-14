@@ -136,14 +136,13 @@ export function updatePlayers(state: GameState, dt: number): void {
           const target = nearby[Math.floor(Math.random() * nearby.length)];
           damageEnemy(state, target, 1, p.idx);
           // Visual lightning bolt from player to target
-          state.beams.push({
-            x: p.x, y: p.y,
-            angle: Math.atan2(target.y - p.y, target.x - p.x),
-            range: dist(p.x, p.y, target.x, target.y),
-            width: 2,
-            color: '#bb66ff',
-            life: 0.15,
-          });
+          const stormBeam = state.beams.acquire();
+          if (stormBeam) {
+            stormBeam.x = p.x; stormBeam.y = p.y;
+            stormBeam.angle = Math.atan2(target.y - p.y, target.x - p.x);
+            stormBeam.range = dist(p.x, p.y, target.x, target.y);
+            stormBeam.width = 2; stormBeam.color = '#bb66ff'; stormBeam.life = 0.15;
+          }
         }
       }
     }

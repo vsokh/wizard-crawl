@@ -296,12 +296,13 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
 
       // Seeker Mines: drop explosive mine on kill
       if (p.seekerMines) {
-        state.zones.push({
-          x: e.x, y: e.y, radius: 50, duration: 4,
-          dmg: 3, color: '#ff8844', owner: p.idx,
-          slow: 0, tickRate: 4, tickTimer: 0, age: 0,
-          drain: 0, heal: 0, pull: 0, freezeAfter: 0,
-        });
+        const mineZone = state.zones.acquire();
+        if (mineZone) {
+          mineZone.x = e.x; mineZone.y = e.y; mineZone.radius = 50; mineZone.duration = 4;
+          mineZone.dmg = 3; mineZone.color = '#ff8844'; mineZone.owner = p.idx;
+          mineZone.slow = 0; mineZone.tickRate = 4; mineZone.tickTimer = 0; mineZone.age = 0;
+          mineZone.drain = 0; mineZone.heal = 0; mineZone.pull = 0; mineZone.freezeAfter = 0;
+        }
         spawnParticles(state, e.x, e.y, '#ff8844', 5, TIMING.PARTICLE_LIFE_SHORT);
       }
     }
@@ -386,11 +387,12 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
       }
       if (nearest) {
         damageEnemy(state, nearest, Math.max(1, Math.floor(p.chainFullDmg ? dmg : dmg * COMBAT.CHAIN_DMG_MULT)), pIdx);
-        state.beams.push({
-          x: e.x, y: e.y,
-          angle: Math.atan2(nearest.y - e.y, nearest.x - e.x),
-          range: nd, width: 2, color: p.cls.color, life: 0.12,
-        });
+        const chainBeam = state.beams.acquire();
+        if (chainBeam) {
+          chainBeam.x = e.x; chainBeam.y = e.y;
+          chainBeam.angle = Math.atan2(nearest.y - e.y, nearest.x - e.x);
+          chainBeam.range = nd; chainBeam.width = 2; chainBeam.color = p.cls.color; chainBeam.life = 0.12;
+        }
       }
     }
 
@@ -630,18 +632,20 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
         const ox = rand(-40, 40);
         const oy = rand(-40, 40);
         const meteorDelay = TIMING.ZONE_TICK + i * TIMING.METEOR_DELAY_STEP;
-        state.aoeMarkers.push({
-          x: wp.x + ox, y: wp.y + oy, radius: 50, delay: meteorDelay,
-          dmg: 2, color: '#ff2200', owner: p.idx, stun: 0, age: 0,
-        });
+        const meteorAoe = state.aoeMarkers.acquire();
+        if (meteorAoe) {
+          meteorAoe.x = wp.x + ox; meteorAoe.y = wp.y + oy; meteorAoe.radius = 50; meteorAoe.delay = meteorDelay;
+          meteorAoe.dmg = 2; meteorAoe.color = '#ff2200'; meteorAoe.owner = p.idx; meteorAoe.stun = 0; meteorAoe.age = 0;
+        }
         // Burn zone after each meteor lands
         setTimeout(() => {
-          state.zones.push({
-            x: wp.x + ox, y: wp.y + oy, radius: 35, duration: 2,
-            dmg: 1, color: '#ff4400', owner: p.idx,
-            slow: 0, tickRate: TIMING.ZONE_TICK, tickTimer: 0, age: 0,
-            drain: 0, heal: 0, pull: 0, freezeAfter: 0,
-          });
+          const burnZone = state.zones.acquire();
+          if (burnZone) {
+            burnZone.x = wp.x + ox; burnZone.y = wp.y + oy; burnZone.radius = 35; burnZone.duration = 2;
+            burnZone.dmg = 1; burnZone.color = '#ff4400'; burnZone.owner = p.idx;
+            burnZone.slow = 0; burnZone.tickRate = TIMING.ZONE_TICK; burnZone.tickTimer = 0; burnZone.age = 0;
+            burnZone.drain = 0; burnZone.heal = 0; burnZone.pull = 0; burnZone.freezeAfter = 0;
+          }
         }, meteorDelay * 1000);
       }
       sfx(SfxName.Fire);
@@ -650,10 +654,12 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     // Stormcaller: Thunder Strike — AoE + chain lightning on detonation
     if (p.clsKey === 'stormcaller') {
       const wp = toWorld(state, state.mouseX, state.mouseY);
-      state.aoeMarkers.push({
-        x: wp.x, y: wp.y, radius: def.radius, delay: def.delay, dmg: def.dmg,
-        color: def.color, owner: p.idx, stun: def.stun || 0, age: 0,
-      });
+      const thunderAoe = state.aoeMarkers.acquire();
+      if (thunderAoe) {
+        thunderAoe.x = wp.x; thunderAoe.y = wp.y; thunderAoe.radius = def.radius; thunderAoe.delay = def.delay;
+        thunderAoe.dmg = def.dmg; thunderAoe.color = def.color; thunderAoe.owner = p.idx;
+        thunderAoe.stun = def.stun || 0; thunderAoe.age = 0;
+      }
       // After detonation, chain to nearby enemies
       setTimeout(() => {
         const hitEnemies: EnemyView[] = [];
@@ -670,11 +676,12 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
           hitEnemies.push(nearest);
           damageEnemy(state, nearest, 2, p.idx);
           nearest.stunTimer = (nearest.stunTimer || 0) + TIMING.STUN_DURATION;
-          state.beams.push({
-            x: lastX, y: lastY,
-            angle: Math.atan2(nearest.y - lastY, nearest.x - lastX),
-            range: nd, width: 3, color: '#ffcc44', life: TIMING.BEAM_LIFE,
-          });
+          const thunderBeam = state.beams.acquire();
+          if (thunderBeam) {
+            thunderBeam.x = lastX; thunderBeam.y = lastY;
+            thunderBeam.angle = Math.atan2(nearest.y - lastY, nearest.x - lastX);
+            thunderBeam.range = nd; thunderBeam.width = 3; thunderBeam.color = '#ffcc44'; thunderBeam.life = TIMING.BEAM_LIFE;
+          }
           spawnParticles(state, nearest.x, nearest.y, '#ffcc44', 5, TIMING.PARTICLE_LIFE_SHORT);
           lastX = nearest.x;
           lastY = nearest.y;
@@ -687,24 +694,26 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     // Cryomancer: Frost Prison — strong slow + freeze after 1.5s
     if (p.clsKey === 'cryomancer') {
       const wp = toWorld(state, state.mouseX, state.mouseY);
-      state.zones.push({
-        x: wp.x, y: wp.y, radius: def.radius, duration: def.duration,
-        dmg: def.dmg, color: def.color, owner: p.idx,
-        slow: 0.95, tickRate: def.tickRate, tickTimer: 0, age: 0,
-        drain: 0, heal: 0, pull: 0, freezeAfter: TIMING.FREEZE_DURATION,
-      });
+      const frostZone = state.zones.acquire();
+      if (frostZone) {
+        frostZone.x = wp.x; frostZone.y = wp.y; frostZone.radius = def.radius; frostZone.duration = def.duration;
+        frostZone.dmg = def.dmg; frostZone.color = def.color; frostZone.owner = p.idx;
+        frostZone.slow = 0.95; frostZone.tickRate = def.tickRate; frostZone.tickTimer = 0; frostZone.age = 0;
+        frostZone.drain = 0; frostZone.heal = 0; frostZone.pull = 0; frostZone.freezeAfter = TIMING.FREEZE_DURATION;
+      }
       sfx(SfxName.Ice);
       return;
     }
     // Necromancer: Death Harvest — drain + pull enemies toward center
     if (p.clsKey === 'necromancer') {
       const wp = toWorld(state, state.mouseX, state.mouseY);
-      state.zones.push({
-        x: wp.x, y: wp.y, radius: def.radius, duration: def.duration,
-        dmg: def.dmg, color: def.color, owner: p.idx,
-        slow: def.slow || 0, tickRate: def.tickRate, tickTimer: 0, age: 0,
-        drain: 1, heal: 0, pull: 30, freezeAfter: 0,
-      });
+      const deathZone = state.zones.acquire();
+      if (deathZone) {
+        deathZone.x = wp.x; deathZone.y = wp.y; deathZone.radius = def.radius; deathZone.duration = def.duration;
+        deathZone.dmg = def.dmg; deathZone.color = def.color; deathZone.owner = p.idx;
+        deathZone.slow = def.slow || 0; deathZone.tickRate = def.tickRate; deathZone.tickTimer = 0; deathZone.age = 0;
+        deathZone.drain = 1; deathZone.heal = 0; deathZone.pull = 30; deathZone.freezeAfter = 0;
+      }
       sfx(SfxName.Arcane);
       return;
     }
@@ -732,12 +741,13 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     }
     // Paladin: Hallowed Ground — self-centered healing zone
     if (p.clsKey === 'paladin') {
-      state.zones.push({
-        x: p.x, y: p.y, radius: 100, duration: def.duration,
-        dmg: def.dmg, color: def.color, owner: p.idx,
-        slow: def.slow || 0, tickRate: def.tickRate, tickTimer: 0, age: 0,
-        drain: 0, heal: 2, pull: 0, freezeAfter: 0,
-      });
+      const healZone = state.zones.acquire();
+      if (healZone) {
+        healZone.x = p.x; healZone.y = p.y; healZone.radius = 100; healZone.duration = def.duration;
+        healZone.dmg = def.dmg; healZone.color = def.color; healZone.owner = p.idx;
+        healZone.slow = def.slow || 0; healZone.tickRate = def.tickRate; healZone.tickTimer = 0; healZone.age = 0;
+        healZone.drain = 0; healZone.heal = 2; healZone.pull = 0; healZone.freezeAfter = 0;
+      }
       sfx(SfxName.Pickup);
       spawnParticles(state, p.x, p.y, '#ffffaa', 15);
       return;
@@ -808,7 +818,8 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     }
     sfx(sType);
   } else if (def.type === SpellType.Beam) {
-    state.beams.push({ x: p.x, y: p.y, angle, range: def.range, width: def.width, color: def.color, life: 0.15 });
+    const beamFx = state.beams.acquire();
+    if (beamFx) { beamFx.x = p.x; beamFx.y = p.y; beamFx.angle = angle; beamFx.range = def.range; beamFx.width = def.width; beamFx.color = def.color; beamFx.life = 0.15; }
     // Beam hit detection
     for (let d = 0; d < def.range; d += 5) {
       const bx = p.x + cos * d;
@@ -869,10 +880,11 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     shake(state, 5);
   } else if (def.type === SpellType.AoeDelayed) {
     const wp = toWorld(state, state.mouseX, state.mouseY);
-    state.aoeMarkers.push({
-      x: wp.x, y: wp.y, radius: def.radius, delay: def.delay, dmg: def.dmg,
-      color: def.color, owner: p.idx, stun: def.stun || 0, age: 0,
-    });
+    const aoeM = state.aoeMarkers.acquire();
+    if (aoeM) {
+      aoeM.x = wp.x; aoeM.y = wp.y; aoeM.radius = def.radius; aoeM.delay = def.delay; aoeM.dmg = def.dmg;
+      aoeM.color = def.color; aoeM.owner = p.idx; aoeM.stun = def.stun || 0; aoeM.age = 0;
+    }
     sfx(SfxName.Arcane);
   } else if (def.type === SpellType.Blink) {
     const nx = clamp(p.x + cos * def.range, WIZARD_SIZE, ROOM_WIDTH - WIZARD_SIZE);
@@ -907,13 +919,14 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     }
   } else if (def.type === SpellType.Zone) {
     const wp = toWorld(state, state.mouseX, state.mouseY);
-    state.zones.push({
-      x: wp.x, y: wp.y, radius: def.radius, duration: def.duration,
-      dmg: def.dmg, color: def.color, owner: p.idx,
-      slow: def.slow || 0, tickRate: def.tickRate, tickTimer: 0, age: 0,
-      drain: def.drain || 0, heal: def.heal || 0, pull: 0, freezeAfter: 0,
-      _turret: p.clsKey === 'engineer' && def.name.includes('Turret'),
-    });
+    const spellZone = state.zones.acquire();
+    if (spellZone) {
+      spellZone.x = wp.x; spellZone.y = wp.y; spellZone.radius = def.radius; spellZone.duration = def.duration;
+      spellZone.dmg = def.dmg; spellZone.color = def.color; spellZone.owner = p.idx;
+      spellZone.slow = def.slow || 0; spellZone.tickRate = def.tickRate; spellZone.tickTimer = 0; spellZone.age = 0;
+      spellZone.drain = def.drain || 0; spellZone.heal = def.heal || 0; spellZone.pull = 0; spellZone.freezeAfter = 0;
+      spellZone._turret = p.clsKey === 'engineer' && def.name.includes('Turret');
+    }
     sfx(SfxName.Ice);
   } else if (def.type === SpellType.Rewind) {
     const snap = p._rewindSnap;
@@ -1038,19 +1051,21 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
       const mx = rand(60, ROOM_WIDTH - 60);
       const my = rand(60, ROOM_HEIGHT - 60);
       setTimeout(() => {
-        state.aoeMarkers.push({
-          x: mx, y: my, radius: 80, delay: ULTIMATE.METEOR_DELAY, dmg: Math.round(5 * pw), color: '#ff2200',
-          owner: p.idx, stun: 0, age: 0,
-        });
+        const ultAoe = state.aoeMarkers.acquire();
+        if (ultAoe) {
+          ultAoe.x = mx; ultAoe.y = my; ultAoe.radius = 80; ultAoe.delay = ULTIMATE.METEOR_DELAY;
+          ultAoe.dmg = Math.round(5 * pw); ultAoe.color = '#ff2200'; ultAoe.owner = p.idx; ultAoe.stun = 0; ultAoe.age = 0;
+        }
         sfx(SfxName.Fire);
         // Lingering burn zone after meteor lands
         setTimeout(() => {
-          state.zones.push({
-            x: mx, y: my, radius: 40, duration: 3,
-            dmg: 1, color: '#ff4400', owner: p.idx,
-            slow: 0, tickRate: ULTIMATE.BURN_ZONE_TICK, tickTimer: 0, age: 0,
-            drain: 0, heal: 0, pull: 0, freezeAfter: 0,
-          });
+          const ultBurnZone = state.zones.acquire();
+          if (ultBurnZone) {
+            ultBurnZone.x = mx; ultBurnZone.y = my; ultBurnZone.radius = 40; ultBurnZone.duration = 3;
+            ultBurnZone.dmg = 1; ultBurnZone.color = '#ff4400'; ultBurnZone.owner = p.idx;
+            ultBurnZone.slow = 0; ultBurnZone.tickRate = ULTIMATE.BURN_ZONE_TICK; ultBurnZone.tickTimer = 0; ultBurnZone.age = 0;
+            ultBurnZone.drain = 0; ultBurnZone.heal = 0; ultBurnZone.pull = 0; ultBurnZone.freezeAfter = 0;
+          }
         }, ULTIMATE.BURN_ZONE_LINGER);
       }, i * 200);
     }
@@ -1114,12 +1129,13 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
       // Draw beam from player to first target
       if (chainTargets.length > 0) {
         const first = chainTargets[0];
-        state.beams.push({
-          x: p.x, y: p.y,
-          angle: Math.atan2(first.y - p.y, first.x - p.x),
-          range: dist(p.x, p.y, first.x, first.y),
-          width: 4, color: '#ffcc44', life: ULTIMATE.CHAIN_BEAM_LIFE,
-        });
+        const ultBeam = state.beams.acquire();
+        if (ultBeam) {
+          ultBeam.x = p.x; ultBeam.y = p.y;
+          ultBeam.angle = Math.atan2(first.y - p.y, first.x - p.x);
+          ultBeam.range = dist(p.x, p.y, first.x, first.y);
+          ultBeam.width = 4; ultBeam.color = '#ffcc44'; ultBeam.life = ULTIMATE.CHAIN_BEAM_LIFE;
+        }
       }
       for (let i = 0; i < chainTargets.length; i++) {
         const target = chainTargets[i];
@@ -1134,12 +1150,13 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
             // Draw beam to next target
             if (idx < chainTargets.length - 1) {
               const next = chainTargets[idx + 1];
-              state.beams.push({
-                x: t.x, y: t.y,
-                angle: Math.atan2(next.y - t.y, next.x - t.x),
-                range: dist(t.x, t.y, next.x, next.y),
-                width: 4, color: '#ffcc44', life: ULTIMATE.CHAIN_BEAM_LIFE,
-              });
+              const nextBeam = state.beams.acquire();
+              if (nextBeam) {
+                nextBeam.x = t.x; nextBeam.y = t.y;
+                nextBeam.angle = Math.atan2(next.y - t.y, next.x - t.x);
+                nextBeam.range = dist(t.x, t.y, next.x, next.y);
+                nextBeam.width = 4; nextBeam.color = '#ffcc44'; nextBeam.life = ULTIMATE.CHAIN_BEAM_LIFE;
+              }
             }
           }, idx * ULTIMATE.CHAIN_DELAY_STEP);
         })(i, target);
@@ -1237,12 +1254,13 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
       const zDist = rand(100, 120);
       const zx = p.x + Math.cos(za) * zDist;
       const zy = p.y + Math.sin(za) * zDist;
-      state.zones.push({
-        x: zx, y: zy, radius: 40, duration: 4,
-        dmg: Math.round(2 * pw), color: '#66aa44', owner: p.idx,
-        slow: ULTIMATE.DRUID_ZONE_SLOW, tickRate: ULTIMATE.DRUID_ZONE_TICK, tickTimer: 0, age: 0,
-        drain: 0, heal: 0, pull: 0, freezeAfter: 0,
-      });
+      const thornZone = state.zones.acquire();
+      if (thornZone) {
+        thornZone.x = zx; thornZone.y = zy; thornZone.radius = 40; thornZone.duration = 4;
+        thornZone.dmg = Math.round(2 * pw); thornZone.color = '#66aa44'; thornZone.owner = p.idx;
+        thornZone.slow = ULTIMATE.DRUID_ZONE_SLOW; thornZone.tickRate = ULTIMATE.DRUID_ZONE_TICK; thornZone.tickTimer = 0; thornZone.age = 0;
+        thornZone.drain = 0; thornZone.heal = 0; thornZone.pull = 0; thornZone.freezeAfter = 0;
+      }
       spawnParticles(state, zx, zy, '#88aa66', 6, TIMING.PARTICLE_LIFE_MEDIUM);
     }
     // Summon 2 treant allies
@@ -1312,13 +1330,14 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
     state.enemies.push(turret);
     spawnParticles(state, turret.x, turret.y, '#dd8833', 15);
     // Also create a high-damage zone around the turret
-    state.zones.push({
-      x: turret.x, y: turret.y, radius: ULTIMATE.TURRET_RADIUS, duration: ULTIMATE.TURRET_LIFE,
-      dmg: Math.round(3 * pw), color: '#dd8833', owner: p.idx,
-      slow: 0, tickRate: 0.7, tickTimer: 0, age: 0,
-      drain: 0, heal: 0, pull: 0, freezeAfter: 0,
-      _turret: true, _megaTurret: true,
-    });
+    const megaZone = state.zones.acquire();
+    if (megaZone) {
+      megaZone.x = turret.x; megaZone.y = turret.y; megaZone.radius = ULTIMATE.TURRET_RADIUS; megaZone.duration = ULTIMATE.TURRET_LIFE;
+      megaZone.dmg = Math.round(3 * pw); megaZone.color = '#dd8833'; megaZone.owner = p.idx;
+      megaZone.slow = 0; megaZone.tickRate = 0.7; megaZone.tickTimer = 0; megaZone.age = 0;
+      megaZone.drain = 0; megaZone.heal = 0; megaZone.pull = 0; megaZone.freezeAfter = 0;
+      megaZone._turret = true; megaZone._megaTurret = true;
+    }
   }
 
   // ultEcho: buff next N LMB casts with double damage

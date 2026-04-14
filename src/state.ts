@@ -22,6 +22,8 @@ import {
   EnemyPool,
 } from './types';
 import { SpatialGrid } from './ecs/spatial-grid';
+import { SpellPool } from './ecs/spell-pool';
+import { EProjPool } from './ecs/eproj-pool';
 import {
   WIZARD_HP,
   MAX_MANA,
@@ -36,6 +38,11 @@ import {
   MAX_TRAILS,
   MAX_SHOCKWAVES,
   MAX_FLOATING_TEXTS,
+  MAX_SPELLS,
+  MAX_EPROJ,
+  MAX_ZONES,
+  MAX_AOE_MARKERS,
+  MAX_BEAMS,
 } from './constants';
 import { Pool } from './systems/pools';
 
@@ -85,15 +92,15 @@ export interface GameState {
   // Entities
   players: Player[];
   enemies: EnemyPool;
-  spells: Spell[];
+  spells: SpellPool;
   particles: Pool<Particle>;
   trails: Pool<Trail>;
   shockwaves: Pool<Shockwave>;
   texts: Pool<FloatingText>;
-  beams: Beam[];
-  zones: Zone[];
-  aoeMarkers: AoeMarker[];
-  eProj: EnemyProjectile[];
+  beams: Pool<Beam>;
+  zones: Pool<Zone>;
+  aoeMarkers: Pool<AoeMarker>;
+  eProj: EProjPool;
   pillars: Pillar[];
   pickups: Pickup[];
 
@@ -188,15 +195,15 @@ export function createInitialState(): GameState {
     rightDown: false,
     players: [],
     enemies: new EnemyPool(),
-    spells: [],
+    spells: new SpellPool(MAX_SPELLS),
     particles: new Pool<Particle>(MAX_PARTICLES, () => ({ x: 0, y: 0, vx: 0, vy: 0, life: 0, r: 0, color: '' })),
     trails: new Pool<Trail>(MAX_TRAILS, () => ({ x: 0, y: 0, life: 0, r: 0, color: '' })),
     shockwaves: new Pool<Shockwave>(MAX_SHOCKWAVES, () => ({ x: 0, y: 0, radius: 0, maxR: 0, life: 0, color: '' })),
     texts: new Pool<FloatingText>(MAX_FLOATING_TEXTS, () => ({ x: 0, y: 0, text: '', color: '', life: 0, vy: 0 })),
-    beams: [],
-    zones: [],
-    aoeMarkers: [],
-    eProj: [],
+    beams: new Pool<Beam>(MAX_BEAMS, () => ({ x: 0, y: 0, angle: 0, range: 0, width: 0, color: '', life: 0 })),
+    zones: new Pool<Zone>(MAX_ZONES, () => ({ x: 0, y: 0, radius: 0, duration: 0, dmg: 0, color: '', owner: 0, slow: 0, tickRate: 0, tickTimer: 0, age: 0, drain: 0, heal: 0, pull: 0, freezeAfter: 0, _turret: false, _megaTurret: false })),
+    aoeMarkers: new Pool<AoeMarker>(MAX_AOE_MARKERS, () => ({ x: 0, y: 0, radius: 0, delay: 0, dmg: 0, color: '', owner: 0, stun: 0, age: 0 })),
+    eProj: new EProjPool(MAX_EPROJ),
     pillars: [],
     pickups: [],
     remoteInput: { angle: 0, mx: 0, my: 0, shoot: false, shoot2: false, ability: false, ult: false, dash: false },

@@ -47,4 +47,22 @@ export class Pool<T> {
     }
     return undefined;
   }
+
+  /** Array-compatible filter method */
+  filter(predicate: (item: T) => boolean): T[] {
+    const result: T[] = [];
+    for (let i = 0; i < this._count; i++) {
+      if (predicate(this.items[i])) result.push(this.items[i]);
+    }
+    return result;
+  }
+
+  /** Array-compatible map method */
+  map<U>(fn: (item: T) => U): U[] {
+    const result: U[] = [];
+    for (let i = 0; i < this._count; i++) {
+      result.push(fn(this.items[i]));
+    }
+    return result;
+  }
 }

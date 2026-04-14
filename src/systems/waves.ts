@@ -14,7 +14,7 @@ const MAX_ENEMY_SIZE = 30;
 
 export function updateSpells(state: GameState, dt: number): void {
   for (let i = state.spells.length - 1; i >= 0; i--) {
-    const s = state.spells[i];
+    const s = state.spells.at(i);
 
     // Homing
     if (s.homing) {
@@ -98,12 +98,13 @@ export function updateSpells(state: GameState, dt: number): void {
           const e = state.enemies.at(idx);
           if (!e.alive) continue;
           if (dist(s.x, s.y, e.x, e.y) < s.zap) {
-            state.beams.push({
-              x: s.x, y: s.y,
-              angle: Math.atan2(e.y - s.y, e.x - s.x),
-              range: dist(s.x, s.y, e.x, e.y),
-              width: 2, color: '#bb88ff', life: 0.1,
-            });
+            const beam = state.beams.acquire();
+            if (beam) {
+              beam.x = s.x; beam.y = s.y;
+              beam.angle = Math.atan2(e.y - s.y, e.x - s.x);
+              beam.range = dist(s.x, s.y, e.x, e.y);
+              beam.width = 2; beam.color = '#bb88ff'; beam.life = 0.1;
+            }
             damageEnemy(state, e, s.dmg, s.owner);
             firstTarget = e;
             break;
@@ -129,12 +130,13 @@ export function updateSpells(state: GameState, dt: number): void {
               }
             }
             if (!nearest) break;
-            state.beams.push({
-              x: prev.x, y: prev.y,
-              angle: Math.atan2(nearest.y - prev.y, nearest.x - prev.x),
-              range: nearestDist,
-              width: 2, color: '#bb88ff', life: 0.1,
-            });
+            const chainBeam = state.beams.acquire();
+            if (chainBeam) {
+              chainBeam.x = prev.x; chainBeam.y = prev.y;
+              chainBeam.angle = Math.atan2(nearest.y - prev.y, nearest.x - prev.x);
+              chainBeam.range = nearestDist;
+              chainBeam.width = 2; chainBeam.color = '#bb88ff'; chainBeam.life = 0.1;
+            }
             damageEnemy(state, nearest, s.dmg, s.owner);
             zapped.add(nearest);
             prev = nearest;
@@ -211,12 +213,13 @@ export function updateSpells(state: GameState, dt: number): void {
           // Lightning: quick random beams + bigger shake
           for (let li = 0; li < 3; li++) {
             const la = Math.random() * Math.PI * 2;
-            state.beams.push({
-              x: s.x, y: s.y,
-              angle: la,
-              range: 40 + Math.random() * 20,
-              width: 1, color: '#ffee88', life: 0.08,
-            });
+            const lb = state.beams.acquire();
+            if (lb) {
+              lb.x = s.x; lb.y = s.y;
+              lb.angle = la;
+              lb.range = 40 + Math.random() * 20;
+              lb.width = 1; lb.color = '#ffee88'; lb.life = 0.08;
+            }
           }
           shake(state, 5);
         } else if (c.includes('8844') || c.includes('aa44') || c.includes('6622')) {
@@ -259,7 +262,7 @@ export function updateSpells(state: GameState, dt: number): void {
           }
         }
       }
-      state.spells.splice(i, 1);
+      state.spells.release(i);
     }
   }
 }
@@ -269,8 +272,8 @@ export function updateSpells(state: GameState, dt: number): void {
 // ═══════════════════════════════════
 
 export function updateAoe(state: GameState, dt: number): void {
-  for (let i = state.aoeMarkers.length - 1; i >= 0; i--) {
-    const m = state.aoeMarkers[i];
+  for (let i = state.aoeMarkers.count - 1; i >= 0; i--) {
+    const m = state.aoeMarkers.get(i);
     m.age += dt;
     if (m.age >= m.delay) {
       spawnParticles(state, m.x, m.y, m.color, 25, 1);
@@ -287,7 +290,7 @@ export function updateAoe(state: GameState, dt: number): void {
           if (m.stun) e.stunTimer = (e.stunTimer || 0) + m.stun;
         }
       }
-      state.aoeMarkers.splice(i, 1);
+      state.aoeMarkers.release(i);
     }
   }
 }
@@ -297,8 +300,8 @@ export function updateAoe(state: GameState, dt: number): void {
 // ═══════════════════════════════════
 
 export function updateZones(state: GameState, dt: number): void {
-  for (let i = state.zones.length - 1; i >= 0; i--) {
-    const z = state.zones[i];
+  for (let i = state.zones.count - 1; i >= 0; i--) {
+    const z = state.zones.get(i);
     z.age += dt;
     z.tickTimer -= dt;
     if (z.tickTimer <= 0) {
@@ -346,6 +349,6 @@ export function updateZones(state: GameState, dt: number): void {
         }
       }
     }
-    if (z.age >= z.duration) state.zones.splice(i, 1);
+    if (z.age >= z.duration) state.zones.release(i);
   }
 }

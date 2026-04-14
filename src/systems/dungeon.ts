@@ -32,10 +32,10 @@ import { sfx } from '../audio';
 export function generateArena(state: GameState): void {
   state.pillars.length = 0;
   state.enemies.clear();
-  state.spells.length = 0;
-  state.zones.length = 0;
-  state.aoeMarkers.length = 0;
-  state.eProj.length = 0;
+  state.spells.clear();
+  state.zones.clear();
+  state.aoeMarkers.clear();
+  state.eProj.clear();
   state.pickups.length = 0;
 
   // Scatter pillars across the arena

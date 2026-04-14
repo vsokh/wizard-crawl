@@ -8,3 +8,7 @@ export { SpatialGrid } from './spatial-grid';
 export * from './components';
 export { SystemRunner } from './system-runner';
 export type { GameSystem } from './system-runner';
+export { SpellPool } from './spell-pool';
+export type { SpellView } from './spell-pool';
+export { EProjPool } from './eproj-pool';
+export type { EProjView } from './eproj-pool';
