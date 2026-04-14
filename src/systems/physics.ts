@@ -209,6 +209,12 @@ export function updatePlayers(state: GameState, dt: number): void {
       state.keys[`_q${p.idx}`] = true;
       castSpell(state, p, 2, input.angle);
       p._animCastFlash = TIMING.ANIM_CAST;
+      // Double Q: fire again after short delay
+      if (p.doubleQ) {
+        for (let dq = 0; dq < p.doubleQ; dq++) {
+          setTimeout(() => castSpellSilent(state, p, 2, input.angle), 60 * (dq + 1));
+        }
+      }
     }
     if (!input.ability) state.keys[`_q${p.idx}`] = false;
 

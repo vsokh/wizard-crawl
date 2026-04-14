@@ -566,7 +566,7 @@ export const UPGRADE_POOL: UpgradeDef[] = [
     apply: (p, stacks) => { const v = flatScaling(1, stacks); for (const s of p.cls.spells) s.dmg = (s.dmg || 0) + v; } },
   { name: 'Primary Boost', desc: 'Primary spell +2 damage', stackable: true, maxStacks: 4,
     apply: (p, stacks) => { p.cls.spells[0].dmg += flatScaling(2, stacks); } },
-  { name: 'Ultimate Power', desc: 'Ultimate spell +3 damage', apply: (p: Player) => { if (p.cls.spells[2].dmg) p.cls.spells[2].dmg += 3; } },
+  { name: 'Ultimate Power', desc: 'Ultimate spell +3 damage', apply: (p: Player) => { if (p.cls.spells[3].dmg) p.cls.spells[3].dmg += 3; } },
   { name: 'Glass Cannon', desc: '+3 spell damage, -2 max HP', apply: (p: Player) => { for (const s of p.cls.spells) s.dmg = (s.dmg || 0) + 3; p.maxHp = Math.max(1, p.maxHp - 2); p.hp = Math.min(p.hp, p.maxHp); } },
   { name: 'Critical Strike', desc: '15% chance to deal 2x damage', stackable: true, maxStacks: 3, apply: (p: Player) => { p.critChance = hyperStack(p, 'critChance', 0.15); } },
   { name: 'Overkill', desc: 'Leftover damage from a kill splashes to a nearby enemy', apply: (p: Player) => { p.overkill = true; } },
@@ -624,6 +624,14 @@ export const UPGRADE_POOL: UpgradeDef[] = [
   { name: 'Free Cast', desc: 'Secondary spell costs no mana (+2s cooldown)', apply: (p: Player) => { if (p.cls.spells[1]) { p.cls.spells[1].mana = 0; p.cls.spells[1].cd += 2; } } },
   { name: 'Combo', desc: 'Secondary deals +50% damage to targets hit by primary recently', apply: (p: Player) => { p.comboBonus = true; } },
   { name: 'Area Secondary', desc: 'Secondary spell range and radius +50%', apply: (p: Player) => { const s = p.cls.spells[1]; if (s) { if (s.range) s.range *= 1.5; if (s.radius) s.radius *= 1.5; if (s.aoeR) s.aoeR *= 1.5; } } },
+
+  // -- Q ABILITY (Q) UPGRADES --
+  { name: 'Q Power', desc: 'Q ability +2 damage', stackable: true, maxStacks: 4,
+    apply: (p, stacks) => { if (p.cls.spells[2]) p.cls.spells[2].dmg = (p.cls.spells[2].dmg || 0) + flatScaling(2, stacks); } },
+  { name: 'Q Rapid Cooldown', desc: 'Q ability cooldown -40%', apply: (p: Player) => { if (p.cls.spells[2]) p.cls.spells[2].cd *= 0.6; } },
+  { name: 'Double Q', desc: 'Q ability triggers twice per cast', apply: (p: Player) => { p.doubleQ = (p.doubleQ || 0) + 1; } },
+  { name: 'Q Efficiency', desc: 'Q ability costs no mana (+3s cooldown)', apply: (p: Player) => { if (p.cls.spells[2]) { p.cls.spells[2].mana = 0; p.cls.spells[2].cd += 3; } } },
+  { name: 'Q Area', desc: 'Q ability range and radius +50%', apply: (p: Player) => { const s = p.cls.spells[2]; if (s) { if (s.range) s.range *= 1.5; if (s.radius) s.radius *= 1.5; if (s.aoeR) s.aoeR *= 1.5; } } },
 
   // -- ULTIMATE (R) UPGRADES --
   { name: 'Quick Charge', desc: 'Ultimate charges 50% faster', apply: (p: Player) => { p.ultChargeRate = (p.ultChargeRate || 1) * 1.5; } },
@@ -814,10 +822,10 @@ export const UPGRADE_POOL: UpgradeDef[] = [
   { name: 'Shadow Step', desc: '+30% dodge chance and +25% move speed', isEvolution: true, evolvesFrom: 29, color: '#ffaa00',
     apply: (p: Player, _s: number) => { p.dodgeChance = (p.dodgeChance || 0) + 0.30; p.moveSpeed *= 1.25; } },
 
-  { name: 'Storm Lord', desc: 'Lightning chains to +5 enemies and primary +2 damage', isEvolution: true, evolvesFrom: 71, color: '#ffaa00', forClass: 'stormcaller',
+  { name: 'Storm Lord', desc: 'Lightning chains to +5 enemies and primary +2 damage', isEvolution: true, evolvesFrom: 76, color: '#ffaa00', forClass: 'stormcaller',
     apply: (p: Player, _s: number) => { p.chainLightning = (p.chainLightning || 0) + 5; p.cls.spells[0].dmg += 2; } },
 
-  { name: 'Lich King', desc: 'Raise dead chance +50% — nearly every kill raises a minion', isEvolution: true, evolvesFrom: 77, color: '#ffaa00', forClass: 'necromancer',
+  { name: 'Lich King', desc: 'Raise dead chance +50% — nearly every kill raises a minion', isEvolution: true, evolvesFrom: 82, color: '#ffaa00', forClass: 'necromancer',
     apply: (p: Player, _s: number) => { p.raiseDead = (p.raiseDead || 0) + 0.50; } },
 
   // ══════════════════════════════════════

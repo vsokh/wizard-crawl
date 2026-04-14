@@ -346,6 +346,7 @@ export function createPlayer(idx: number, clsKey: string): Player {
     selfDmg: false,
     damageTakenMul: 1,
     selfDmgChance: 0,
+    doubleQ: 0,
     doubleSecondary: 0,
     comboBonus: false,
     ultChargeRate: 1,

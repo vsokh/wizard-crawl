@@ -259,6 +259,7 @@ export class ClassAbilities {
 }
 
 export class SecondaryUpgrades {
+  doubleQ: number = 0;
   doubleSecondary: number = 0;
   comboBonus: boolean = false;
   ultChargeRate: number = 1;

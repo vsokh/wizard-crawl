@@ -219,6 +219,9 @@ export interface Player {
   damageTakenMul: number;   // multiplier for incoming damage (1 = normal)
   selfDmgChance: number;    // chance to take self-damage when casting (0 = none)
 
+  // Q ability upgrades
+  doubleQ: number;
+
   // Secondary (RMB) upgrades
   doubleSecondary: number;
   comboBonus: boolean;
