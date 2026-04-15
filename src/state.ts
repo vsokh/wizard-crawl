@@ -312,6 +312,12 @@ function normalizeSpellDef(input: SpellDefInput): SpellDef {
     chargeMaxDmg: input.chargeMaxDmg ?? 0,
     chargePierce: input.chargePierce ?? 0,
     chargeRadius: input.chargeRadius ?? 0,
+    tetherRange: input.tetherRange,
+    tetherDmg: input.tetherDmg,
+    tetherHeal: input.tetherHeal,
+    tetherTickRate: input.tetherTickRate,
+    tetherDuration: input.tetherDuration,
+    tetherReward: input.tetherReward ? { ...input.tetherReward } : undefined,
   };
 }
 
@@ -475,6 +481,10 @@ export function createPlayer(idx: number, clsKey: string): Player {
     formSwitchBuff: 0,
     _formDmgMult: 1,
     _formArmor: 0,
+    _tetherTarget: -1,
+    _tetherTimer: 0,
+    _tetherSpellIdx: -1,
+    _tetherTickTimer: 0,
     _animCastFlash: 0,
     _animHitFlash: 0,
     _animDeathFade: -1,

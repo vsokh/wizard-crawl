@@ -35,9 +35,10 @@ import { generateArena, updateWaves, spawnEnemy } from './systems/dungeon';
 import { showUpgradeScreen } from './systems/upgrades';
 import { initShop, openShop } from './systems/shop';
 import { applySynergies } from './systems/synergy';
+import { updateTethers } from './systems/tether-system';
 
 import { updateCamera } from './rendering/renderer';
-import { updateFx, drawBeams, drawZones, drawAoe, drawFx, drawCrosshair, drawCountdown, drawSynergyBanner } from './rendering/draw-effects';
+import { updateFx, drawBeams, drawTethers, drawZones, drawAoe, drawFx, drawCrosshair, drawCountdown, drawSynergyBanner } from './rendering/draw-effects';
 import { drawRoom, drawPillars } from './rendering/draw-room';
 import { drawWizard, drawEnemies, drawSpells, drawEProj, drawPickups } from './rendering/draw-entities';
 import { clearGradCache } from './rendering/gradient-cache';
@@ -57,6 +58,7 @@ runner
   .add('rebuildEnemyGrid', 5, rebuildEnemyGrid)
   .add('updatePlayers', 10, updatePlayers)
   .add('updateSpells', 20, updateSpells)
+  .add('updateTethers', 25, updateTethers)
   .add('updateAoe', 30, updateAoe)
   .add('updateZones', 40, updateZones)
   .add('enemyTimers', 50, enemyTimers)
@@ -399,6 +401,7 @@ function loop(now: number): void {
   drawEProj(ctx, state);
   drawSpells(ctx, state);
   drawBeams(ctx, state);
+  drawTethers(ctx, state);
   drawEnemies(ctx, state);
   drawWizard(ctx, state);
   drawFx(ctx, state);
@@ -473,6 +476,7 @@ if (new URLSearchParams(window.location.search).has('screenshots')) {
       drawEProj(ctx, state);
       drawSpells(ctx, state);
       drawBeams(ctx, state);
+      drawTethers(ctx, state);
       drawEnemies(ctx, state);
       drawWizard(ctx, state);
       drawFx(ctx, state);

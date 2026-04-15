@@ -1504,6 +1504,36 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
         });
       }
     }
+  } else if (def.type === SpellType.Tether) {
+    // Tether: find nearest enemy within tetherRange and attach
+    const tetherRange = def.tetherRange || 200;
+    let bestDist = tetherRange;
+    let bestIdx = -1;
+    for (let i = 0; i < state.enemies.length; i++) {
+      const e = state.enemies.at(i);
+      if (!e.alive || e._friendly) continue;
+      const dx = e.x - p.x;
+      const dy = e.y - p.y;
+      const edist = Math.sqrt(dx * dx + dy * dy);
+      if (edist < bestDist) {
+        bestDist = edist;
+        bestIdx = i;
+      }
+    }
+    if (bestIdx >= 0) {
+      p._tetherTarget = bestIdx;
+      p._tetherTimer = def.tetherDuration || 3;
+      p._tetherSpellIdx = idx;
+      p._tetherTickTimer = 0;
+      netSfx(state, SfxName.Arcane);
+      spawnParticles(state, p.x, p.y, def.color, 10);
+      const te = state.enemies.at(bestIdx);
+      spawnText(state, te.x, te.y - 20, 'TETHERED', def.color);
+    } else {
+      // No enemy in range — fizzle, refund 50% mana
+      p.mana = Math.min(p.maxMana, p.mana + def.mana * 0.5);
+      spawnText(state, p.x, p.y - 20, 'NO TARGET', '#888888');
+    }
   } else if (def.type === SpellType.Ultimate && def.key === 'Q') {
     // Special Q abilities that use Ultimate type
     if (p.clsKey === 'druid') {
