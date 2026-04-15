@@ -97,6 +97,21 @@ describe('damageEnemy()', () => {
       // 4 * 1.5 = 6
       expect(e.hp).toBe(14);
     });
+
+    it('heals player via fury lifesteal when fury is active', () => {
+      const p = createTestPlayer(0, 'berserker');
+      p._furyActive = true;
+      p.hp = 5;
+      p.maxHp = 14;
+      state.players = [p];
+      const e = createTestEnemy({ hp: 100, maxHp: 100 });
+      state.enemies.clear(); state.enemies.push(e);
+
+      // Deal 20 raw damage → fury 1.5x → 30 dmg → 5% lifesteal → floor(1.5) = 1 heal
+      damageEnemy(state, e, 20, 0);
+
+      expect(p.hp).toBe(6); // 5 + 1 healed
+    });
   });
 
   describe('blood rage', () => {

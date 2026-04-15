@@ -226,6 +226,12 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
     if (heal > 0) p.hp = Math.min(p.maxHp, p.hp + heal);
   }
 
+  // Berserker fury lifesteal: 5% heal when fury active
+  if (p && p._furyActive) {
+    const furyHeal = Math.floor(dmg * COMBAT.FURY_LIFESTEAL);
+    if (furyHeal > 0) p.hp = Math.min(p.maxHp, p.hp + furyHeal);
+  }
+
   if (e.hp <= 0) {
     // Start death animation instead of immediately removing
     e._deathTimer = TIMING.DEATH_TIMER;
