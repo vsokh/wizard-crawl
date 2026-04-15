@@ -122,6 +122,40 @@ export interface ClassPassive {
   desc: string;
 }
 
+// ── Stance switching ──
+
+export interface StanceFormDef {
+  name: string;
+  spells: SpellDefInput[];
+  passive?: ClassPassive;
+  moveSpeed?: number;
+  color?: string;
+  glow?: string;
+}
+
+export interface StanceFormResolved {
+  name: string;
+  spells: SpellDef[];
+  passive?: ClassPassive;
+  moveSpeed?: number;
+  color?: string;
+  glow?: string;
+}
+
+export interface StanceDef {
+  formA: StanceFormDef;
+  formB: StanceFormDef;
+  switchCd: number;
+  switchBuff?: { duration: number; dmgMult?: number; armor?: number; };
+}
+
+export interface StanceResolved {
+  formA: StanceFormResolved;
+  formB: StanceFormResolved;
+  switchCd: number;
+  switchBuff?: { duration: number; dmgMult?: number; armor?: number; };
+}
+
 export interface ClassDef {
   name: string;
   color: string;
@@ -134,6 +168,7 @@ export interface ClassDef {
   moveSpeed?: number;
   maxMana?: number;
   manaRegen?: number;
+  stanceForms?: StanceResolved;
 }
 
 /** The shape used in the CLASSES constant (spells are partial) */
@@ -149,6 +184,7 @@ export interface ClassDefInput {
   moveSpeed?: number;
   maxMana?: number;
   manaRegen?: number;
+  stanceForms?: StanceDef;
 }
 
 export interface EnemyDef {
@@ -355,6 +391,13 @@ export interface Player {
 
   // Tidecaller state
   _summonCount: number;        // tidecaller active summon count
+
+  // Stance switching state
+  currentForm?: 'A' | 'B';       // Current active form (undefined = no stance class)
+  formSwitchCd: number;           // Remaining cooldown on form switch
+  formSwitchBuff: number;         // Remaining duration of switch buff
+  _formDmgMult: number;           // Active dmg multiplier from switch buff
+  _formArmor: number;             // Active armor from switch buff
 
   // Animation state
   _animCastFlash: number;     // timer for casting glow (decays to 0)

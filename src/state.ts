@@ -248,6 +248,26 @@ export function cloneClassDef(key: string): ClassDef {
     moveSpeed: src.moveSpeed,
     maxMana: src.maxMana,
     manaRegen: src.manaRegen,
+    stanceForms: src.stanceForms ? {
+      formA: {
+        name: src.stanceForms.formA.name,
+        spells: src.stanceForms.formA.spells.map(s => normalizeSpellDef({ ...s })),
+        passive: src.stanceForms.formA.passive ? { ...src.stanceForms.formA.passive } : undefined,
+        moveSpeed: src.stanceForms.formA.moveSpeed,
+        color: src.stanceForms.formA.color,
+        glow: src.stanceForms.formA.glow,
+      },
+      formB: {
+        name: src.stanceForms.formB.name,
+        spells: src.stanceForms.formB.spells.map(s => normalizeSpellDef({ ...s })),
+        passive: src.stanceForms.formB.passive ? { ...src.stanceForms.formB.passive } : undefined,
+        moveSpeed: src.stanceForms.formB.moveSpeed,
+        color: src.stanceForms.formB.color,
+        glow: src.stanceForms.formB.glow,
+      },
+      switchCd: src.stanceForms.switchCd,
+      switchBuff: src.stanceForms.switchBuff ? { ...src.stanceForms.switchBuff } : undefined,
+    } : undefined,
   };
 }
 
@@ -294,7 +314,7 @@ export function createPlayer(idx: number, clsKey: string): Player {
   const cls = cloneClassDef(clsKey);
   const hp = cls.hp ?? WIZARD_HP;
   const maxMana = cls.maxMana ?? MAX_MANA;
-  return {
+  const p: Player = {
     idx,
     cls,
     clsKey,
@@ -442,6 +462,11 @@ export function createPlayer(idx: number, clsKey: string): Player {
     _eagleEyeTimer: 0,
     _cannonShots: 0,
     _summonCount: 0,
+    currentForm: cls.stanceForms ? 'A' : undefined,
+    formSwitchCd: 0,
+    formSwitchBuff: 0,
+    _formDmgMult: 1,
+    _formArmor: 0,
     _animCastFlash: 0,
     _animHitFlash: 0,
     _animDeathFade: -1,
@@ -449,6 +474,17 @@ export function createPlayer(idx: number, clsKey: string): Player {
     _animUltTimer: 0,
     respawnTimer: 0,
   };
+
+  // Stance class initialization: override spells with formA
+  if (cls.stanceForms) {
+    p.cls.spells = [...cls.stanceForms.formA.spells, p.cls.spells[3]];
+    p._baseSpellDmg = p.cls.spells.map(s => s.dmg);
+    if (cls.stanceForms.formA.moveSpeed) p.moveSpeed = cls.stanceForms.formA.moveSpeed;
+    if (cls.stanceForms.formA.color) p.cls.color = cls.stanceForms.formA.color;
+    if (cls.stanceForms.formA.glow) p.cls.glow = cls.stanceForms.formA.glow;
+  }
+
+  return p;
 }
 
 /** Return and increment the next monotonic enemy ID (host only). */

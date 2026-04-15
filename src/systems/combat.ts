@@ -48,6 +48,50 @@ import { createFriendlyEnemy } from './dungeon';
 let _aliveEnemies: EnemyView[] = [];
 
 // ═══════════════════════════════════
+//       STANCE SWITCHING
+// ═══════════════════════════════════
+
+export function switchStance(state: GameState, p: Player): void {
+  const forms = p.cls.stanceForms;
+  if (!forms || p.formSwitchCd > 0) return;
+
+  // Toggle form
+  const newForm = p.currentForm === 'A' ? 'B' : 'A';
+  const formDef = newForm === 'A' ? forms.formA : forms.formB;
+
+  // Swap spell slots 0-2 (keep slot 3 structure for compatibility)
+  p.cls.spells[0] = formDef.spells[0];
+  p.cls.spells[1] = formDef.spells[1];
+  p.cls.spells[2] = formDef.spells[2];
+
+  // Update base spell damage for soft cap calculation
+  p._baseSpellDmg[0] = formDef.spells[0].dmg;
+  p._baseSpellDmg[1] = formDef.spells[1].dmg;
+  p._baseSpellDmg[2] = formDef.spells[2].dmg;
+
+  // Apply form-specific overrides
+  if (formDef.moveSpeed) p.moveSpeed = formDef.moveSpeed;
+  if (formDef.color) p.cls.color = formDef.color;
+  if (formDef.glow) p.cls.glow = formDef.glow;
+
+  // Set cooldown
+  p.formSwitchCd = forms.switchCd;
+  p.currentForm = newForm;
+
+  // Apply switch buff
+  if (forms.switchBuff) {
+    p.formSwitchBuff = forms.switchBuff.duration;
+    p._formDmgMult = forms.switchBuff.dmgMult ?? 1;
+    p._formArmor = forms.switchBuff.armor ?? 0;
+  }
+
+  // VFX
+  spawnParticles(state, p.x, p.y, p.cls.color, 15, 0.8);
+  spawnText(state, p.x, p.y - 30, formDef.name, p.cls.color);
+  netSfx(state, SfxName.Boom);
+}
+
+// ═══════════════════════════════════
 //       BONUS DAMAGE SOFT CAP
 // ═══════════════════════════════════
 
@@ -57,8 +101,8 @@ function getEffectiveSpellDmg(p: Player, spellIdx: number): number {
   const baseDmg = p._baseSpellDmg[spellIdx] || 0;
   const currentDmg = p.cls.spells[spellIdx].dmg;
   const bonus = currentDmg - baseDmg;
-  if (bonus <= 0) return currentDmg;
-  return baseDmg + softCapBonusDmg(bonus);
+  const raw = bonus <= 0 ? currentDmg : baseDmg + softCapBonusDmg(bonus);
+  return raw * (p._formDmgMult || 1);
 }
 
 // ═══════════════════════════════════
@@ -127,8 +171,8 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
   spawnParticles(state, e.x, e.y, '#ff6644', 5, TIMING.HIT_PARTICLE_SCALE);
   netSfx(state, SfxName.Hit);
 
-  // Ultimate charge (+5 per hit, +15 per kill)
-  if (p) {
+  // Ultimate charge (+5 per hit, +15 per kill) — stance classes don't accumulate ultCharge
+  if (p && !p.cls.stanceForms) {
     const hitChargeGain = Math.round(COMBAT.ULT_CHARGE_HIT * (p.ultChargeRate || 1));
     const chargeCap = p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD;
     p.ultCharge = Math.min(chargeCap, (p.ultCharge || 0) + hitChargeGain);
@@ -300,11 +344,13 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
           p.critChance += 0.01;
         }
       }
-      // Ultimate charge on kill
-      const killChargeGain = Math.round(COMBAT.ULT_CHARGE_KILL * (p.ultChargeRate || 1));
-      const killChargeCap = p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD;
-      p.ultCharge = Math.min(killChargeCap, (p.ultCharge || 0) + killChargeGain);
-      if (p.ultCharge >= (p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD)) p.ultReady = true;
+      // Ultimate charge on kill — stance classes don't accumulate ultCharge
+      if (!p.cls.stanceForms) {
+        const killChargeGain = Math.round(COMBAT.ULT_CHARGE_KILL * (p.ultChargeRate || 1));
+        const killChargeCap = p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD;
+        p.ultCharge = Math.min(killChargeCap, (p.ultCharge || 0) + killChargeGain);
+        if (p.ultCharge >= (p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD)) p.ultReady = true;
+      }
 
       // Passive: Necro soul harvest
       if (p.clsKey === 'necromancer') {
@@ -556,7 +602,7 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
   if (p._rage > 0) reducedDmg = Math.ceil(reducedDmg * 2);
   // Cursed: damage taken multiplier
   if (p.damageTakenMul && p.damageTakenMul !== 1) reducedDmg = Math.ceil(reducedDmg * p.damageTakenMul);
-  const dmg = Math.max(1, reducedDmg - (p.armor || 0));
+  const dmg = Math.max(1, reducedDmg - (p.armor || 0) - (p._formArmor || 0));
 
   p.hp -= dmg;
   p.iframes = TIMING.IFRAME_DAMAGE;

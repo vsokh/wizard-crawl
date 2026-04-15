@@ -16,7 +16,7 @@ import {
   GAME_OVER_DELAY_MS,
 } from '../constants';
 import { Enemy, EnemyView, GamePhase, NetworkMode, PickupType, SfxName } from '../types';
-import { castSpell, castSpellSilent, castUltimate, damageEnemy } from './combat';
+import { castSpell, castSpellSilent, castUltimate, damageEnemy, switchStance } from './combat';
 
 /** Callback set by main.ts to break circular dep with upgrades module */
 export let onChestPickup: ((state: GameState) => void) | null = null;
@@ -86,6 +86,12 @@ export function updatePlayers(state: GameState, dt: number): void {
     const slow = p.slowTimer > 0 ? WAVE_PHYSICS.SLOW_MOVE_MULT : 1;
     if (p.slowTimer > 0) p.slowTimer -= dt;
 
+    // Reset move speed to form value for stance classes
+    if (p.cls.stanceForms && p.currentForm) {
+      const form = p.currentForm === 'A' ? p.cls.stanceForms.formA : p.cls.stanceForms.formB;
+      if (form.moveSpeed) p.moveSpeed = form.moveSpeed;
+    }
+
     // Aim follows mouse instantly
     if (!isNaN(input.angle)) p.angle = input.angle;
 
@@ -134,6 +140,16 @@ export function updatePlayers(state: GameState, dt: number): void {
       if (p._eagleEyeTimer <= 0) {
         p._eagleEyeStreak = 0;
         p._eagleEyeTimer = 0;
+      }
+    }
+
+    // Stance switching timers
+    if (p.formSwitchCd > 0) p.formSwitchCd -= dt;
+    if (p.formSwitchBuff > 0) {
+      p.formSwitchBuff -= dt;
+      if (p.formSwitchBuff <= 0) {
+        p._formDmgMult = 1;
+        p._formArmor = 0;
       }
     }
 
@@ -238,16 +254,27 @@ export function updatePlayers(state: GameState, dt: number): void {
     }
     if (!input.ability) state.keys[`_q${p.idx}`] = false;
 
-    // Ultimate (Space) - needs full charge
-    const ultThreshold = p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD;
-    if (input.ult && p.ultCharge >= ultThreshold && !state.keys[`_r${p.idx}`]) {
+    // Ultimate (Space) / Stance Switch
+    if (input.ult && !state.keys[`_r${p.idx}`]) {
       state.keys[`_r${p.idx}`] = true;
-      const wasOverflowed = p.ultOverflow && p.ultCharge >= COMBAT.ULT_THRESHOLD_OVERFLOW;
-      castUltimate(state, p, input.angle);
-      p._animCastFlash = TIMING.ANIM_CAST;
-      if (wasOverflowed) {
-        // Overflow: cast a second time
-        castUltimate(state, p, input.angle);
+      if (p.cls.stanceForms) {
+        // Stance classes: Space switches form
+        if (p.formSwitchCd <= 0) {
+          switchStance(state, p);
+          p._animCastFlash = TIMING.ANIM_CAST;
+        }
+      } else {
+        // Normal classes: Space casts ultimate
+        const ultThreshold = p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD;
+        if (p.ultCharge >= ultThreshold) {
+          const wasOverflowed = p.ultOverflow && p.ultCharge >= COMBAT.ULT_THRESHOLD_OVERFLOW;
+          castUltimate(state, p, input.angle);
+          p._animCastFlash = TIMING.ANIM_CAST;
+          if (wasOverflowed) {
+            // Overflow: cast a second time
+            castUltimate(state, p, input.angle);
+          }
+        }
       }
     }
     if (!input.ult) state.keys[`_r${p.idx}`] = false;

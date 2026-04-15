@@ -569,13 +569,39 @@ export const CLASSES: Record<string, ClassDefInput> = {
   },
   hexblade: {
     name: 'Hexblade', color: '#7755cc', glow: '#5533aa',
-    desc: 'Curse mage. Mark and detonate.',
+    desc: 'Stance-switching hybrid — ranged hexes, melee executions.',
     passive: { name: 'Hex Mastery', desc: 'Hex-marked enemies take 25% more damage from all sources; 3 stacks also slows 30%' },
+    stanceForms: {
+      formA: {
+        name: 'Caster',
+        color: '#a855f7',
+        glow: '#7733cc',
+        moveSpeed: 200,
+        spells: [
+          { name: 'Hex Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 1.5, speed: 420, radius: 5, mana: 6, cd: 0.3, life: 0.8, homing: 0.8, color: '#a855f7', trail: '#7733cc' },
+          { name: 'Doom Mark', key: 'RMB', type: SpellType.Homing, dmg: 0.5, speed: 500, radius: 6, mana: 12, cd: 3.0, life: 0.6, color: '#9966dd', trail: '#5533aa' },
+          { name: 'Void Zone', key: 'Q', type: SpellType.Zone, dmg: 1, mana: 20, cd: 6, radius: 70, duration: 3, tickRate: 0.5, slow: 0.6, color: '#6644bb' },
+        ],
+      },
+      formB: {
+        name: 'Blade',
+        color: '#dc2626',
+        glow: '#aa1111',
+        moveSpeed: 175,
+        spells: [
+          { name: 'Hex Slash', key: 'LMB', type: SpellType.Cone, dmg: 2.5, range: 55, mana: 2, cd: 0.25, angle: 1.5, color: '#dc2626' },
+          { name: 'Shadow Leap', key: 'RMB', type: SpellType.AoeDelayed, dmg: 2, mana: 15, cd: 4, delay: 0.1, aoeR: 50, radius: 50, color: '#aa1111' },
+          { name: 'Whirlwind', key: 'Q', type: SpellType.Nova, dmg: 3, mana: 18, cd: 5, radius: 60, color: '#ff3333' },
+        ],
+      },
+      switchCd: 3.5,
+      switchBuff: { duration: 1.0, dmgMult: 1.5, armor: 2 },
+    },
     spells: [
-      { name: 'Hex Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 1.5, speed: 380, radius: 8, mana: 7, cd: 0.3, life: 1.2, slow: 0.3, color: '#7755cc', trail: '#5533aa' },
-      { name: 'Doom Mark', key: 'RMB', type: SpellType.Homing, dmg: 2, speed: 250, radius: 12, mana: 20, cd: 3, life: 2.5, homing: 3.0, color: '#9966dd', trail: '#5533aa' },
-      { name: 'Hex Blast', key: 'Q', type: SpellType.AoeDelayed, dmg: 3, mana: 30, cd: 7, delay: 0.6, radius: 85, stun: 0.8, color: '#6644bb' },
-      { name: 'Hexstorm', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#5533aa', mana: 0, cd: 0 },
+      { name: 'Hex Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 1.5, speed: 420, radius: 5, mana: 6, cd: 0.3, life: 0.8, homing: 0.8, color: '#a855f7', trail: '#7733cc' },
+      { name: 'Doom Mark', key: 'RMB', type: SpellType.Homing, dmg: 0.5, speed: 500, radius: 6, mana: 12, cd: 3.0, life: 0.6, color: '#9966dd', trail: '#5533aa' },
+      { name: 'Void Zone', key: 'Q', type: SpellType.Zone, dmg: 1, mana: 20, cd: 6, radius: 70, duration: 3, tickRate: 0.5, slow: 0.6, color: '#6644bb' },
+      { name: 'Stance Switch', key: 'Space', type: SpellType.Ultimate, ultCharge: 0, color: '#5533aa', mana: 0, cd: 0 },
     ],
   },
   warden: {
