@@ -383,8 +383,8 @@ export const CLASSES: Record<string, ClassDefInput> = {
     hp: 7, moveSpeed: 185, maxMana: 100, manaRegen: 14,
     passive: { name: 'Frostbite', desc: 'Slowed enemies take +1 damage' },
     spells: [
-      { name: 'Frost Ray', key: 'LMB', type: SpellType.Beam, dmg: 1.2, range: 250, mana: 6, cd: 0.2, width: 4, slow: 1.0, color: '#88ddff', trail: '#44aadd' },
-      { name: 'Freeze Breath', key: 'RMB', type: SpellType.Cone, dmg: 2, range: 120, mana: 22, cd: 3.5, angle: 0.7, slow: 1.5, color: '#88ddff' },
+      { name: 'Frost Ray', key: 'LMB', type: SpellType.Beam, dmg: 1.2, range: 250, mana: 6, cd: 0.2, width: 4, slow: 1.0, color: '#88ddff', trail: '#44aadd', applyMark: { name: 'frost', duration: 3.0, maxStacks: 3, visual: '#88CCFF' } },
+      { name: 'Freeze Breath', key: 'RMB', type: SpellType.Cone, dmg: 2, range: 120, mana: 22, cd: 3.5, angle: 0.7, slow: 1.5, color: '#88ddff', detonateMark: { name: 'frost', dmgPerStack: 2.0, aoeOnDetonate: 60, spreadOnDetonate: true, effectOnDetonate: { stun: 0.3 } } },
       { name: 'Blizzard', key: 'Q', type: SpellType.Zone, dmg: 1, mana: 28, cd: 8, radius: 90, duration: 4, tickRate: 0.7, slow: 0.8, color: '#2288dd' },
       { name: 'Absolute Zero', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#2288dd', mana: 0, cd: 0 },
     ],
@@ -396,8 +396,8 @@ export const CLASSES: Record<string, ClassDefInput> = {
     passive: { name: 'Static', desc: 'Every 4th hit stuns the target for 0.5s' },
     spells: [
       { name: 'Lightning', key: 'LMB', type: SpellType.Beam, dmg: 2, range: 320, mana: 7, cd: 0.28, width: 3, color: '#cc88ff', trail: '#aa55ff', channel: 1.5, channelSlow: 0.5, channelScale: 2.5, channelTicks: 5, channelBreak: 3 },
-      { name: 'Ball Zap', key: 'RMB', type: SpellType.Projectile, dmg: 2, speed: 140, radius: 16, mana: 18, cd: 3, life: 3.5, zap: 75, zapRate: 0.45, color: '#bb66ff', trail: '#9944dd' },
-      { name: 'Thunder', key: 'Q', type: SpellType.AoeDelayed, dmg: 3, mana: 28, cd: 7, delay: 0.5, radius: 65, stun: 1, color: '#ffcc44' },
+      { name: 'Ball Zap', key: 'RMB', type: SpellType.Projectile, dmg: 2, speed: 140, radius: 16, mana: 18, cd: 3, life: 3.5, zap: 75, zapRate: 0.45, color: '#bb66ff', trail: '#9944dd', applyMark: { name: 'static', duration: 4.0, maxStacks: 3, visual: '#cc88ff' } },
+      { name: 'Thunder', key: 'Q', type: SpellType.AoeDelayed, dmg: 3, mana: 28, cd: 7, delay: 0.5, radius: 65, stun: 1, color: '#ffcc44', detonateMark: { name: 'static', dmgPerStack: 2.0, aoeOnDetonate: 65, effectOnDetonate: { stun: 0.5 } } },
       { name: 'Storm Fury', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#ffcc44', mana: 0, cd: 0 },
     ],
   },
@@ -469,9 +469,9 @@ export const CLASSES: Record<string, ClassDefInput> = {
     hp: 10, moveSpeed: 180, maxMana: 120, manaRegen: 16,
     passive: { name: 'Aura of Light', desc: 'Nearby ally regens 2 HP/s' },
     spells: [
-      { name: 'Smite', key: 'LMB', type: SpellType.Projectile, dmg: 2, speed: 380, radius: 9, mana: 7, cd: 0.35, life: 1.2, color: '#ffddaa', trail: '#ccaa66', explode: 25 },
+      { name: 'Smite', key: 'LMB', type: SpellType.Projectile, dmg: 2, speed: 380, radius: 9, mana: 7, cd: 0.35, life: 1.2, color: '#ffddaa', trail: '#ccaa66', explode: 25, applyMark: { name: 'judgment', duration: 3.0, maxStacks: 1, visual: '#ffddaa' } },
       { name: 'Holy Shield', key: 'RMB', type: SpellType.AllyShield, mana: 25, cd: 5, duration: 3, color: '#ffffcc' },
-      { name: 'Consecrate', key: 'Q', type: SpellType.Zone, dmg: 2, mana: 24, cd: 7, radius: 100, duration: 3, tickRate: 0.6, slow: 0.3, color: '#ffeeaa', heal: 2 },
+      { name: 'Consecrate', key: 'Q', type: SpellType.Zone, dmg: 2, mana: 24, cd: 7, radius: 100, duration: 3, tickRate: 0.6, slow: 0.3, color: '#ffeeaa', heal: 2, detonateMark: { name: 'judgment', dmgPerStack: 3.0, aoeOnDetonate: 100, effectOnDetonate: { heal: 1.5 } } },
       { name: 'Holy Light', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#ffffcc', mana: 0, cd: 0 },
     ],
   },
