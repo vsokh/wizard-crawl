@@ -417,7 +417,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     passive: { name: 'Soul Harvest', desc: 'Kills heal 0.5 HP' },
     spells: [
       { name: 'Soul Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 1.5, speed: 360, radius: 9, mana: 8, cd: 0.35, life: 1.2, color: '#55cc55', trail: '#228822', drain: 0.5 },
-      { name: 'Death Coil', key: 'RMB', type: SpellType.Homing, dmg: 3, speed: 280, radius: 10, mana: 28, cd: 4, life: 2.5, homing: 3.5, drain: 2, color: '#44aa44', trail: '#228822' },
+      { name: 'Life Siphon', key: 'RMB', type: SpellType.Tether, dmg: 0, mana: 22, cd: 6, color: '#44aa44', trail: '#228822', tetherRange: 180, tetherDmg: 1.5, tetherHeal: 1.0, tetherTickRate: 0.3, tetherDuration: 3, tetherReward: { dmgBurst: 3, healBurst: 2 } },
       { name: 'Plague', key: 'Q', type: SpellType.Zone, dmg: 1, mana: 32, cd: 8, radius: 80, duration: 4, tickRate: 0.8, slow: 0.3, color: '#338833' },
       { name: 'Army of Dead', key: 'Space', type: SpellType.Ultimate, ultCharge: 110, color: '#228822', mana: 0, cd: 0 },
     ],
@@ -430,7 +430,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     spells: [
       { name: 'Time Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 2, speed: 480, radius: 8, mana: 8, cd: 0.35, life: 1, stun: 0.3, color: '#ffcc44', trail: '#cc9922' },
       { name: 'Temporal Field', key: 'RMB', type: SpellType.Zone, dmg: 0, mana: 22, cd: 4, radius: 70, duration: 3.5, tickRate: 0.5, slow: 2.5, stun: 0.3, color: '#ffdd66' },
-      { name: 'Rewind', key: 'Q', type: SpellType.Rewind, mana: 36, cd: 12, color: '#ffcc44' },
+      { name: 'Temporal Tether', key: 'Q', type: SpellType.Tether, dmg: 0, mana: 30, cd: 10, color: '#ffcc44', trail: '#cc9922', tetherRange: 200, tetherDmg: 0, tetherTickRate: 0.5, tetherDuration: 4, tetherReward: { stun: 2.5 } },
       { name: 'Time Stop', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#ffdd66', mana: 0, cd: 0 },
     ],
   },
@@ -542,7 +542,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     spells: [
       { name: 'Gravity Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 1.5, speed: 280, radius: 10, mana: 6, cd: 0.32, life: 0.8, slow: 0.5, color: '#6644aa', trail: '#4422aa' },
       { name: 'Singularity', key: 'RMB', type: SpellType.Zone, dmg: 1.5, mana: 22, cd: 5, radius: 80, duration: 4, tickRate: 0.6, slow: 0.8, color: '#5533aa' },
-      { name: 'Collapse', key: 'Q', type: SpellType.Nova, dmg: 3, mana: 35, cd: 8, range: 120, stun: 1.0, color: '#7755cc' },
+      { name: 'Event Horizon', key: 'Q', type: SpellType.Tether, dmg: 0, mana: 22, cd: 8, color: '#7755cc', trail: '#4422aa', tetherRange: 200, tetherDmg: 2.0, tetherHeal: 1.0, tetherTickRate: 0.3, tetherDuration: 3, tetherReward: { stun: 2.0, dmgBurst: 3, healBurst: 2 } },
       { name: 'Gravitational Ruin', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#4422aa', mana: 0, cd: 0 },
     ],
   },
@@ -637,7 +637,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     passive: { name: 'Soul Bond', desc: 'LMB marks enemies for 4s; allies deal +1 damage and heal 0.5 HP on marked kills' },
     spells: [
       { name: 'Soul Lash', key: 'LMB', type: SpellType.Beam, dmg: 1.5, range: 220, mana: 6, cd: 0.28, width: 3, color: '#55aa88', trail: '#338866' },
-      { name: 'Spirit Chain', key: 'RMB', type: SpellType.Homing, dmg: 2, speed: 260, radius: 10, mana: 18, cd: 3.5, life: 2.5, homing: 3.5, slow: 1.2, color: '#66bb99', trail: '#338866' },
+      { name: 'Soul Tether', key: 'RMB', type: SpellType.Tether, dmg: 0, mana: 18, cd: 5, color: '#66bb99', trail: '#338866', tetherRange: 250, tetherDmg: 0, tetherTickRate: 0.4, tetherDuration: 2, tetherReward: { stun: 1.5 } },
       { name: 'Soul Surge', key: 'Q', type: SpellType.Zone, dmg: 0, mana: 30, cd: 8, radius: 80, duration: 4, tickRate: 0.8, heal: 1.5, color: '#44aa77' },
       { name: 'Soul Storm', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#338866', mana: 0, cd: 0 },
     ],
@@ -1045,4 +1045,10 @@ export const UPGRADE_POOL: UpgradeDef[] = [
   { name: 'Soul Bargain', desc: '+60% mana regen and -50% mana costs, but -4 max HP',
     isCursed: true, color: '#cc3333',
     apply: (p: Player) => { p.manaRegen *= 1.6; for (const s of p.cls.spells) s.mana *= 0.5; p.maxHp = Math.max(1, p.maxHp - 4); p.hp = Math.min(p.hp, p.maxHp); } },
+
+  // ── Tether upgrades ──
+  { name: 'Iron Tether', desc: 'Tether range +30', stackable: true, maxStacks: 3, color: '#aaaacc',
+    apply: (p: Player, stacks: number) => { for (const s of p.cls.spells) { if (s.tetherRange) s.tetherRange += 30 * stacks; } } },
+  { name: 'Leech', desc: 'Tether healing +0.5/tick', stackable: true, maxStacks: 3, color: '#44ff88',
+    apply: (p: Player, stacks: number) => { for (const s of p.cls.spells) { if (s.tetherHeal !== undefined) s.tetherHeal += 0.5 * stacks; } } },
 ];

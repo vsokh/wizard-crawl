@@ -38,6 +38,7 @@ export enum SpellType {
   Leap = 'leap',
   AllyShield = 'ally_shield',
   Trap = 'trap',
+  Tether = 'tether',
   Ultimate = 'ultimate',
 }
 
@@ -129,6 +130,17 @@ export interface SpellDef {
       slow?: number;
       heal?: number;
     };
+  };
+  // Tether fields
+  tetherRange?: number;       // Max range before tether breaks (100-300 units)
+  tetherDmg?: number;         // Damage per tick while tethered
+  tetherHeal?: number;        // Healing per tick while tethered (drain tethers)
+  tetherTickRate?: number;    // Tick interval in seconds (0.2-0.5)
+  tetherDuration?: number;    // Max tether duration (2-6 seconds)
+  tetherReward?: {            // Bonus for maintaining full duration
+    stun?: number;
+    dmgBurst?: number;
+    healBurst?: number;
   };
 }
 
@@ -427,6 +439,12 @@ export interface Player {
   formSwitchBuff: number;         // Remaining duration of switch buff
   _formDmgMult: number;           // Active dmg multiplier from switch buff
   _formArmor: number;             // Active armor from switch buff
+
+  // Tether state
+  _tetherTarget: number;       // Entity ID of tethered enemy (-1 = none)
+  _tetherTimer: number;        // Time remaining on tether
+  _tetherSpellIdx: number;     // Which spell slot created the tether (-1 = none)
+  _tetherTickTimer: number;    // Tick accumulator for damage/heal ticks
 
   // Animation state
   _animCastFlash: number;     // timer for casting glow (decays to 0)

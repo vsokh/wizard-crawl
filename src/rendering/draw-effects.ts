@@ -129,6 +129,99 @@ export function drawBeams(ctx: CanvasRenderingContext2D, state: GameState): void
   ctx.globalAlpha = 1;
 }
 
+export function drawTethers(ctx: CanvasRenderingContext2D, state: GameState): void {
+  const t = state.time;
+  for (const p of state.players) {
+    if (!p.alive || p._tetherTarget < 0) continue;
+    const target = state.enemies.at(p._tetherTarget);
+    if (!target || !target.alive) continue;
+
+    const def = p.cls.spells[p._tetherSpellIdx];
+    if (!def) continue;
+
+    const tetherRange = def.tetherRange || 200;
+    const dx = target.x - p.x;
+    const dy = target.y - p.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // Opacity decreases as distance approaches break range
+    const rangeFrac = dist / tetherRange;
+    const baseAlpha = Math.max(0.2, 1.0 - rangeFrac * 0.7);
+
+    // Pulse effect
+    const pulse = 0.85 + 0.15 * Math.sin(t * 8);
+
+    // Color based on tether type
+    const hasDmg = (def.tetherDmg || 0) > 0;
+    const hasHeal = (def.tetherHeal || 0) > 0;
+    let color = def.color;
+    let coreColor = '#ffffff';
+    if (hasDmg && hasHeal) {
+      // Drain tether — green
+      color = '#44ff88';
+      coreColor = '#ccffcc';
+    } else if (hasDmg) {
+      // Damage tether — red-ish (use spell color)
+      coreColor = '#ffcccc';
+    } else {
+      // CC/utility tether — blue-ish
+      color = '#4488ff';
+      coreColor = '#ccccff';
+    }
+
+    // Pass 1: outer glow
+    ctx.globalAlpha = baseAlpha * pulse * 0.25;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(target.x, target.y);
+    ctx.stroke();
+
+    // Pass 2: mid beam
+    ctx.globalAlpha = baseAlpha * pulse * 0.5;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(target.x, target.y);
+    ctx.stroke();
+
+    // Pass 3: core
+    ctx.globalAlpha = baseAlpha * pulse * 0.8;
+    ctx.strokeStyle = coreColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(target.x, target.y);
+    ctx.stroke();
+
+    // Animated energy dots along the tether
+    const dotCount = 4;
+    for (let i = 0; i < dotCount; i++) {
+      const frac = ((i / dotCount) + t * 1.5) % 1.0;
+      const dotX = p.x + dx * frac;
+      const dotY = p.y + dy * frac;
+      ctx.globalAlpha = baseAlpha * pulse * 0.9;
+      ctx.fillStyle = coreColor;
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // End-point glows
+    ctx.globalAlpha = baseAlpha * pulse * 0.4;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
 export function drawZones(ctx: CanvasRenderingContext2D, state: GameState): void {
   const t = state.time;
   for (const z of state.zones) {
