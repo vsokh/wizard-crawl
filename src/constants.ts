@@ -165,6 +165,7 @@ export const MINIMAP_CELL_SIZE = 16;
 
 export const COMBAT = {
   FURY_DAMAGE_MULT: 1.5,
+  FURY_LIFESTEAL: 0.05,
   MOMENTUM_CAP: 0.2,
   MOMENTUM_DIVISOR: 1000,
   ULT_CHARGE_HIT: 3,
@@ -448,8 +449,8 @@ export const CLASSES: Record<string, ClassDefInput> = {
   berserker: {
     name: 'Berserker', color: '#ff4444', glow: '#cc2222',
     desc: 'Melee DPS. The lower the HP, the stronger.',
-    hp: 12, moveSpeed: 200, maxMana: 70, manaRegen: 10,
-    passive: { name: 'Fury', desc: 'Below 50% HP: +50% damage and speed' },
+    hp: 14, moveSpeed: 200, maxMana: 70, manaRegen: 10,
+    passive: { name: 'Fury', desc: 'Below 50% HP: +50% damage and speed, 5% lifesteal' },
     spells: [
       { name: 'Axe Swing', key: 'LMB', type: SpellType.Cone, dmg: 3, range: 50, mana: 2, cd: 0.35, angle: 1.5, color: '#ff6644' },
       { name: 'Throwing Axe', key: 'RMB', type: SpellType.Projectile, dmg: 3, speed: 500, radius: 10, mana: 8, cd: 0.8, life: 1.2, color: '#ff4444', trail: '#cc2222' },
