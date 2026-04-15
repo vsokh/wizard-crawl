@@ -302,8 +302,8 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
 
       // Passive: Necro soul harvest
       if (p.clsKey === 'necromancer') {
-        p.hp = Math.min(p.maxHp, p.hp + 1);
-        spawnText(state, p.x, p.y - 15, '+1 HP', '#44ff88');
+        p.hp = Math.min(p.maxHp, p.hp + 0.5);
+        spawnText(state, p.x, p.y - 15, '+0.5 HP', '#44ff88');
       }
 
       // Passive: Bladecaller kill rush — kills within 1.5s of Shadow Step reset its cd; kills grant speed boost
@@ -894,7 +894,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
         deathZone.x = wp.x; deathZone.y = wp.y; deathZone.radius = def.radius; deathZone.duration = def.duration;
         deathZone.dmg = def.dmg; deathZone.color = def.color; deathZone.owner = p.idx;
         deathZone.slow = def.slow || 0; deathZone.stun = 0; deathZone.tickRate = def.tickRate; deathZone.tickTimer = 0; deathZone.age = 0;
-        deathZone.drain = 1; deathZone.heal = 0; deathZone.pull = 30; deathZone.freezeAfter = 0;
+        deathZone.drain = 0; deathZone.heal = 0; deathZone.pull = 30; deathZone.freezeAfter = 0;
       }
       netSfx(state, SfxName.Arcane);
       return;

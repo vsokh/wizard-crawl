@@ -413,9 +413,9 @@ export const CLASSES: Record<string, ClassDefInput> = {
     name: 'Necromancer', color: '#55cc55', glow: '#228822',
     desc: 'Death magic. Drains life.',
     hp: 8, moveSpeed: 180, maxMana: 100, manaRegen: 14,
-    passive: { name: 'Soul Harvest', desc: 'Kills heal 1 HP' },
+    passive: { name: 'Soul Harvest', desc: 'Kills heal 0.5 HP' },
     spells: [
-      { name: 'Soul Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 1.5, speed: 360, radius: 9, mana: 8, cd: 0.35, life: 1.2, color: '#55cc55', trail: '#228822', drain: 1 },
+      { name: 'Soul Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 1.5, speed: 360, radius: 9, mana: 8, cd: 0.35, life: 1.2, color: '#55cc55', trail: '#228822', drain: 0.5 },
       { name: 'Death Coil', key: 'RMB', type: SpellType.Homing, dmg: 3, speed: 280, radius: 10, mana: 28, cd: 4, life: 2.5, homing: 3.5, drain: 2, color: '#44aa44', trail: '#228822' },
       { name: 'Plague', key: 'Q', type: SpellType.Zone, dmg: 1, mana: 32, cd: 8, radius: 80, duration: 4, tickRate: 0.8, slow: 0.3, color: '#338833' },
       { name: 'Army of Dead', key: 'Space', type: SpellType.Ultimate, ultCharge: 110, color: '#228822', mana: 0, cd: 0 },
