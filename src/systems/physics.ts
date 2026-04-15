@@ -150,6 +150,17 @@ export function updatePlayers(state: GameState, dt: number): void {
       }
     }
 
+    // Combo chain timer: increment per frame, reset chain if timeout exceeded
+    if (p.comboChainSlot >= 0) {
+      p.comboChainTimer += dt;
+      const activeSpell = p.cls.spells[p.comboChainSlot];
+      if (activeSpell?.combo && p.comboChainTimer >= activeSpell.combo.timeout) {
+        p.comboChainCount = 0;
+        p.comboChainSlot = -1;
+        p.comboChainTimer = 0;
+      }
+    }
+
     // Storm Shield: lightning strikes random nearby enemy every 1s
     if (p.stormShield) {
       p._stormTimer = (p._stormTimer || 0) + dt;

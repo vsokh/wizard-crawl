@@ -2496,6 +2496,47 @@ export function drawWizard(ctx: CanvasRenderingContext2D, state: GameState): voi
     ctx.fillStyle = p.ultCharge >= 100 ? 'rgba(255,200,60,.8)' : 'rgba(255,200,60,.3)';
     ctx.fillRect(bx, by + bh + 5, bw * Math.min(1, p.ultCharge / 100), 1);
 
+    // Combo chain indicator
+    if (p.comboChainCount > 0 && p.comboChainSlot >= 0) {
+      const activeSpell = cls.spells[p.comboChainSlot];
+      if (activeSpell?.combo) {
+        const totalSteps = activeSpell.combo.steps;
+        const currentStep = p.comboChainCount;
+        const dotSize = 4;
+        const dotGap = 3;
+        const totalWidth = totalSteps * dotSize + (totalSteps - 1) * dotGap;
+        const startX = p.x - totalWidth / 2;
+        const dotY = p.y - WIZARD_SIZE - 14;
+
+        for (let i = 0; i < totalSteps; i++) {
+          const dx = startX + i * (dotSize + dotGap);
+          if (i < currentStep) {
+            // Completed step — bright
+            ctx.fillStyle = i === totalSteps - 1 ? '#ffaa00' : cls.color;
+            ctx.globalAlpha = 0.9;
+          } else {
+            // Upcoming step — dim
+            ctx.fillStyle = '#666666';
+            ctx.globalAlpha = 0.4;
+          }
+          ctx.fillRect(dx, dotY, dotSize, dotSize);
+        }
+        ctx.globalAlpha = 1;
+
+        // Timer arc showing remaining time
+        const timeLeft = 1 - (p.comboChainTimer / activeSpell.combo.timeout);
+        if (timeLeft > 0) {
+          ctx.strokeStyle = cls.color;
+          ctx.globalAlpha = 0.5;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(p.x, dotY - 2, 3, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * timeLeft);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
+
     // Player label + class name
     ctx.fillStyle = p.idx === 0 ? 'rgba(100,180,255,.5)' : 'rgba(255,140,100,.5)';
     ctx.font = '9px Courier New';

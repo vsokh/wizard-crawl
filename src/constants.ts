@@ -441,7 +441,8 @@ export const CLASSES: Record<string, ClassDefInput> = {
     passive: { name: 'Bulwark', desc: 'Take 25% less damage' },
     spells: [
       { name: 'Shield Throw', key: 'LMB', type: SpellType.Projectile, dmg: 2, speed: 350, radius: 10, mana: 4, cd: 0.4, life: 0.8, color: '#ccddee', trail: '#8899aa', pierce: 1 },
-      { name: 'Shield Rush', key: 'RMB', type: SpellType.Leap, range: 100, mana: 15, cd: 2, dmg: 3, aoeR: 60, stun: 1.5, color: '#8899aa' },
+      { name: 'Shield Combo', key: 'RMB', type: SpellType.Leap, range: 100, mana: 15, cd: 2, dmg: 1.5, aoeR: 60, slow: 0.5, color: '#8899aa',
+        combo: { steps: 2, timeout: 2.0, dmgScale: [1.0, 2.0], effects: { 2: { stun: 1.0 } } } },
       { name: 'Charge', key: 'Q', type: SpellType.Blink, range: 200, mana: 20, cd: 3.5, color: '#aabbcc' },
       { name: 'Shield Wall', key: 'Space', type: SpellType.Ultimate, ultCharge: 120, color: '#ccddee', mana: 0, cd: 0 },
     ],
@@ -452,7 +453,8 @@ export const CLASSES: Record<string, ClassDefInput> = {
     hp: 14, moveSpeed: 200, maxMana: 70, manaRegen: 10,
     passive: { name: 'Fury', desc: 'Below 50% HP: +50% damage and speed, 5% lifesteal' },
     spells: [
-      { name: 'Axe Swing', key: 'LMB', type: SpellType.Cone, dmg: 3, range: 50, mana: 2, cd: 0.35, angle: 1.5, color: '#ff6644' },
+      { name: 'Axe Combo', key: 'LMB', type: SpellType.Cone, dmg: 2.5, range: 50, mana: 2, cd: 0.35, angle: 1.5, color: '#ff6644',
+        combo: { steps: 3, timeout: 2.0, dmgScale: [1.0, 1.2, 2.0], effects: { 3: { aoeR: 50 } } } },
       { name: 'Throwing Axe', key: 'RMB', type: SpellType.Projectile, dmg: 3, speed: 500, radius: 10, mana: 8, cd: 0.8, life: 1.2, color: '#ff4444', trail: '#cc2222' },
       { name: 'Leap Slam', key: 'Q', type: SpellType.Leap, range: 180, mana: 20, cd: 3.5, dmg: 3, aoeR: 60, color: '#ff3322' },
       { name: 'Blood Rage', key: 'Space', type: SpellType.Ultimate, ultCharge: 80, color: '#ff2222', mana: 0, cd: 0 },
@@ -512,7 +514,8 @@ export const CLASSES: Record<string, ClassDefInput> = {
     hp: 7, moveSpeed: 210, maxMana: 80, manaRegen: 12,
     passive: { name: 'Inner Peace', desc: '25% chance to dodge attacks' },
     spells: [
-      { name: 'Chi Blast', key: 'LMB', type: SpellType.Projectile, dmg: 1, speed: 500, radius: 8, mana: 3, cd: 0.15, life: 0.5, color: '#eedd88', trail: '#ccaa44' },
+      { name: 'Chi Combo', key: 'LMB', type: SpellType.Cone, dmg: 1, range: 60, mana: 3, cd: 0.2, angle: 1.2, color: '#eedd88',
+        combo: { steps: 3, timeout: 1.5, dmgScale: [0.8, 1.2, 2.5], effects: { 3: { stun: 0.5, aoeR: 40 } } } },
       { name: 'Flying Kick', key: 'RMB', type: SpellType.Leap, range: 180, mana: 12, cd: 2, dmg: 4, aoeR: 55, color: '#ccaa44' },
       { name: 'Chi Burst', key: 'Q', type: SpellType.Zone, dmg: 0, mana: 15, cd: 6, radius: 40, duration: 3, tickRate: 0.8, heal: 2, color: '#ffffcc' },
       { name: 'Thousand Fists', key: 'Space', type: SpellType.Ultimate, ultCharge: 80, color: '#eedd88', mana: 0, cd: 0 },
@@ -546,7 +549,8 @@ export const CLASSES: Record<string, ClassDefInput> = {
     desc: 'Blade dancer. Kill-chain mobility.',
     passive: { name: 'Kill Rush', desc: 'Kills within 1.5s of Shadow Step reset its cooldown; kills grant +10% speed for 3s' },
     spells: [
-      { name: 'Blade Slash', key: 'LMB', type: SpellType.Cone, dmg: 2.5, range: 55, mana: 3, cd: 0.3, angle: 1.2, color: '#cc3355' },
+      { name: 'Blade Chain', key: 'LMB', type: SpellType.Cone, dmg: 2.5, range: 55, mana: 3, cd: 0.3, angle: 1.2, color: '#cc3355',
+        combo: { steps: 4, timeout: 1.8, dmgScale: [0.8, 1.0, 1.5, 3.0], effects: { 4: { aoeR: 60, stun: 0.3 } } } },
       { name: 'Shadow Step', key: 'RMB', type: SpellType.Leap, range: 140, mana: 12, cd: 2.5, dmg: 2, aoeR: 45, color: '#aa2244' },
       { name: 'Blade Toss', key: 'Q', type: SpellType.Barrage, dmg: 1.5, speed: 450, radius: 6, mana: 20, cd: 6, count: 5, spread: 0.5, life: 0.8, color: '#cc3355', trail: '#881133' },
       { name: 'Thousand Cuts', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#aa2244', mana: 0, cd: 0 },

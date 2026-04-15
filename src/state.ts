@@ -285,6 +285,7 @@ function normalizeSpellDef(input: SpellDefInput): SpellDef {
     aoeR: input.aoeR ?? 0,
     heal: input.heal ?? 0,
     ultCharge: input.ultCharge ?? 0,
+    combo: input.combo,
   };
 }
 
@@ -370,6 +371,9 @@ export function createPlayer(idx: number, clsKey: string): Player {
     fullRotationTimer: 0,
     fullRotationSpells: 0,
     fullRotationBuff: 0,
+    comboChainCount: 0,
+    comboChainTimer: 0,
+    comboChainSlot: -1,
     burnSpread: false,
     magmaArmor: false,
     fireZoneOnExplode: false,

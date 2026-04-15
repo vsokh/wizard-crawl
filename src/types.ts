@@ -97,6 +97,14 @@ export interface SpellDef {
   aoeR: number;
   heal: number;
   ultCharge: number;
+  combo?: {
+    steps: number;          // Total combo hits (2-4)
+    timeout: number;        // Reset window in seconds
+    dmgScale: number[];     // Damage multiplier per step [0.8, 1.2, 2.5]
+    effects?: {             // Per-step bonus effects (keyed by step number, 1-indexed)
+      [step: number]: { stun?: number; aoeR?: number; slow?: number; knockback?: number }
+    }
+  };
 }
 
 /** Partial spell definition as written in CLASSES constants (many fields optional) */
@@ -252,6 +260,11 @@ export interface Player {
   fullRotationTimer: number;
   fullRotationSpells: number;
   fullRotationBuff: number;
+
+  // Combo chain state
+  comboChainCount: number;     // Current combo step (0 = no active chain)
+  comboChainTimer: number;     // Time since last combo hit (resets chain at timeout)
+  comboChainSlot: number;      // Which spell slot the active combo is on (-1 = none)
 
   // Class-specific upgrade flags
   burnSpread: boolean;

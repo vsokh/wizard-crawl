@@ -778,6 +778,40 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     spawnText(state, p.x, p.y - 15, 'ECHO!', '#ffaa44');
   }
 
+  // ── Combo Chain: advance combo step, apply damage scaling ──
+  let comboDmgMul = 1;
+  const comboDef = def.combo;
+  if (comboDef) {
+    // Check if continuing an active combo on the same slot
+    if (p.comboChainSlot === idx && p.comboChainCount > 0 && p.comboChainTimer < comboDef.timeout) {
+      // Advance to next step
+      p.comboChainCount++;
+    } else {
+      // Start new combo (first hit or different slot or timed out)
+      p.comboChainCount = 1;
+    }
+    p.comboChainSlot = idx;
+    p.comboChainTimer = 0; // Reset timer on each hit
+
+    // Apply damage scaling for current step
+    const stepIdx = p.comboChainCount - 1; // 0-indexed into dmgScale array
+    if (stepIdx < comboDef.dmgScale.length) {
+      comboDmgMul = comboDef.dmgScale[stepIdx];
+    }
+
+    // Show combo step text
+    if (p.comboChainCount > 1) {
+      const stepColor = p.comboChainCount >= comboDef.steps ? '#ffaa00' : '#ffcc88';
+      spawnText(state, p.x, p.y - 25, `${p.comboChainCount}/${comboDef.steps}`, stepColor);
+    }
+
+    // Check if combo is complete (reached final step)
+    if (p.comboChainCount >= comboDef.steps) {
+      p.comboChainCount = 0; // Reset after completing the chain
+      p.comboChainSlot = -1;
+    }
+  }
+
   // Spell Weaving: alternating LMB/RMB gives +25% dmg per swap (max 3 stacks)
   if (p.spellWeaving && (idx === 0 || idx === 1)) {
     if (p.lastSpellSlot !== -1 && p.lastSpellSlot !== idx && (p.lastSpellSlot === 0 || p.lastSpellSlot === 1)) {
@@ -805,10 +839,27 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     }
   }
 
-  // Temporarily boost def.dmg for spell weaving and echo multipliers
+  // Temporarily boost def.dmg for combo chain, spell weaving, and echo multipliers
   const origDmg = def.dmg;
-  if (spellWeaveMul > 1) {
-    def.dmg = Math.ceil(def.dmg * spellWeaveMul);
+  const totalMul = comboDmgMul * spellWeaveMul;
+  if (totalMul !== 1) {
+    def.dmg = Math.ceil(def.dmg * totalMul);
+  }
+
+  // Apply combo chain per-step effects
+  let origStun = def.stun;
+  let origAoeR = def.aoeR;
+  let comboEffectsApplied = false;
+  if (comboDef?.effects) {
+    // Use the step that was just fired (before reset). If chain completed, use the final step.
+    const firedStep = comboDmgMul !== 1 ? (p.comboChainCount === 0 ? comboDef.steps : p.comboChainCount) : 0;
+    const stepEffects = comboDef.effects[firedStep];
+    if (stepEffects) {
+      comboEffectsApplied = true;
+      if (stepEffects.stun) def.stun = Math.max(def.stun, stepEffects.stun);
+      if (stepEffects.aoeR) def.aoeR = Math.max(def.aoeR, stepEffects.aoeR);
+      if (stepEffects.slow) def.slow = Math.max(def.slow, stepEffects.slow);
+    }
   }
 
   // ── CLASS-SPECIFIC Q ABILITIES ──
@@ -1351,8 +1402,12 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     }, 500);
   }
 
-  // Restore def.dmg after temporary spell weaving boost
+  // Restore def.dmg and combo effects after temporary boosts
   def.dmg = origDmg;
+  if (comboEffectsApplied) {
+    def.stun = origStun;
+    def.aoeR = origAoeR;
+  }
 }
 
 // ═══════════════════════════════════
