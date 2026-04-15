@@ -14,8 +14,9 @@ import {
   WAVE_PHYSICS,
   DUNGEON_TIMING,
   GAME_OVER_DELAY_MS,
+  CD_FLOORS,
 } from '../constants';
-import { Enemy, EnemyView, GamePhase, NetworkMode, PickupType, SfxName } from '../types';
+import { Enemy, EnemyView, GamePhase, NetworkMode, PickupType, SfxName, SpellType } from '../types';
 import { castSpell, castChargedSpell, castSpellSilent, castUltimate, damageEnemy, switchStance } from './combat';
 
 /** Callback set by main.ts to break circular dep with upgrades module */
@@ -105,6 +106,13 @@ export function updatePlayers(state: GameState, dt: number): void {
       const chargeDef = p.cls.spells[p._chargeSlot];
       if (chargeDef && chargeDef.chargeSlow) {
         ms *= chargeDef.chargeSlow;
+      }
+    }
+    // Channel slow: reduce speed while channeling
+    if (p.channeling && p.channelSlot !== undefined) {
+      const chDef = p.cls.spells[p.channelSlot];
+      if (chDef && chDef.channelSlow !== undefined) {
+        ms *= chDef.channelSlow;
       }
     }
     let mvx = (input.mx || 0) * ms;
@@ -225,6 +233,99 @@ export function updatePlayers(state: GameState, dt: number): void {
     // ── SPELL CASTING ──
     const sd = p.cls.spells;
 
+    // ── CHANNELING UPDATE ──
+    if (p.channeling && p.channelSlot !== undefined) {
+      const chSlot = p.channelSlot;
+      const chDef = sd[chSlot];
+      if (!chDef || !chDef.channel) {
+        // Invalid channel state — reset
+        p.channeling = false;
+        p.channelTimer = 0;
+        p.channelSlot = undefined;
+        p.channelAngle = undefined;
+      } else {
+        p.channelTimer = (p.channelTimer || 0) + dt;
+
+        // Determine if the cast key is still held
+        const slotHeld = (chSlot === 0 && input.shoot)
+          || (chSlot === 1 && input.shoot2)
+          || (chSlot === 2 && input.ability)
+          || (chSlot === 3 && input.ult);
+
+        // Channel ticks: deal damage at intervals during sustained channels
+        if (chDef.channelTicks && chDef.channelTicks > 0) {
+          const tickInterval = chDef.channel / chDef.channelTicks;
+          const prevTicks = Math.floor(((p.channelTimer || 0) - dt) / tickInterval);
+          const currTicks = Math.floor((p.channelTimer || 0) / tickInterval);
+          if (currTicks > prevTicks) {
+            const progress = Math.min(1, (p.channelTimer || 0) / chDef.channel);
+            const scaledDmg = chDef.dmg * (1 + ((chDef.channelScale || 1) - 1) * progress);
+            if (chDef.type === SpellType.Beam) {
+              const beam = state.beams.acquire();
+              if (beam) {
+                beam.x = p.x; beam.y = p.y;
+                beam.angle = p.channelAngle ?? p.angle;
+                beam.range = chDef.range || 200;
+                beam.width = (chDef.width || 3) * (1 + progress * 0.5);
+                beam.color = chDef.color;
+                beam.life = tickInterval * 0.9;
+                const cos = Math.cos(beam.angle);
+                const sin = Math.sin(beam.angle);
+                const step = 20;
+                for (let d = 0; d < beam.range; d += step) {
+                  const bx = p.x + cos * d;
+                  const by = p.y + sin * d;
+                  const nearby = state.enemyGrid.queryArea(bx, by, step);
+                  for (const ei of nearby) {
+                    const e = state.enemies.at(ei);
+                    if (!e.alive) continue;
+                    if ((e.x - bx) ** 2 + (e.y - by) ** 2 < step * step) {
+                      damageEnemy(state, e, Math.ceil(scaledDmg), p.idx);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // Channel completion or key release
+        if (!slotHeld || (p.channelTimer || 0) >= chDef.channel) {
+          const progress = Math.min(1, (p.channelTimer || 0) / chDef.channel);
+
+          // Non-tick channels (charge-and-release): fire the spell on completion with scaled damage
+          if (!chDef.channelTicks) {
+            const scaledDmg = chDef.dmg * (1 + ((chDef.channelScale || 1) - 1) * progress);
+            const origDmg = chDef.dmg;
+            const origMana = chDef.mana;
+            (chDef as any).dmg = Math.ceil(scaledDmg);
+            (chDef as any).mana = 0; // already deducted at channel start
+            p.channeling = false;
+            castSpell(state, p, chSlot, p.channelAngle ?? p.angle);
+            (chDef as any).dmg = origDmg;
+            (chDef as any).mana = origMana;
+          }
+
+          // Set cooldown (deferred from channel start)
+          let cd = chDef.cd;
+          if (p.bloodlust && p._bloodlustStacks > 0) {
+            const speedBonus = Math.min(p._bloodlustStacks * 0.05, COMBAT.BLOODLUST_SPEED_CAP);
+            cd = cd / (1 + speedBonus);
+          }
+          if (p.fullRotationBuff > 0) cd = cd / 3;
+          p.cd[chSlot] = Math.max(CD_FLOORS[chSlot] ?? 0, cd);
+
+          // Clear channeling state
+          p.channeling = false;
+          p.channelTimer = 0;
+          p.channelSlot = undefined;
+          p.channelAngle = undefined;
+        }
+      }
+    }
+
+    // Don't cast new spells while channeling
+    if (!p.channeling) {
     // Primary (LMB) — with charge-up support
     const lmbDef = sd[0];
     if (lmbDef.chargeTime && lmbDef.chargeTime > 0) {
@@ -343,6 +444,7 @@ export function updatePlayers(state: GameState, dt: number): void {
       }
     }
     if (!input.ult) state.keys[`_r${p.idx}`] = false;
+    } // end !channeling guard
 
     // ── PASSIVES ──
 

@@ -142,6 +142,12 @@ export interface SpellDef {
     dmgBurst?: number;
     healBurst?: number;
   };
+  // Channeled casting
+  channel?: number;        // Channel duration in seconds (0.5-4.0)
+  channelSlow?: number;    // Movement speed multiplier while channeling (0-1.0, where 0 = rooted)
+  channelScale?: number;   // Damage multiplier at full channel (1.0-4.0)
+  channelTicks?: number;   // For sustained channels: number of damage ticks during channel
+  channelBreak?: number;   // Damage threshold to break channel (0 = unbreakable)
 }
 
 /** Partial spell definition as written in CLASSES constants (many fields optional) */
@@ -276,6 +282,12 @@ export interface Player {
   xpToNext: number;
   level: number;
   takenUpgrades: Map<number, number>;
+
+  // Channeling state
+  channeling?: boolean;      // Currently channeling an ability
+  channelTimer?: number;     // Time spent channeling (seconds)
+  channelSlot?: number;      // Which spell slot is being channeled (0-3)
+  channelAngle?: number;     // Locked aim angle at channel start
 
   // Upgrade-applied properties
   vampirism: number;

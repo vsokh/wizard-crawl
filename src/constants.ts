@@ -392,7 +392,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
     hp: 7, moveSpeed: 190, maxMana: 100, manaRegen: 14,
     passive: { name: 'Static', desc: 'Every 4th hit stuns the target for 0.5s' },
     spells: [
-      { name: 'Lightning', key: 'LMB', type: SpellType.Beam, dmg: 2, range: 320, mana: 7, cd: 0.28, width: 3, color: '#cc88ff', trail: '#aa55ff' },
+      { name: 'Lightning', key: 'LMB', type: SpellType.Beam, dmg: 2, range: 320, mana: 7, cd: 0.28, width: 3, color: '#cc88ff', trail: '#aa55ff', channel: 1.5, channelSlow: 0.5, channelScale: 2.5, channelTicks: 5, channelBreak: 3 },
       { name: 'Ball Zap', key: 'RMB', type: SpellType.Projectile, dmg: 2, speed: 140, radius: 16, mana: 18, cd: 3, life: 3.5, zap: 75, zapRate: 0.45, color: '#bb66ff', trail: '#9944dd' },
       { name: 'Thunder', key: 'Q', type: SpellType.AoeDelayed, dmg: 3, mana: 28, cd: 7, delay: 0.5, radius: 65, stun: 1, color: '#ffcc44' },
       { name: 'Storm Fury', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#ffcc44', mana: 0, cd: 0 },

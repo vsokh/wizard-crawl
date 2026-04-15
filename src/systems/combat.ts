@@ -612,6 +612,22 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
   netSfx(state, SfxName.Hit);
   spawnText(state, p.x, p.y - 20, `-${dmg}`, '#ff4444');
 
+  // Channel break: interrupt channel if damage exceeds threshold
+  if (p.channeling && p.channelSlot !== undefined) {
+    const chDef = p.cls.spells[p.channelSlot];
+    if (chDef && chDef.channelBreak && chDef.channelBreak > 0 && dmg >= chDef.channelBreak) {
+      // Partial cooldown refund: 50% of remaining channel time mapped to cooldown reduction
+      const progress = Math.min(1, (p.channelTimer || 0) / (chDef.channel || 1));
+      const refundedCd = chDef.cd * (1 - progress) * 0.5;
+      p.cd[p.channelSlot] = Math.max(0, chDef.cd - refundedCd);
+      p.channeling = false;
+      p.channelTimer = 0;
+      p.channelSlot = undefined;
+      p.channelAngle = undefined;
+      spawnText(state, p.x, p.y - 30, 'INTERRUPTED', '#ff8844');
+    }
+  }
+
   // Thorns
   if (p.thorns && attacker && attacker.alive !== undefined) {
     attacker.hp -= p.thorns;
@@ -694,6 +710,12 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
       netSfx(state, SfxName.Pickup);
       return;
     }
+
+    // Clear channeling on death
+    p.channeling = false;
+    p.channelTimer = 0;
+    p.channelSlot = undefined;
+    p.channelAngle = undefined;
 
     p.alive = false;
     p._animDeathFade = 1.0;
@@ -905,6 +927,17 @@ function classSfx(clsKey: string): SfxName {
 export function castSpell(state: GameState, p: Player, idx: number, angle: number): void {
   const def = p.cls.spells[idx];
   p.mana -= def.mana;
+
+  // Channel start: begin channeling instead of instant cast
+  if (def.channel && !p.channeling) {
+    p.channeling = true;
+    p.channelTimer = 0;
+    p.channelSlot = idx;
+    p.channelAngle = angle;
+    // Mana already deducted above. Don't set cooldown yet — it starts when channel ends.
+    return;
+  }
+
   // Warlock Dark Pact: refund 30% mana cost but pay HP instead
   if (p.clsKey === 'warlock' && def.mana > 0) {
     const refund = Math.floor(def.mana * COMBAT.WARLOCK_MANA_REFUND);
