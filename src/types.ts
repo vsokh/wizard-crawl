@@ -97,6 +97,24 @@ export interface SpellDef {
   aoeR: number;
   heal: number;
   ultCharge: number;
+  // Mark/detonate system
+  applyMark?: {
+    name: string;
+    duration: number;
+    maxStacks?: number;
+    visual?: string;
+  };
+  detonateMark?: {
+    name: string;
+    dmgPerStack: number;
+    aoeOnDetonate?: number;
+    spreadOnDetonate?: boolean;
+    effectOnDetonate?: {
+      stun?: number;
+      slow?: number;
+      heal?: number;
+    };
+  };
 }
 
 /** Partial spell definition as written in CLASSES constants (many fields optional) */
@@ -416,6 +434,12 @@ export interface Enemy {
   // Soulbinder mark expiry timestamp
   _soulMark: number;
 
+  // Generic mark/detonate system
+  _markName: string;
+  _markStacks: number;
+  _markTimer: number;
+  _markOwner: number;
+
   // Network interpolation (guest only)
   _targetX?: number;
   _targetY?: number;
@@ -453,6 +477,9 @@ export interface Spell {
   _reversed: boolean;
   _bounces: number;
   _slot: number;
+  // Mark/detonate carried from def
+  applyMark?: SpellDef['applyMark'];
+  detonateMark?: SpellDef['detonateMark'];
 }
 
 export interface Particle {
