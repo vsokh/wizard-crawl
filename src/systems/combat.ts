@@ -644,6 +644,17 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
   if (p._rage > 0) reducedDmg = Math.ceil(reducedDmg * 2);
   // Cursed: damage taken multiplier
   if (p.damageTakenMul && p.damageTakenMul !== 1) reducedDmg = Math.ceil(reducedDmg * p.damageTakenMul);
+  // Warden Bastion: allies inside a Warden-owned Bastion zone take reduced damage.
+  // Warden is the only class with a Zone-type spell, so owner.clsKey === 'warden' is sufficient.
+  for (const z of state.zones) {
+    if (!z || z.duration <= 0) continue;
+    const owner = state.players[z.owner];
+    if (!owner || owner.clsKey !== 'warden') continue;
+    if (dist(p.x, p.y, z.x, z.y) < z.radius) {
+      reducedDmg = Math.ceil(reducedDmg * COMBAT.BASTION_ALLY_DR_MULT);
+      break;
+    }
+  }
   const dmg = Math.max(1, reducedDmg - (p.armor || 0) - (p._formArmor || 0));
 
   p.hp -= dmg;

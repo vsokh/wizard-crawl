@@ -177,6 +177,7 @@ export const COMBAT = {
   SPLITTER_ANGLE: 0.8,
   CHAIN_DMG_MULT: 0.5,
   BULWARK_DMG_MULT: 0.75,
+  BASTION_ALLY_DR_MULT: 0.8,  // Warden Bastion: allies inside zone take 20% less damage
   ARCANIST_ECHO_CHANCE: 0.25,
   COMBO_STUN_DURATION: 0.5,
   WARLOCK_MANA_REFUND: 0.3,
