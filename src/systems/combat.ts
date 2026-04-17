@@ -898,6 +898,24 @@ export function detonateMarks(
   spawnParticles(state, e.x, e.y, color, 12, 0.5);
   spawnShockwave(state, e.x, e.y, det.aoeOnDetonate || 40, color);
 
+  // Visual + audio feedback (task #206)
+  const bigWaveR = Math.min(140, 60 + 25 * stacks);
+  spawnShockwave(state, e.x, e.y, bigWaveR, color);
+  if (det.aoeOnDetonate && det.aoeOnDetonate > 0) {
+    spawnShockwave(state, e.x, e.y, det.aoeOnDetonate, 'rgba(255,255,255,.25)');
+  }
+  const burstCount = Math.min(32, 8 + 6 * stacks);
+  spawnParticles(state, e.x, e.y, color, burstCount, 0.9);
+  spawnParticles(state, e.x, e.y, '#ffffff', 6, 1.1);
+  shake(state, Math.min(3.5, 1.2 + 0.6 * stacks));
+  const h = (markColor.startsWith('#') ? markColor.slice(1) : markColor).padEnd(6, '0');
+  const fr = parseInt(h.substring(0, 2), 16) || 255;
+  const fg = parseInt(h.substring(2, 4), 16) || 255;
+  const fb = parseInt(h.substring(4, 6), 16) || 255;
+  flashScreen(state, 0.12, `${fr},${fg},${fb}`);
+  netSfx(state, SfxName.Boom);
+  netSfx(state, SfxName.Zap);
+
   if (det.aoeOnDetonate && det.aoeOnDetonate > 0) {
     const aoeCandidates = state.enemyGrid.queryArea(e.x, e.y, det.aoeOnDetonate);
     for (const aidx of aoeCandidates) {
