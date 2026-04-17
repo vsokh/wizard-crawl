@@ -181,7 +181,7 @@ chargeLevel?: number;      // 0.0-1.0, computed as channelTimer / spell.chargeTi
 
 **Existing classes to retrofit:**
 - **Ranger** — LMB Power Shot gains charge-up. Tap for 1.0 dmg quick shot. Hold 1.2s for 4.5 dmg piercing sniper shot. Move at 0.5x while charging. This changes Ranger from "machine gun while running" to "find an angle, charge, release, reposition."
-- **Warlock** — RMB Shadow Bolt gains a 0.8s charge for 2x damage + AOE explosion. Since Warlock already has highest base RMB damage (3), a charged Shadow Bolt at 6 dmg with an explosion is devastating but requires commitment.
+- **Warlock** — LMB Shadow Bolt gains a 0.8s charge (chargeSlow 0.5) that scales damage from 1.5 (tap) to 6.0 (full) with a 30-radius AOE explosion on release. A charged Shadow Bolt is devastating but requires commitment. (Note: charge-up lives on the primary-attack slot (LMB) for consistency with Ranger and Cannoneer — an intentional deviation from this doc's original RMB suggestion, now reconciled.)
 
 **New class identity:**
 - **Cannoneer** (see Section 3 of LoL research) — LMB is a charge-up power shot with a 4-shot ammo magazine (see Mechanic 7). The 4th shot always deals 1.5x regardless of charge.
