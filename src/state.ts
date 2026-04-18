@@ -616,6 +616,18 @@ export function shake(state: GameState, intensity: number): void {
   state.shakeIntensity = Math.max(state.shakeIntensity, intensity);
 }
 
+/** Acquire a local beam and, when hosting, queue it for guest replay. */
+export function spawnBeam(
+  state: GameState, x: number, y: number, angle: number,
+  range: number, width: number, color: string, life: number = 0.15
+): void {
+  const b = state.beams.acquire();
+  if (b) { b.x = x; b.y = y; b.angle = angle; b.range = range; b.width = width; b.color = color; b.life = life; }
+  if (state.mode === NetworkMode.Host) {
+    state.pendingFx.push({ t: 'b', x: ~~x, y: ~~y, c: color, a: angle, mr: range, w: width, l: life });
+  }
+}
+
 /** Play sfx locally and queue it for guest when hosting */
 export function netSfx(state: GameState, name: SfxName): void {
   sfx(name);

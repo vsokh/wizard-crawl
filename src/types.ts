@@ -893,15 +893,18 @@ export interface NetStatePillarData {
 }
 
 export interface NetFxEvent {
-  t: 'p' | 't' | 'sw' | 's';  // particle, text, shockwave, sfx
+  t: 'p' | 't' | 'sw' | 's' | 'b';  // particle, text, shockwave, sfx, beam
   x: number;
   y: number;
   c: string;  // color
   n?: number;  // count (particles)
   s?: number;  // scale (particles)
   tx?: string; // text content
-  mr?: number; // maxR (shockwave)
+  mr?: number; // maxR (shockwave) / range (beam)
   sn?: string; // sfx name
+  a?: number;  // angle (beam)
+  w?: number;  // width (beam)
+  l?: number;  // life (beam)
 }
 
 export interface NetStateMessage {

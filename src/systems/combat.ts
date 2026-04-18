@@ -9,6 +9,7 @@ import {
   spawnParticles,
   spawnText,
   spawnShockwave,
+  spawnBeam,
   shake,
   flashScreen,
   netSfx,
@@ -1362,8 +1363,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     }
     netSfx(state, sType);
   } else if (def.type === SpellType.Beam) {
-    const beamFx = state.beams.acquire();
-    if (beamFx) { beamFx.x = p.x; beamFx.y = p.y; beamFx.angle = angle; beamFx.range = def.range; beamFx.width = def.width; beamFx.color = def.color; beamFx.life = 0.15; }
+    spawnBeam(state, p.x, p.y, angle, def.range, def.width, def.color, 0.15);
     // Beam hit detection
     const beamDmg = Math.round(getEffectiveSpellDmg(p, idx) * echoDmgMul);
     let primaryTarget: EnemyView | null = null;
@@ -1423,11 +1423,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     const coneDmg = Math.round(getEffectiveSpellDmg(p, idx) * echoDmgMul);
     // Visual: narrow cones (Bladecaller thrust) render as a beam flash; wide cones use particle spray.
     if (def.angle < 0.5) {
-      const thrust = state.beams.acquire();
-      if (thrust) {
-        thrust.x = p.x; thrust.y = p.y; thrust.angle = angle; thrust.range = def.range;
-        thrust.width = 4; thrust.color = def.color; thrust.life = 0.12;
-      }
+      spawnBeam(state, p.x, p.y, angle, def.range, 4, def.color, 0.12);
       for (let d = 20; d < def.range; d += 18) {
         spawnParticles(state, p.x + Math.cos(angle) * d, p.y + Math.sin(angle) * d, def.color, 2, 0.25);
       }
