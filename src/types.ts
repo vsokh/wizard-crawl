@@ -479,6 +479,8 @@ export interface Player {
 
   // Cannoneer state
   _cannonShots: number;        // cannoneer shot counter
+  _siegeTimer: number;         // Siege Mode remaining duration (0 = inactive)
+  _siegeFireTimer: number;     // auto-fire tick accumulator during siege
 
   // Charge-up state
   _chargeLevel: number;     // 0.0-1.0 progress

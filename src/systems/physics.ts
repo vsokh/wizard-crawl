@@ -131,6 +131,10 @@ export function updatePlayers(state: GameState, dt: number): void {
       // Record afterimage at ~60fps-ish rate
       p._rollGhosts.push({ x: p.x, y: p.y, angle: p.angle, age: 0 });
       if (p._rollGhosts.length > 6) p._rollGhosts.shift();
+    } else if (p._siegeTimer > 0) {
+      // Siege Mode: rooted in place
+      p.vx = 0;
+      p.vy = 0;
     } else {
       p.vx = mvx;
       p.vy = mvy;

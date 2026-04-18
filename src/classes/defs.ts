@@ -260,15 +260,15 @@ export const CLASSES: Record<string, ClassDefInput> = {
   },
   cannoneer: {
     name: 'Cannoneer', color: '#aa7733', glow: '#885522',
-    desc: 'Artillery. Heavy power shots with no escape — you commit to the blast.',
+    desc: 'Heavy artillery. Devastating damage in both target-kill and wave-clear, but movement is slow and escape is weak.',
     hp: 10, moveSpeed: 160, maxMana: 90, manaRegen: 12,
     passive: { name: 'Heavy Caliber', desc: 'Every 4th shot deals 2x damage with double explosion radius' },
     spells: [
       { name: 'Power Shot', key: 'LMB', type: SpellType.Projectile, dmg: 3, speed: 500, radius: 11, mana: 10, cd: 0.5, life: 1.5, explode: 40, pierce: 1, color: '#aa7733', trail: '#885522',
         chargeTime: 1.0, chargeSlow: 0.4, chargeMinDmg: 1.0, chargeMaxDmg: 8.0, chargePierce: 1, chargeRadius: 25 },
-      { name: 'Concussive Shell', key: 'RMB', type: SpellType.AoeDelayed, dmg: 2, mana: 18, cd: 3.5, delay: 0.4, radius: 60, stun: 0.8, color: '#cc9944' },
-      { name: 'Mortar Strike', key: 'Q', type: SpellType.AoeDelayed, dmg: 8, mana: 28, cd: 7, delay: 0.9, radius: 95, color: '#dd8822' },
-      { name: 'Artillery Barrage', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#885522', mana: 0, cd: 0 },
+      { name: 'Cannonball', key: 'RMB', type: SpellType.Projectile, dmg: 5, speed: 420, radius: 10, mana: 16, cd: 3.5, life: 2.2, pierce: 99, color: '#dd8833', trail: '#aa5522' },
+      { name: 'Shrapnel Burst', key: 'Q', type: SpellType.Ultimate, ultCharge: 0, mana: 24, cd: 5, color: '#dd8833' },
+      { name: 'Siege Mode', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#885522', mana: 0, cd: 0 },
     ],
   },
   soulbinder: {

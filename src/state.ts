@@ -501,6 +501,8 @@ export function createPlayer(idx: number, clsKey: string): Player {
     _rollVy: 0,
     _rollGhosts: [],
     _cannonShots: 0,
+    _siegeTimer: 0,
+    _siegeFireTimer: 0,
     _chargeLevel: 0,
     _chargeSlot: -1,
     _summonCount: 0,
