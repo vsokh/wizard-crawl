@@ -2508,6 +2508,53 @@ export function drawWizard(ctx: CanvasRenderingContext2D, state: GameState): voi
       ctx.stroke();
     }
 
+    // ── Discharge shield field ──
+    if (p._dischargeShield > 0) {
+      const maxDur = 0.5;
+      const life = Math.min(1, p._dischargeShield / maxDur);
+      const shieldR = p.cls.spells[2]?.range || 180;
+      const pulse = 0.7 + 0.3 * Math.sin(state.time * 18);
+
+      // Translucent fill (radial gradient — fainter at center, brighter at rim)
+      const grd = ctx.createRadialGradient(p.x, p.y, shieldR * 0.25, p.x, p.y, shieldR);
+      grd.addColorStop(0, `rgba(204, 136, 255, ${0.05 * life})`);
+      grd.addColorStop(0.7, `rgba(204, 136, 255, ${0.14 * life})`);
+      grd.addColorStop(1, `rgba(204, 136, 255, ${0.28 * life * pulse})`);
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, shieldR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Outer rim
+      ctx.strokeStyle = `rgba(204, 136, 255, ${0.7 * life * pulse})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, shieldR, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Inner highlight ring
+      ctx.strokeStyle = `rgba(255, 255, 255, ${0.35 * life * pulse})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, shieldR - 3, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Static crackle along the perimeter (short random arcs)
+      ctx.strokeStyle = `rgba(255, 240, 255, ${0.45 * life})`;
+      ctx.lineWidth = 1;
+      const arcs = 6;
+      for (let i = 0; i < arcs; i++) {
+        const a0 = (state.time * 3 + i * Math.PI * 2 / arcs) % (Math.PI * 2);
+        const a1 = a0 + 0.25 + Math.random() * 0.15;
+        const r0 = shieldR + (Math.random() - 0.5) * 4;
+        const r1 = shieldR + (Math.random() - 0.5) * 4;
+        ctx.beginPath();
+        ctx.moveTo(p.x + Math.cos(a0) * r0, p.y + Math.sin(a0) * r0);
+        ctx.lineTo(p.x + Math.cos(a1) * r1, p.y + Math.sin(a1) * r1);
+        ctx.stroke();
+      }
+    }
+
     // ── Class-specific ultimate animation ──
     if (p._animUltTimer > 0) {
       drawUltimateAnim(ctx, p.x, p.y, p.clsKey, cls.color, cls.glow, state.time, p._animUltTimer / TIMING.ANIM_ULT);

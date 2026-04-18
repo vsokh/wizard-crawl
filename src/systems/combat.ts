@@ -1382,30 +1382,16 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
   } else if (def.type === SpellType.Nova) {
     spawnShockwave(state, p.x, p.y, def.range, def.color);
     spawnParticles(state, p.x, p.y, def.color, 20);
-    // Stormcaller Discharge: dominant player-centered expanding purple ring + bolts
+    // Stormcaller Discharge: charged static field around the caster — stuns,
+    // destroys incoming projectiles (via the shield timer checked in eProj), and
+    // detonates static marks as a bonus.
     if (p.clsKey === 'stormcaller') {
-      // Layered expanding rings — bright white core, mid purple, full-radius purple
+      p._dischargeShield = 0.5;
       spawnShockwave(state, p.x, p.y, def.range, '#cc88ff');
-      spawnShockwave(state, p.x, p.y, def.range * 0.65, '#bb66ff');
-      spawnShockwave(state, p.x, p.y, def.range * 0.3, '#ffffff');
-      // Radiating purple bolts
-      const boltCount = 12;
-      for (let i = 0; i < boltCount; i++) {
-        const ba = (i / boltCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
-        const bolt = state.beams.acquire();
-        if (bolt) {
-          bolt.x = p.x; bolt.y = p.y;
-          bolt.angle = ba;
-          bolt.range = def.range;
-          bolt.width = 3 + Math.random() * 2;
-          bolt.color = '#cc88ff';
-          bolt.life = 0.22;
-        }
-      }
-      spawnParticles(state, p.x, p.y, '#ffffff', 14, 1.1);
-      spawnParticles(state, p.x, p.y, '#cc88ff', 22, 1.4);
-      flashScreen(state, 0.2, '200,140,255');
-      shake(state, 5);
+      spawnParticles(state, p.x, p.y, '#cc88ff', 20, 1.1);
+      spawnParticles(state, p.x, p.y, '#ffffff', 10, 0.8);
+      flashScreen(state, 0.15, '200,140,255');
+      shake(state, 4);
       netSfx(state, SfxName.Zap);
     }
     let novaHealed = 0;

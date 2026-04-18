@@ -426,6 +426,7 @@ export function createPlayer(idx: number, clsKey: string): Player {
     _stormTimer: 0,
     _thunderGod: 0,
     _channelDetStacks: 0,
+    _dischargeShield: 0,
     blinkExplode: false,
     spellMirror: 0,
     raiseDead: 0,

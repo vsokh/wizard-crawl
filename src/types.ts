@@ -381,6 +381,7 @@ export interface Player {
   _stormTimer: number;
   _thunderGod: number;
   _channelDetStacks: number;
+  _dischargeShield: number;
   blinkExplode: boolean;
   spellMirror: number;
   raiseDead: number;

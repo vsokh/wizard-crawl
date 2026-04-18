@@ -188,6 +188,7 @@ export class Upgrades {
   stormShield: boolean = false;
   _thunderGod: number = 0;
   _channelDetStacks: number = 0;
+  _dischargeShield: number = 0;
   blinkExplode: boolean = false;
   spellMirror: number = 0;
   raiseDead: number = 0;

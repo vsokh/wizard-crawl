@@ -44,20 +44,32 @@ export function updateEProj(state: GameState, dt: number): void {
     }
 
     let hit = false;
+    // Stormcaller Discharge field: destroy any enemy projectile that enters the shield radius
     for (const pl of state.players) {
-      if (!pl.alive || pl.iframes > 0) continue;
-      if (dist(p.x, p.y, pl.x, pl.y) < WIZARD_SIZE + p.radius) {
-        // Paladin reflect shield: bounce projectile back instead of taking damage
-        if (pl._holyShield > 0 && pl.reflectShield) {
-          p.vx = -p.vx * 1.5;
-          p.vy = -p.vy * 1.5;
-          p.life = 3;
-          spawnParticles(state, p.x, p.y, '#ffddaa', 8, 0.6);
-          break; // exit player loop without setting hit
-        }
-        damagePlayer(state, pl, p.dmg);
+      if (!pl.alive || pl._dischargeShield <= 0) continue;
+      const shieldR = pl.cls.spells[2]?.range || 180;
+      if (dist(p.x, p.y, pl.x, pl.y) < shieldR + p.radius) {
+        spawnParticles(state, p.x, p.y, '#cc88ff', 6, 0.5);
         hit = true;
         break;
+      }
+    }
+    if (!hit) {
+      for (const pl of state.players) {
+        if (!pl.alive || pl.iframes > 0) continue;
+        if (dist(p.x, p.y, pl.x, pl.y) < WIZARD_SIZE + p.radius) {
+          // Paladin reflect shield: bounce projectile back instead of taking damage
+          if (pl._holyShield > 0 && pl.reflectShield) {
+            p.vx = -p.vx * 1.5;
+            p.vy = -p.vy * 1.5;
+            p.life = 3;
+            spawnParticles(state, p.x, p.y, '#ffddaa', 8, 0.6);
+            break; // exit player loop without setting hit
+          }
+          damagePlayer(state, pl, p.dmg);
+          hit = true;
+          break;
+        }
       }
     }
     for (const pl2 of state.pillars) {

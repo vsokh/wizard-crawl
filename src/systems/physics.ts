@@ -202,6 +202,8 @@ export function updatePlayers(state: GameState, dt: number): void {
       p._thunderGod = Math.max(0, p._thunderGod - dt);
       p.cd[1] = 0;
     }
+    // Discharge shield: tick down active-field timer
+    if (p._dischargeShield > 0) p._dischargeShield = Math.max(0, p._dischargeShield - dt);
 
     // Storm Shield: lightning strikes random nearby enemy every 1s
     if (p.stormShield) {
