@@ -43,6 +43,10 @@ import {
   BOSS_WAVE_XP,
 } from '../constants';
 import { createFriendlyEnemy } from './dungeon';
+import { dispatchCastUltimate, dispatchCastQAbility, dispatchDamageEnemy, dispatchKill } from '../classes/hooks';
+import '../classes/registry';
+import { dispatchSpell } from './spell-handlers';
+import './spell-handlers-builtin';
 
 // Pre-allocated scratch array to avoid per-frame filter() allocations
 let _aliveEnemies: EnemyView[] = [];
@@ -221,75 +225,26 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
     if (p.ultCharge >= (p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD)) p.ultReady = true;
   }
 
-  // Passive: Cryomancer frostbite (+1 dmg if slowed)
-  if (p && p.clsKey === 'cryomancer' && e.slowTimer > 0) {
-    e.hp -= 1;
-    spawnText(state, e.x, e.y - 15, '+1', '#88ddff');
-  }
+  // Per-class onDamageEnemy hooks (frostbite, echo, burn DOT, hex, soul mark, attunement, decay, heavy caliber).
+  if (p) dispatchDamageEnemy(state, p, e, dmg);
 
-  // Passive: Arcanist echo (20% chance to echo primary attack)
-  if (p && p.clsKey === 'arcanist' && Math.random() < COMBAT.ARCANIST_ECHO_CHANCE) {
-    castSpellSilent(state, p, 0, Math.atan2(e.y - p.y, e.x - p.x));
-  }
-
-  // Passive: burn DOT (pyromancer)
-  if (p && p.clsKey === 'pyromancer') {
-    e._burnTimer = (e._burnTimer || 0) + 2;
-    e._burnOwner = p.idx;
-  }
-
-  // Passive: Hexblade hex stacks — each hit adds a stack, 3+ stacks applies slow
-  if (p && p.clsKey === 'hexblade') {
-    e._hexStacks = (e._hexStacks || 0) + 1;
-    if (e._hexStacks >= 3) {
-      e.slowTimer = (e.slowTimer || 0) + 0.5;
-    }
-  }
-
-  // Passive: Hexblade hex mastery — all players deal +25% to hex-marked enemies
+  // Cross-class passive: Hexblade hex mastery — any player deals +25% to hex-marked enemies.
   if (e._hexStacks && e._hexStacks > 0) {
     const hexBonus = Math.max(1, Math.floor(dmg * 0.25));
     e.hp -= hexBonus;
     spawnText(state, e.x, e.y - 20, '+' + hexBonus, '#7755cc');
   }
 
-  // Passive: Warden mark — allies deal +1 damage to warden-marked enemies
+  // Cross-class passive: Warden mark — allies (non-warden) deal +1 to marked enemies.
   if (p && e._wardenMark && p.clsKey !== 'warden') {
     e.hp -= 1;
     spawnText(state, e.x, e.y - 20, '+1', '#5588aa');
   }
 
-  // Passive: Soulbinder soul mark — LMB marks enemies
-  if (p && p.clsKey === 'soulbinder') {
-    e._soulMark = state.time + 4;
-  }
-
-  // Passive: Soulbinder soul bond — allies deal +1 to soul-marked enemies
+  // Cross-class passive: Soulbinder soul bond — allies (non-soulbinder) deal +1 to soul-marked enemies.
   if (p && e._soulMark && e._soulMark > state.time && p.clsKey !== 'soulbinder') {
     e.hp -= 1;
     spawnText(state, e.x, e.y - 20, '+1', '#55aa88');
-  }
-
-  // Passive: Invoker elemental attunement — burning+slowed enemies take +1
-  if (p && p.clsKey === 'invoker' && (e._burnTimer > 0) && (e.slowTimer > 0)) {
-    e.hp -= 1;
-    spawnText(state, e.x, e.y - 20, '+1', '#cc8844');
-  }
-
-  // Passive: Voidweaver entropic decay — debuffed enemies take 15% more damage
-  if (p && p.clsKey === 'voidweaver' && ((e._burnTimer || 0) > 0 || (e.slowTimer || 0) > 0 || (e.stunTimer || 0) > 0)) {
-    const entropicBonus = Math.max(1, Math.floor(dmg * 0.15));
-    e.hp -= entropicBonus;
-    spawnText(state, e.x, e.y - 20, '+' + entropicBonus, '#aa44cc');
-  }
-
-  // Passive: Cannoneer heavy caliber — every 4th shot does 2x damage
-  if (p && p.clsKey === 'cannoneer') {
-    p._cannonShots = (p._cannonShots || 0) + 1;
-    if (p._cannonShots % 4 === 0) {
-      e.hp -= dmg; // extra damage (doubles it)
-      spawnText(state, e.x, e.y - 25, 'HEAVY!', '#aa7733');
-    }
   }
 
   // Mana on hit
@@ -385,37 +340,13 @@ export function damageEnemy(state: GameState, e: Enemy, rawDmg: number, pIdx: nu
         if (p.ultCharge >= (p.ultOverflow ? COMBAT.ULT_THRESHOLD_OVERFLOW : COMBAT.ULT_THRESHOLD)) p.ultReady = true;
       }
 
-      // Passive: Necro soul harvest
-      if (p.clsKey === 'necromancer') {
-        p.hp = Math.min(p.maxHp, p.hp + 0.5);
-        spawnText(state, p.x, p.y - 15, '+0.5 HP', '#44ff88');
-      }
+      // Per-class onKill hooks (necro soul harvest, bladecaller kill rush, voidweaver explode).
+      dispatchKill(state, p, e);
 
-      // Passive: Bladecaller kill rush — kills within 1.5s of Shadow Step reset its cd; kills grant speed boost
-      if (p.clsKey === 'bladecaller') {
-        if (p._lastShadowStep && state.time - p._lastShadowStep < 1.5) {
-          p.cd[1] = 0;
-          spawnText(state, p.x, p.y - 15, 'RESET!', '#cc3355');
-        }
-        p._rushSpeed = state.time + 3;
-      }
-
-      // Passive: Soulbinder — ally heals on marked kill
+      // Cross-class passive: Soulbinder — non-soulbinder players heal on marked kill.
       if (p.clsKey !== 'soulbinder' && e._soulMark && e._soulMark > state.time) {
         p.hp = Math.min(p.maxHp, p.hp + 0.5);
         spawnText(state, p.x, p.y - 15, '+0.5 HP', '#55aa88');
-      }
-
-      // Passive: Voidweaver — debuffed kills explode
-      if (p.clsKey === 'voidweaver' && ((e._burnTimer || 0) > 0 || (e.slowTimer || 0) > 0 || (e.stunTimer || 0) > 0)) {
-        for (const nearby of state.enemies) {
-          if (!nearby.alive || nearby === e || nearby._friendly) continue;
-          if (dist(e.x, e.y, nearby.x, nearby.y) < 60) {
-            damageEnemy(state, nearby, 1, p.idx);
-            spawnParticles(state, nearby.x, nearby.y, '#aa44cc', 4);
-          }
-        }
-        spawnShockwave(state, e.x, e.y, 60, 'rgba(170,70,200,.3)');
       }
 
       // Raise Dead: chance to convert killed enemy into friendly minion
@@ -1155,126 +1086,8 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
   }
 
   // ── CLASS-SPECIFIC Q ABILITIES ──
-  if (idx === 2) {
-    // Pyromancer: Meteor Shower — 3 scattered meteors + burn zones
-    if (p.clsKey === 'pyromancer') {
-      const wp = toWorld(state, state.mouseX, state.mouseY);
-      for (let i = 0; i < 3; i++) {
-        const ox = rand(-40, 40);
-        const oy = rand(-40, 40);
-        const meteorDelay = TIMING.ZONE_TICK + i * TIMING.METEOR_DELAY_STEP;
-        const meteorAoe = state.aoeMarkers.acquire();
-        if (meteorAoe) {
-          meteorAoe.x = wp.x + ox; meteorAoe.y = wp.y + oy; meteorAoe.radius = 50; meteorAoe.delay = meteorDelay;
-          meteorAoe.dmg = 2; meteorAoe.color = '#ff2200'; meteorAoe.owner = p.idx; meteorAoe.stun = 0; meteorAoe.age = 0;
-        }
-        // Burn zone after each meteor lands
-        setTimeout(() => {
-          const burnZone = state.zones.acquire();
-          if (burnZone) {
-            burnZone.x = wp.x + ox; burnZone.y = wp.y + oy; burnZone.radius = 35; burnZone.duration = 2;
-            burnZone.dmg = 1; burnZone.color = '#ff4400'; burnZone.owner = p.idx;
-            burnZone.slow = 0; burnZone.stun = 0; burnZone.tickRate = TIMING.ZONE_TICK; burnZone.tickTimer = 0; burnZone.age = 0;
-            burnZone.drain = 0; burnZone.heal = 0; burnZone.pull = 0; burnZone.freezeAfter = 0;
-          }
-        }, meteorDelay * 1000);
-      }
-      netSfx(state, SfxName.Fire);
-      return;
-    }
-    // Cryomancer: Frost Prison — strong slow + freeze after 1.5s
-    if (p.clsKey === 'cryomancer') {
-      const wp = toWorld(state, state.mouseX, state.mouseY);
-      const frostZone = state.zones.acquire();
-      if (frostZone) {
-        frostZone.x = wp.x; frostZone.y = wp.y; frostZone.radius = def.radius; frostZone.duration = def.duration;
-        frostZone.dmg = def.dmg; frostZone.color = def.color; frostZone.owner = p.idx;
-        frostZone.slow = 0.95; frostZone.stun = 0; frostZone.tickRate = def.tickRate; frostZone.tickTimer = 0; frostZone.age = 0;
-        frostZone.drain = 0; frostZone.heal = 0; frostZone.pull = 0; frostZone.freezeAfter = TIMING.FREEZE_DURATION;
-      }
-      netSfx(state, SfxName.Ice);
-      return;
-    }
-    // Necromancer: Death Harvest — drain + pull enemies toward center
-    if (p.clsKey === 'necromancer') {
-      const wp = toWorld(state, state.mouseX, state.mouseY);
-      const deathZone = state.zones.acquire();
-      if (deathZone) {
-        deathZone.x = wp.x; deathZone.y = wp.y; deathZone.radius = def.radius; deathZone.duration = def.duration;
-        deathZone.dmg = def.dmg; deathZone.color = def.color; deathZone.owner = p.idx;
-        deathZone.slow = def.slow || 0; deathZone.stun = 0; deathZone.tickRate = def.tickRate; deathZone.tickTimer = 0; deathZone.age = 0;
-        deathZone.drain = 0; deathZone.heal = 0; deathZone.pull = 30; deathZone.freezeAfter = 0;
-      }
-      netSfx(state, SfxName.Arcane);
-      return;
-    }
-    // Arcanist: Arcane Salvo — 5 homing projectiles
-    if (p.clsKey === 'arcanist') {
-      for (let i = 0; i < 5; i++) {
-        const sa = angle + (i - 2.5) * 0.12 + rand(-0.05, 0.05);
-        setTimeout(() => {
-          state.spells.push({
-            type: SpellType.Homing, dmg: def.dmg, speed: def.speed,
-            radius: def.radius || 7, life: 2, homing: 2.5,
-            color: def.color, trail: def.trail,
-            x: p.x + Math.cos(sa) * WIZARD_SIZE,
-            y: p.y + Math.sin(sa) * WIZARD_SIZE,
-            vx: Math.cos(sa) * def.speed,
-            vy: Math.sin(sa) * def.speed,
-            owner: p.idx, age: 0, zapTimer: 0, pierceLeft: 0,
-            zap: 0, zapRate: 0, slow: 0, drain: 0, explode: 0, burn: 0,
-            stun: 0, clsKey: p.clsKey, _reversed: false, _bounces: 0,
-            _slot: idx,
-          });
-          netSfx(state, SfxName.Arcane);
-        }, i * 80);
-      }
-      return;
-    }
-    // Paladin: Hallowed Ground — self-centered healing zone
-    if (p.clsKey === 'paladin') {
-      const healZone = state.zones.acquire();
-      if (healZone) {
-        healZone.x = p.x; healZone.y = p.y; healZone.radius = 100; healZone.duration = def.duration;
-        healZone.dmg = def.dmg; healZone.color = def.color; healZone.owner = p.idx;
-        healZone.slow = def.slow || 0; healZone.stun = 0; healZone.tickRate = def.tickRate; healZone.tickTimer = 0; healZone.age = 0;
-        healZone.drain = 0; healZone.heal = 2; healZone.pull = 0; healZone.freezeAfter = 0;
-      }
-      netSfx(state, SfxName.Pickup);
-      spawnParticles(state, p.x, p.y, '#ffffaa', 15);
-      return;
-    }
-    // Monk: Chi Burst — instant heal + knockback pulse
-    if (p.clsKey === 'monk') {
-      // Heal self (reads spell def so Zen Master 3× multiplier works)
-      const healAmt = def.heal || 3;
-      p.hp = Math.min(p.maxHp, p.hp + healAmt);
-      spawnText(state, p.x, p.y - 20, `+${healAmt} HP`, '#88ff88');
-      // Zen Master: also restore mana equal to heal amount
-      if (p.zenMana) {
-        p.mana = Math.min(p.maxMana, p.mana + healAmt);
-        spawnText(state, p.x, p.y - 35, `+${healAmt} MP`, '#88bbff');
-      }
-      // Knockback all enemies in range
-      const knockR = 80;
-      const knockForce = COMBAT.KNOCKBACK_FORCE;
-      for (const e of state.enemies) {
-        if (!e.alive) continue;
-        const d = dist(p.x, p.y, e.x, e.y);
-        if (d < knockR && d > 0) {
-          const knockAngle = Math.atan2(e.y - p.y, e.x - p.x);
-          e.x += Math.cos(knockAngle) * (knockForce / Math.max(d, 30)) * 3;
-          e.y += Math.sin(knockAngle) * (knockForce / Math.max(d, 30)) * 3;
-          damageEnemy(state, e, 1, p.idx);
-        }
-      }
-      spawnShockwave(state, p.x, p.y, knockR, 'rgba(255,255,200,.4)');
-      spawnParticles(state, p.x, p.y, '#eedd88', 20, 0.8);
-      netSfx(state, SfxName.Boom);
-      shake(state, 4);
-      return;
-    }
-  }
+  // All per-class Q overrides live in class hooks (castQAbility).
+  if (idx === 2 && dispatchCastQAbility(state, p, def, angle)) return;
 
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
@@ -1282,7 +1095,9 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
   const sy = p.y + sin * WIZARD_SIZE * 1.5;
   const sType = classSfx(p.clsKey);
 
-  if (def.type === SpellType.Projectile || def.type === SpellType.Homing) {
+  if (dispatchSpell(state, p, def, idx, angle, cos, sin)) {
+    // handler returned true — skip legacy chain
+  } else if (def.type === SpellType.Projectile || def.type === SpellType.Homing) {
     const spell = {
       ...spellToRuntime(def),
       x: sx, y: sy,
@@ -1442,15 +1257,6 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       aoeM.color = def.color; aoeM.owner = p.idx; aoeM.stun = def.stun || 0; aoeM.age = 0;
     }
     netSfx(state, SfxName.Arcane);
-  } else if (def.type === SpellType.Blink) {
-    const nx = clamp(p.x + cos * def.range, WIZARD_SIZE, ROOM_WIDTH - WIZARD_SIZE);
-    const ny = clamp(p.y + sin * def.range, WIZARD_SIZE, ROOM_HEIGHT - WIZARD_SIZE);
-    spawnParticles(state, p.x, p.y, def.color, 12);
-    p.x = nx;
-    p.y = ny;
-    spawnParticles(state, p.x, p.y, def.color, 12);
-    p.iframes = TIMING.IFRAME_BLINK;
-    netSfx(state, SfxName.Blink);
   } else if (def.type === SpellType.Barrage) {
     // Muzzle flash for barrage
     spawnParticles(state, p.x + cos * 15, p.y + sin * 15, def.color, 3, 0.3);
@@ -1622,52 +1428,8 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       p.mana = Math.min(p.maxMana, p.mana + def.mana * 0.5);
       spawnText(state, p.x, p.y - 20, 'NO TARGET', '#888888');
     }
-  } else if (def.type === SpellType.Ultimate && def.key === 'Q') {
-    // Special Q abilities that use Ultimate type
-    if (p.clsKey === 'druid') {
-      // Spirit Wolf: summon a wolf ally
-      const wolf = createFriendlyEnemy(state, p.x + cos * 40, p.y + sin * 40, p.idx);
-      wolf.type = '_wolf';
-      wolf.hp = 8;
-      wolf.maxHp = 8;
-      wolf._lifespan = 12;
-      if (p.packLeader) {
-        wolf.hp = 16;
-        wolf.maxHp = 16;
-        wolf._dmgMul = 2;
-      }
-      state.enemies.push(wolf);
-      spawnParticles(state, wolf.x, wolf.y, '#88aa66', 10);
-      if (p.packLeader) {
-        const wolf2 = createFriendlyEnemy(state, p.x - cos * 40, p.y - sin * 40, p.idx);
-        wolf2.type = '_wolf';
-        wolf2.hp = 16;
-        wolf2.maxHp = 16;
-        wolf2._dmgMul = 2;
-        wolf2._lifespan = 15;
-        state.enemies.push(wolf2);
-        spawnParticles(state, wolf2.x, wolf2.y, '#88aa66', 10);
-      }
-      netSfx(state, SfxName.Pickup);
-    } else if (p.clsKey === 'warlock') {
-      // Summon Imp: small ranged demon ally
-      let canSpawn = true;
-      if (p.demonicPact) {
-        const impCount = state.enemies.filter(e => e.alive && e._friendly && e.type === '_imp' && e._owner === p.idx).length;
-        if (impCount >= 3) canSpawn = false;
-      }
-      if (canSpawn) {
-        const imp = createFriendlyEnemy(state, p.x + cos * 40, p.y + sin * 40, p.idx);
-        imp.type = '_imp';
-        imp.hp = 5;
-        imp.maxHp = 5;
-        imp._lifespan = p.demonicPact ? 0 : 12;
-        state.enemies.push(imp);
-        spawnParticles(state, imp.x, imp.y, '#cc4466', 10);
-        netSfx(state, SfxName.Arcane);
-      }
-    }
   }
+  // Summon-style Q (druid spirit wolf, warlock imp, tidecaller elemental) are in class castQAbility hooks now.
 
   // Temporal Echo: fire a delayed copy at 50% damage
   if (p.temporalEcho && idx === 0 && (def.type === SpellType.Projectile || def.type === SpellType.Homing)) {
@@ -1719,467 +1481,7 @@ export function castUltimate(state: GameState, p: Player, angle: number): void {
     spawnText(state, p.x, p.y - 25, '+50% HP', '#88ff88');
   }
 
-  const pw = p.ultPower || 1;
-
-  if (p.clsKey === 'pyromancer') {
-    // Inferno: rain 8 meteors across the room with lingering burn zones
-    for (let i = 0; i < 8; i++) {
-      const mx = rand(60, ROOM_WIDTH - 60);
-      const my = rand(60, ROOM_HEIGHT - 60);
-      setTimeout(() => {
-        const ultAoe = state.aoeMarkers.acquire();
-        if (ultAoe) {
-          ultAoe.x = mx; ultAoe.y = my; ultAoe.radius = 80; ultAoe.delay = ULTIMATE.METEOR_DELAY;
-          ultAoe.dmg = Math.round(5 * pw); ultAoe.color = '#ff2200'; ultAoe.owner = p.idx; ultAoe.stun = 0; ultAoe.age = 0;
-        }
-        netSfx(state, SfxName.Fire);
-        // Lingering burn zone after meteor lands
-        setTimeout(() => {
-          const ultBurnZone = state.zones.acquire();
-          if (ultBurnZone) {
-            ultBurnZone.x = mx; ultBurnZone.y = my; ultBurnZone.radius = 40; ultBurnZone.duration = 3;
-            ultBurnZone.dmg = 1; ultBurnZone.color = '#ff4400'; ultBurnZone.owner = p.idx;
-            ultBurnZone.slow = 0; ultBurnZone.stun = 0; ultBurnZone.tickRate = ULTIMATE.BURN_ZONE_TICK; ultBurnZone.tickTimer = 0; ultBurnZone.age = 0;
-            ultBurnZone.drain = 0; ultBurnZone.heal = 0; ultBurnZone.pull = 0; ultBurnZone.freezeAfter = 0;
-          }
-        }, ULTIMATE.BURN_ZONE_LINGER);
-      }, i * 200);
-    }
-  } else if (p.clsKey === 'cryomancer') {
-    // Absolute Zero: freeze ALL enemies for 3s + damage
-    for (const e of state.enemies) {
-      if (!e.alive) continue;
-      e.stunTimer = (e.stunTimer || 0) + 3 * pw;
-      damageEnemy(state, e, Math.round(3 * pw), p.idx);
-    }
-    spawnShockwave(state, p.x, p.y, ROOM_WIDTH, 'rgba(100,200,255,.3)');
-  } else if (p.clsKey === 'stormcaller') {
-    // Thunder God: 5s transformation — Lightning becomes instant, auto-detonates
-    // on every hit, Storm Step cd removed, move speed +50%.
-    p._thunderGod = 5;
-    p.cd[2] = 0;
-    spawnParticles(state, p.x, p.y, '#ffcc44', 40, 1.5);
-    spawnShockwave(state, p.x, p.y, 160, '#ffcc44');
-    shake(state, 4);
-    netSfx(state, SfxName.Zap);
-  } else if (p.clsKey === 'arcanist') {
-    // Arcane Storm: spiral of 20 homing missiles
-    for (let i = 0; i < 20; i++) {
-      const sa = p.angle + (i / 20) * Math.PI * 4;
-      setTimeout(() => {
-        state.spells.push({
-          type: SpellType.Homing, dmg: Math.round(2 * pw), speed: 250, radius: 6, life: ULTIMATE.HOMING_MISSILE_LIFE,
-          homing: ULTIMATE.HOMING_FACTOR, color: '#ff55aa', trail: '#dd3388',
-          x: p.x + Math.cos(sa) * 20, y: p.y + Math.sin(sa) * 20,
-          vx: Math.cos(sa) * 200, vy: Math.sin(sa) * 200,
-          owner: p.idx, age: 0, zapTimer: 0, pierceLeft: 0,
-          zap: 0, zapRate: 0, slow: 0, drain: 0, explode: 0, burn: 0,
-          stun: 0, clsKey: p.clsKey, _reversed: false, _bounces: 0,
-        });
-        netSfx(state, SfxName.Arcane);
-      }, i * ULTIMATE.ARCANE_STORM_TIMEOUT);
-    }
-  } else if (p.clsKey === 'necromancer') {
-    // Army of Dead: summon 6 friendly skeletons
-    for (let i = 0; i < 6; i++) {
-      const sa = p.angle + (i / 6) * Math.PI * 2;
-      const sx = p.x + Math.cos(sa) * 50;
-      const sy = p.y + Math.sin(sa) * 50;
-      state.enemies.push(createFriendlyEnemy(state, sx, sy, p.idx));
-      spawnParticles(state, sx, sy, '#55cc55', 8);
-    }
-  } else if (p.clsKey === 'chronomancer') {
-    // Time Stop: freeze all enemies for 3s, player moves at 1.5x speed
-    const freezeDur = ULTIMATE.TIME_STOP_DURATION * pw;
-    for (const e of state.enemies) {
-      if (!e.alive) continue;
-      e.stunTimer = (e.stunTimer || 0) + freezeDur;
-    }
-    p.moveSpeed *= ULTIMATE.TIME_STOP_SPEED_MULT;
-    p._timeStopTimer = freezeDur;
-    spawnShockwave(state, p.x, p.y, ROOM_WIDTH, 'rgba(255,200,60,.2)');
-  } else if (p.clsKey === 'knight') {
-    // Shield Wall: become invulnerable for 3s + reflect all damage
-    const shieldDur = ULTIMATE.TIME_STOP_DURATION * pw;
-    p.iframes = shieldDur;
-    p._shieldWall = shieldDur;
-    spawnShockwave(state, p.x, p.y, 80, 'rgba(200,200,255,.4)');
-  } else if (p.clsKey === 'berserker') {
-    // Blood Rage: 2x damage, 2x speed, take 2x damage for 5s
-    const rageDur = ULTIMATE.BLOOD_RAGE_DURATION * pw;
-    p._rage = rageDur;
-    p._rageDmgMul = ULTIMATE.BLOOD_RAGE_DMG_MULT;
-    spawnParticles(state, p.x, p.y, '#ff3333', 25, 1.2);
-  } else if (p.clsKey === 'paladin') {
-    // Holy Light: heal both players for 75% max HP + damage all enemies for 3
-    for (const pl of state.players) {
-      if (pl.alive) {
-        pl.hp = Math.min(pl.maxHp, pl.hp + Math.round(pl.maxHp * ULTIMATE.PALADIN_HEAL_FRACTION));
-        spawnParticles(state, pl.x, pl.y, '#ffffaa', 15);
-        spawnText(state, pl.x, pl.y - 20, 'HEAL 75%', '#ffffaa');
-      }
-    }
-    for (const e of state.enemies) {
-      if (!e.alive) continue;
-      damageEnemy(state, e, Math.round(3 * pw), p.idx);
-    }
-    spawnShockwave(state, p.x, p.y, ROOM_WIDTH, 'rgba(255,255,180,.3)');
-  } else if (p.clsKey === 'ranger') {
-    // Volley: fire 20 arrows in a spread cone in the aimed direction
-    const cos0 = Math.cos(angle);
-    const sin0 = Math.sin(angle);
-    const spreadHalf = ULTIMATE.RANGER_SPREAD_BASE;
-    for (let i = 0; i < 20; i++) {
-      const aOff = -spreadHalf + (spreadHalf * 2) * (i / 19) + rand(-ULTIMATE.RANGER_SPREAD_STEP, ULTIMATE.RANGER_SPREAD_STEP);
-      const sa = angle + aOff;
-      const aCos = Math.cos(sa);
-      const aSin = Math.sin(sa);
-      setTimeout(() => {
-        state.spells.push({
-          type: SpellType.Projectile, dmg: Math.round(2 * pw), speed: 400, radius: 5, life: ULTIMATE.RANGER_ARROW_LIFE,
-          color: '#88cc44', trail: '#668833',
-          x: p.x + cos0 * WIZARD_SIZE, y: p.y + sin0 * WIZARD_SIZE,
-          vx: aCos * 400, vy: aSin * 400,
-          owner: p.idx, age: 0, zapTimer: 0, pierceLeft: ULTIMATE.RANGER_ARROW_PIERCE,
-          homing: 0, zap: 0, zapRate: 0, slow: 0, drain: 0, explode: 0, burn: 0,
-          stun: 0, clsKey: p.clsKey, _reversed: false, _bounces: 0,
-        });
-        netSfx(state, SfxName.Hit);
-      }, i * 30);
-    }
-  } else if (p.clsKey === 'druid') {
-    // Nature's Wrath: summon ring of 6 thorn zones + 2 treant allies
-    for (let i = 0; i < 6; i++) {
-      const za = (i / 6) * Math.PI * 2;
-      const zDist = rand(100, 120);
-      const zx = p.x + Math.cos(za) * zDist;
-      const zy = p.y + Math.sin(za) * zDist;
-      const thornZone = state.zones.acquire();
-      if (thornZone) {
-        thornZone.x = zx; thornZone.y = zy; thornZone.radius = 40; thornZone.duration = 4;
-        thornZone.dmg = Math.round(2 * pw); thornZone.color = '#66aa44'; thornZone.owner = p.idx;
-        thornZone.slow = ULTIMATE.DRUID_ZONE_SLOW; thornZone.stun = 0; thornZone.tickRate = ULTIMATE.DRUID_ZONE_TICK; thornZone.tickTimer = 0; thornZone.age = 0;
-        thornZone.drain = 0; thornZone.heal = 0; thornZone.pull = 0; thornZone.freezeAfter = 0;
-      }
-      spawnParticles(state, zx, zy, '#88aa66', 6, TIMING.PARTICLE_LIFE_MEDIUM);
-    }
-    // Summon 2 treant allies
-    for (let i = 0; i < 2; i++) {
-      const ta = angle + (i === 0 ? -ULTIMATE.DRUID_TREANT_ANGLE : ULTIMATE.DRUID_TREANT_ANGLE);
-      const tx = p.x + Math.cos(ta) * 50;
-      const ty = p.y + Math.sin(ta) * 50;
-      const treant = createFriendlyEnemy(state, tx, ty, p.idx);
-      treant.hp = 8;
-      treant.maxHp = 8;
-      treant._lifespan = ULTIMATE.DRUID_TREANT_LIFE;
-      state.enemies.push(treant);
-      spawnParticles(state, tx, ty, '#88aa66', 10);
-    }
-    spawnShockwave(state, p.x, p.y, 130, 'rgba(80,180,60,.3)');
-  } else if (p.clsKey === 'warlock') {
-    // Doom: marks all enemies, after 3s they take 35% of their max HP as damage
-    const marked = state.enemies.filter(e => e.alive && !e._friendly);
-    for (const e of marked) {
-      spawnText(state, e.x, e.y - 15, 'DOOMED', '#662288');
-    }
-    const pIdx = p.idx;
-    setTimeout(() => {
-      for (const e of marked) {
-        if (!e.alive) continue;
-        const doomDmg = Math.max(1, Math.ceil(e.maxHp * ULTIMATE.DOOM_DMG_FRACTION * pw));
-        damageEnemy(state, e, doomDmg, pIdx);
-        spawnParticles(state, e.x, e.y, '#662288', 10);
-      }
-      netSfx(state, SfxName.Boom);
-      shake(state, 6);
-    }, 3000);
-  } else if (p.clsKey === 'monk') {
-    // Thousand Fists: 20 rapid melee hits in a cone with knockback
-    p.iframes = TIMING.IFRAME_MONK_ULT;
-    const monkDmg = Math.round(1 * pw);
-    for (let i = 0; i < 20; i++) {
-      setTimeout(() => {
-        for (const e of state.enemies) {
-          if (!e.alive) continue;
-          const d = dist(p.x, p.y, e.x, e.y);
-          if (d > 60) continue;
-          const a2 = Math.atan2(e.y - p.y, e.x - p.x);
-          const diff = Math.abs(((a2 - angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
-          if (diff <= ULTIMATE.MONK_CONE_ANGLE) {
-            damageEnemy(state, e, monkDmg, p.idx);
-            // Knockback: push enemy away from player
-            if (d > 0) {
-              const nx = (e.x - p.x) / d;
-              const ny = (e.y - p.y) / d;
-              e.vx = nx * ULTIMATE.MONK_KNOCKBACK;
-              e.vy = ny * ULTIMATE.MONK_KNOCKBACK;
-            }
-          }
-        }
-        spawnParticles(state, p.x + Math.cos(angle) * 30, p.y + Math.sin(angle) * 30, '#eedd88', 2, 0.3);
-        netSfx(state, SfxName.Hit);
-      }, i * 40);
-    }
-  } else if (p.clsKey === 'engineer') {
-    // Mega Turret: huge turret (20 HP, 3 dmg/shot, 12s)
-    const turret = createFriendlyEnemy(state, p.x + Math.cos(angle) * 40, p.y + Math.sin(angle) * 40, p.idx);
-    turret.type = '_ally';
-    turret.hp = 20;
-    turret.maxHp = 20;
-    turret._lifespan = ULTIMATE.TURRET_LIFE;
-    state.enemies.push(turret);
-    spawnParticles(state, turret.x, turret.y, '#dd8833', 15);
-    // Also create a high-damage zone around the turret
-    const megaZone = state.zones.acquire();
-    if (megaZone) {
-      megaZone.x = turret.x; megaZone.y = turret.y; megaZone.radius = ULTIMATE.TURRET_RADIUS; megaZone.duration = ULTIMATE.TURRET_LIFE;
-      megaZone.dmg = Math.round(3 * pw); megaZone.color = '#dd8833'; megaZone.owner = p.idx;
-      megaZone.slow = 0; megaZone.stun = 0; megaZone.tickRate = 0.7; megaZone.tickTimer = 0; megaZone.age = 0;
-      megaZone.drain = 0; megaZone.heal = 0; megaZone.pull = 0; megaZone.freezeAfter = 0;
-      megaZone._turret = true; megaZone._megaTurret = true;
-      // Engineer Overclock: turrets fire 20% faster
-      megaZone.tickRate *= 0.8;
-    }
-  } else if (p.clsKey === 'graviturge') {
-    // Gravitational Ruin: gravity vortex at cursor that pulls and crushes enemies
-    const tx = clamp(p.x + Math.cos(angle) * 120, 60, ROOM_WIDTH - 60);
-    const ty = clamp(p.y + Math.sin(angle) * 120, 60, ROOM_HEIGHT - 60);
-    // Deploy gravity vortex zone
-    const gravZone = state.zones.acquire();
-    if (gravZone) {
-      gravZone.x = tx; gravZone.y = ty; gravZone.radius = ULTIMATE.GRAVITY_PULL_RANGE;
-      gravZone.duration = ULTIMATE.GRAVITY_SLOW_DURATION; gravZone.dmg = Math.round(ULTIMATE.GRAVITY_PULL_DMG * pw);
-      gravZone.color = '#4422aa'; gravZone.owner = p.idx;
-      gravZone.slow = 0.8; gravZone.stun = 0; gravZone.tickRate = 0.5; gravZone.tickTimer = 0; gravZone.age = 0;
-      gravZone.drain = 0; gravZone.heal = 0; gravZone.pull = 1; gravZone.freezeAfter = 0;
-    }
-    // Pull all enemies toward vortex center
-    for (const e of state.enemies) {
-      if (!e.alive || e._friendly) continue;
-      const d = dist(tx, ty, e.x, e.y);
-      if (d < ULTIMATE.GRAVITY_PULL_RANGE && d > 1) {
-        const nx = (tx - e.x) / d;
-        const ny = (ty - e.y) / d;
-        e.vx = nx * 80;
-        e.vy = ny * 80;
-        e.slowTimer = Math.max(e.slowTimer || 0, ULTIMATE.GRAVITY_SLOW_DURATION);
-      }
-    }
-    spawnShockwave(state, tx, ty, ULTIMATE.GRAVITY_PULL_RANGE, 'rgba(100,50,180,.3)');
-    spawnParticles(state, tx, ty, '#6644aa', 20, 1.0);
-  } else if (p.clsKey === 'bladecaller') {
-    // Thousand Cuts: dash to 12 random enemies dealing damage
-    _aliveEnemies.length = 0;
-    for (const e2 of state.enemies) {
-      if (e2.alive && !e2._friendly) _aliveEnemies.push(e2);
-    }
-    const cutDmg = Math.round(ULTIMATE.THOUSAND_CUTS_DMG * pw);
-    p.iframes = ULTIMATE.THOUSAND_CUTS_HITS * 0.1 + 0.5;
-    const targets = _aliveEnemies.slice();
-    for (let i = 0; i < ULTIMATE.THOUSAND_CUTS_HITS; i++) {
-      ((idx: number) => {
-        setTimeout(() => {
-          if (targets.length === 0) return;
-          const t = targets[idx % targets.length];
-          if (!t.alive) return;
-          // Teleport player to target
-          p.x = t.x + rand(-15, 15);
-          p.y = t.y + rand(-15, 15);
-          damageEnemy(state, t, cutDmg, p.idx);
-          spawnParticles(state, t.x, t.y, '#cc3355', 4, 0.3);
-          netSfx(state, SfxName.Hit);
-          shake(state, 2);
-        }, idx * 100);
-      })(i);
-    }
-  } else if (p.clsKey === 'architect') {
-    // Mega Construct: massive zone at cursor position
-    const tx = clamp(p.x + Math.cos(angle) * 100, 60, ROOM_WIDTH - 60);
-    const ty = clamp(p.y + Math.sin(angle) * 100, 60, ROOM_HEIGHT - 60);
-    const megaConstruct = state.zones.acquire();
-    if (megaConstruct) {
-      megaConstruct.x = tx; megaConstruct.y = ty; megaConstruct.radius = ULTIMATE.MEGA_CONSTRUCT_RADIUS;
-      megaConstruct.duration = ULTIMATE.MEGA_CONSTRUCT_DURATION; megaConstruct.dmg = Math.round(ULTIMATE.MEGA_CONSTRUCT_DMG * pw);
-      megaConstruct.color = '#228899'; megaConstruct.owner = p.idx;
-      megaConstruct.slow = 0.5; megaConstruct.stun = 0; megaConstruct.tickRate = 0.5; megaConstruct.tickTimer = 0; megaConstruct.age = 0;
-      megaConstruct.drain = 0; megaConstruct.heal = 0; megaConstruct.pull = 0; megaConstruct.freezeAfter = 0;
-    }
-    spawnShockwave(state, tx, ty, ULTIMATE.MEGA_CONSTRUCT_RADIUS, 'rgba(50,150,180,.3)');
-    spawnParticles(state, tx, ty, '#44aacc', 20, 1.2);
-  } else if (p.clsKey === 'hexblade') {
-    // Hexstorm: apply 3 hex stacks to ALL enemies, then detonate
-    const hexDmg = Math.round(ULTIMATE.HEXSTORM_EXPLOSION_DMG * pw);
-    for (const e of state.enemies) {
-      if (!e.alive || e._friendly) continue;
-      e._hexStacks = (e._hexStacks || 0) + ULTIMATE.HEXSTORM_STACKS;
-      e.slowTimer = (e.slowTimer || 0) + 1.0;
-      damageEnemy(state, e, hexDmg, p.idx);
-      spawnParticles(state, e.x, e.y, '#7755cc', 8, 0.5);
-    }
-    // Chain visual beams between nearby hexed enemies
-    const hexed = state.enemies.filter(e => e.alive && (e._hexStacks || 0) >= 3);
-    for (let i = 0; i < hexed.length && i < 20; i++) {
-      for (let j = i + 1; j < hexed.length && j < 20; j++) {
-        if (dist(hexed[i].x, hexed[i].y, hexed[j].x, hexed[j].y) < 150) {
-          const hexBeam = state.beams.acquire();
-          if (hexBeam) {
-            hexBeam.x = hexed[i].x; hexBeam.y = hexed[i].y;
-            hexBeam.angle = Math.atan2(hexed[j].y - hexed[i].y, hexed[j].x - hexed[i].x);
-            hexBeam.range = dist(hexed[i].x, hexed[i].y, hexed[j].x, hexed[j].y);
-            hexBeam.width = 3; hexBeam.color = '#7755cc'; hexBeam.life = 0.5;
-          }
-        }
-      }
-    }
-    spawnShockwave(state, p.x, p.y, ROOM_WIDTH * 0.5, 'rgba(120,80,200,.2)');
-  } else if (p.clsKey === 'warden') {
-    // Unbreakable: invulnerable + protect allies
-    p.iframes = ULTIMATE.UNBREAKABLE_DURATION;
-    p._invulnTimer = ULTIMATE.UNBREAKABLE_DURATION;
-    // All nearby allies get DR
-    for (const ally of state.players) {
-      if (ally.idx !== p.idx && ally.alive) {
-        ally._wardenDR = ULTIMATE.UNBREAKABLE_DURATION;
-        spawnText(state, ally.x, ally.y - 20, 'PROTECTED', '#5588aa');
-        spawnParticles(state, ally.x, ally.y, '#88bbdd', 10);
-      }
-    }
-    // Mark all nearby enemies
-    for (const e of state.enemies) {
-      if (!e.alive || e._friendly) continue;
-      if (dist(p.x, p.y, e.x, e.y) < 200) {
-        e._wardenMark = true;
-        spawnText(state, e.x, e.y - 15, 'MARKED', '#5588aa');
-      }
-    }
-    spawnShockwave(state, p.x, p.y, 200, 'rgba(80,130,170,.4)');
-  } else if (p.clsKey === 'cannoneer') {
-    // Artillery Barrage: rain explosive shells
-    const shellDmg = Math.round(ULTIMATE.ARTILLERY_DMG * pw);
-    for (let i = 0; i < ULTIMATE.ARTILLERY_SHELLS; i++) {
-      ((idx: number) => {
-        setTimeout(() => {
-          const tx = p.x + rand(-200, 200);
-          const ty = p.y + rand(-200, 200);
-          const clampedX = clamp(tx, 60, ROOM_WIDTH - 60);
-          const clampedY = clamp(ty, 60, ROOM_HEIGHT - 60);
-          // Spawn AOE explosion
-          const marker = state.aoeMarkers.acquire();
-          if (marker) {
-            marker.x = clampedX; marker.y = clampedY;
-            marker.radius = ULTIMATE.ARTILLERY_RADIUS; marker.delay = 0.4;
-            marker.dmg = shellDmg; marker.owner = p.idx;
-            marker.color = '#aa7733'; marker.age = 0; marker.stun = 0.5;
-          }
-          spawnParticles(state, clampedX, clampedY, '#dd8833', 10, 0.5);
-          shake(state, 4);
-          netSfx(state, SfxName.Hit);
-        }, idx * 300);
-      })(i);
-    }
-    spawnShockwave(state, p.x, p.y, 200, 'rgba(170,120,50,.3)');
-  } else if (p.clsKey === 'soulbinder') {
-    // Soul Storm: drain life from all enemies in range
-    const stormDmg = Math.round(ULTIMATE.SOUL_STORM_DMG * pw);
-    let totalDrained = 0;
-    for (const e of state.enemies) {
-      if (!e.alive || e._friendly) continue;
-      if (dist(p.x, p.y, e.x, e.y) < ULTIMATE.SOUL_STORM_RADIUS) {
-        damageEnemy(state, e, stormDmg, p.idx);
-        totalDrained += stormDmg;
-        spawnParticles(state, e.x, e.y, '#55aa88', 6, 0.4);
-        // Mark all hit enemies
-        e._soulMark = state.time + 4;
-      }
-    }
-    const healAmt = Math.floor(totalDrained * 0.25);
-    if (healAmt > 0) {
-      p.hp = Math.min(p.maxHp, p.hp + healAmt);
-      spawnText(state, p.x, p.y - 15, '+' + healAmt + ' HP', '#44ff88');
-    }
-    spawnShockwave(state, p.x, p.y, ULTIMATE.SOUL_STORM_RADIUS, 'rgba(80,170,130,.3)');
-    spawnParticles(state, p.x, p.y, '#55aa88', 15, 1.0);
-  } else if (p.clsKey === 'invoker') {
-    // Elemental Convergence: triple overlapping zones
-    const tx = clamp(p.x + Math.cos(angle) * 120, 60, ROOM_WIDTH - 60);
-    const ty = clamp(p.y + Math.sin(angle) * 120, 60, ROOM_HEIGHT - 60);
-    const zoneDmg = Math.round(ULTIMATE.CONVERGENCE_DMG * pw);
-    // Fire zone
-    const fireZone = state.zones.acquire();
-    if (fireZone) {
-      fireZone.x = tx - 30; fireZone.y = ty; fireZone.radius = ULTIMATE.CONVERGENCE_RADIUS;
-      fireZone.duration = ULTIMATE.CONVERGENCE_DURATION; fireZone.dmg = zoneDmg;
-      fireZone.color = '#ff6633'; fireZone.owner = p.idx;
-      fireZone.slow = 0; fireZone.stun = 0; fireZone.tickRate = 0.5; fireZone.tickTimer = 0; fireZone.age = 0;
-      fireZone.drain = 0; fireZone.heal = 0; fireZone.pull = 0; fireZone.freezeAfter = 0;
-    }
-    // Ice zone
-    const iceZone = state.zones.acquire();
-    if (iceZone) {
-      iceZone.x = tx + 30; iceZone.y = ty; iceZone.radius = ULTIMATE.CONVERGENCE_RADIUS;
-      iceZone.duration = ULTIMATE.CONVERGENCE_DURATION; iceZone.dmg = zoneDmg;
-      iceZone.color = '#44bbff'; iceZone.owner = p.idx;
-      iceZone.slow = 1.5; iceZone.stun = 0; iceZone.tickRate = 0.5; iceZone.tickTimer = 0; iceZone.age = 0;
-      iceZone.drain = 0; iceZone.heal = 0; iceZone.pull = 0; iceZone.freezeAfter = 0;
-    }
-    // Lightning zone
-    const lightZone = state.zones.acquire();
-    if (lightZone) {
-      lightZone.x = tx; lightZone.y = ty - 30; lightZone.radius = ULTIMATE.CONVERGENCE_RADIUS;
-      lightZone.duration = ULTIMATE.CONVERGENCE_DURATION; lightZone.dmg = zoneDmg;
-      lightZone.color = '#ffcc44'; lightZone.owner = p.idx;
-      lightZone.slow = 0; lightZone.stun = 0.5; lightZone.tickRate = 0.6; lightZone.tickTimer = 0; lightZone.age = 0;
-      lightZone.drain = 0; lightZone.heal = 0; lightZone.pull = 0; lightZone.freezeAfter = 0;
-    }
-    spawnShockwave(state, tx, ty, ULTIMATE.CONVERGENCE_RADIUS, 'rgba(200,130,70,.3)');
-    spawnParticles(state, tx, ty, '#ff6633', 8, 0.5);
-    spawnParticles(state, tx, ty, '#44bbff', 8, 0.5);
-    spawnParticles(state, tx, ty, '#ffcc44', 8, 0.5);
-  } else if (p.clsKey === 'tidecaller') {
-    // Tsunami: push all enemies away + damage + slow
-    for (const e of state.enemies) {
-      if (!e.alive || e._friendly) continue;
-      const d = dist(p.x, p.y, e.x, e.y);
-      if (d < ULTIMATE.TSUNAMI_RADIUS && d > 1) {
-        const nx = (e.x - p.x) / d;
-        const ny = (e.y - p.y) / d;
-        e.vx = nx * ULTIMATE.TSUNAMI_PUSH;
-        e.vy = ny * ULTIMATE.TSUNAMI_PUSH;
-        e.slowTimer = Math.max(e.slowTimer || 0, ULTIMATE.TSUNAMI_SLOW);
-        damageEnemy(state, e, Math.round(ULTIMATE.TSUNAMI_DMG * pw), p.idx);
-        spawnParticles(state, e.x, e.y, '#3388bb', 4, 0.3);
-      }
-    }
-    spawnShockwave(state, p.x, p.y, ULTIMATE.TSUNAMI_RADIUS, 'rgba(50,130,180,.4)');
-    spawnParticles(state, p.x, p.y, '#44aadd', 20, 1.2);
-  } else if (p.clsKey === 'voidweaver') {
-    // Void Rift: pull zone + DOT + debuffs
-    const tx = clamp(p.x + Math.cos(angle) * 120, 60, ROOM_WIDTH - 60);
-    const ty = clamp(p.y + Math.sin(angle) * 120, 60, ROOM_HEIGHT - 60);
-    const riftZone = state.zones.acquire();
-    if (riftZone) {
-      riftZone.x = tx; riftZone.y = ty; riftZone.radius = ULTIMATE.VOID_RIFT_RADIUS;
-      riftZone.duration = ULTIMATE.VOID_RIFT_DURATION; riftZone.dmg = Math.round(ULTIMATE.VOID_RIFT_DMG * pw);
-      riftZone.color = '#882299'; riftZone.owner = p.idx;
-      riftZone.slow = 1.0; riftZone.stun = 0; riftZone.tickRate = 0.5; riftZone.tickTimer = 0; riftZone.age = 0;
-      riftZone.drain = 0; riftZone.heal = 0; riftZone.pull = 1; riftZone.freezeAfter = 0;
-    }
-    // Pull enemies toward rift
-    for (const e of state.enemies) {
-      if (!e.alive || e._friendly) continue;
-      const d = dist(tx, ty, e.x, e.y);
-      if (d < ULTIMATE.VOID_RIFT_RADIUS && d > 1) {
-        const nx = (tx - e.x) / d;
-        const ny = (ty - e.y) / d;
-        e.vx = nx * 60;
-        e.vy = ny * 60;
-        e.slowTimer = Math.max(e.slowTimer || 0, 1.0);
-        e._burnTimer = (e._burnTimer || 0) + 3;
-      }
-    }
-    spawnShockwave(state, tx, ty, ULTIMATE.VOID_RIFT_RADIUS, 'rgba(130,30,150,.3)');
-    spawnParticles(state, tx, ty, '#aa44cc', 20, 1.0);
-  }
+  dispatchCastUltimate(state, p, angle);
 
   // ultEcho: buff next N LMB casts with double damage
   if (p.ultEcho > 0) {

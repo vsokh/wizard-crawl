@@ -26,6 +26,8 @@ import { sfx } from './audio';
 import { SpatialGrid } from './ecs/spatial-grid';
 import { SpellPool } from './ecs/spell-pool';
 import { EProjPool } from './ecs/eproj-pool';
+import { initClassState } from './classes/state';
+import './classes/registry';
 import {
   WIZARD_HP,
   MAX_MANA,
@@ -505,6 +507,7 @@ export function createPlayer(idx: number, clsKey: string): Player {
     _animMoving: false,
     _animUltTimer: 0,
     respawnTimer: 0,
+    classState: initClassState(clsKey),
   };
 
   // Stance class initialization: override spells with formA

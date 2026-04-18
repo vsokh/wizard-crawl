@@ -78,6 +78,9 @@ export function buildSpellEffects(spell: SpellDefInput): string {
 }
 
 export function generateSpellDescription(spell: SpellDefInput, classKey?: string): string {
+  // Author-written override has priority.
+  if (spell.description) return spell.description;
+
   // Ultimate abilities
   if (spell.ultCharge && spell.mana === 0) {
     const desc = classKey ? ULTIMATE_DESCRIPTIONS[classKey] : undefined;

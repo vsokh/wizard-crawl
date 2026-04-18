@@ -155,6 +155,8 @@ export interface SpellDef {
     range?: number;
     pillarRange?: number;
   };
+  /** Author-written description override. If set, skips the auto-generator. */
+  description?: string;
 }
 
 /** Partial spell definition as written in CLASSES constants (many fields optional) */
@@ -499,6 +501,9 @@ export interface Player {
   _lerpT?: number;
   _serverVx?: number;   // last known host velocity
   _serverVy?: number;
+
+  // Per-class typed state bag (new code should live here; see src/classes/state.ts)
+  classState?: import('./classes/state').ClassStateBag;
 }
 
 export interface Enemy {

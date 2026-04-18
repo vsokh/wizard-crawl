@@ -3,6 +3,7 @@ import { ENEMIES, WIZARD_SIZE, TIMING } from '../constants';
 import { PickupType } from '../types';
 import { rgba } from './rgba-cache';
 import { radGrad, linGrad } from './gradient-cache';
+import { getClassRender } from '../classes/render';
 
 // ═══════════════════════════════════
 //       GRADIENT & EFFECT CACHES
@@ -22,7 +23,7 @@ const _barrelTips: { x: number; y: number }[] = [{ x: 0, y: 0 }, { x: 0, y: 0 },
 // Pre-built simple noise table for organic animation (avoids per-frame random calls)
 const NOISE_TABLE: number[] = [];
 for (let i = 0; i < 256; i++) NOISE_TABLE[i] = Math.sin(i * 0.3927) * 0.5 + Math.cos(i * 0.7854) * 0.5;
-function noise(i: number): number { return NOISE_TABLE[((i | 0) & 255 + 256) & 255]; }
+export function noise(i: number): number { return NOISE_TABLE[((i | 0) & 255 + 256) & 255]; }
 
 // Pseudo-random seeded by index (deterministic shimmer per entity)
 function hash(n: number): number { return ((Math.sin(n * 127.1 + 311.7) * 43758.5453) % 1 + 1) % 1; }
@@ -42,6 +43,13 @@ export const CLASS_SCALE: Record<string, number> = {
 
 // ── Class-specific ultimate cast animation ──
 function drawUltimateAnim(ctx: CanvasRenderingContext2D, x: number, y: number, clsKey: string, color: string, glow: string, time: number, progress: number): void {
+  const render = getClassRender(clsKey);
+  if (render?.drawUltAnim) {
+    ctx.save();
+    render.drawUltAnim(ctx, x, y, color, glow, time, progress);
+    ctx.restore();
+    return;
+  }
   ctx.save();
   const S = WIZARD_SIZE;
   const alpha = progress * 0.8;
@@ -90,31 +98,7 @@ function drawUltimateAnim(ctx: CanvasRenderingContext2D, x: number, y: number, c
       break;
     }
 
-    // 3. Stormcaller — Lightning corona: jagged lightning bolts radiating out
-    case 'stormcaller': {
-      const boltColors = ['#bb66ff', '#ffee88', '#ffffff'];
-      ctx.globalAlpha = alpha;
-      ctx.lineWidth = 2;
-      const numBolts = 7;
-      for (let i = 0; i < numBolts; i++) {
-        const angle = (i / numBolts) * Math.PI * 2 + noise(i * 37 + time * 10) * 0.5;
-        const len = S * 3 * (1 - progress * 0.3);
-        ctx.strokeStyle = boltColors[i % 3];
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        let bx = x, by = y;
-        const segs = 5;
-        for (let s = 1; s <= segs; s++) {
-          const t = s / segs;
-          const jitter = noise(i * 13 + s * 7 + time * 20) * S * 0.5;
-          bx = x + Math.cos(angle) * len * t + Math.cos(angle + Math.PI / 2) * jitter;
-          by = y + Math.sin(angle) * len * t + Math.sin(angle + Math.PI / 2) * jitter;
-          ctx.lineTo(bx, by);
-        }
-        ctx.stroke();
-      }
-      break;
-    }
+    // 3. Stormcaller ult anim moved to src/classes/stormcaller/render.ts
 
     // 4. Arcanist — Arcane circle: rotating magic circle with rune dots
     case 'arcanist': {
@@ -476,35 +460,7 @@ function drawUltimateAnim(ctx: CanvasRenderingContext2D, x: number, y: number, c
       break;
     }
 
-    // 16. Bladecaller — Spinning blade arcs with crimson motion trails
-    case 'bladecaller': {
-      ctx.globalAlpha = alpha;
-      const bladeColors = ['#cc3355', '#aa2244', '#ff4466'];
-      const numBlades = 6;
-      const slashLen = S * 3 * (1 - progress * 0.2);
-      for (let i = 0; i < numBlades; i++) {
-        const bladeA = time * 8 + (i / numBlades) * Math.PI * 2 + progress * 4;
-        ctx.strokeStyle = bladeColors[i % 3];
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        const sx = x + Math.cos(bladeA) * S * 0.3;
-        const sy = y + Math.sin(bladeA) * S * 0.3;
-        const ex = x + Math.cos(bladeA) * slashLen;
-        const ey = y + Math.sin(bladeA) * slashLen;
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(ex, ey);
-        ctx.stroke();
-        // Motion trail
-        ctx.globalAlpha = alpha * 0.3;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        const trailA = bladeA - 0.3;
-        ctx.lineTo(x + Math.cos(trailA) * slashLen * 0.8, y + Math.sin(trailA) * slashLen * 0.8);
-        ctx.stroke();
-        ctx.globalAlpha = alpha;
-      }
-      break;
-    }
+    // 16. Bladecaller ult anim moved to src/classes/bladecaller/render.ts
 
     // 17. Architect — Expanding geometric blueprint grid
     case 'architect': {
@@ -832,6 +788,11 @@ function drawUltimateAnim(ctx: CanvasRenderingContext2D, x: number, y: number, c
 
 // ── Class-specific silhouette drawing ──
 export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, clsKey: string, color: string, glow: string, time: number, player?: { hp: number; maxHp: number; _furyActive: boolean }): void {
+  const render = getClassRender(clsKey);
+  if (render?.drawBody) {
+    render.drawBody(ctx, x, y, angle, color, glow, time, player);
+    return;
+  }
   const scale = CLASS_SCALE[clsKey] || 1.0;
   const S = WIZARD_SIZE * scale;
 
@@ -1964,6 +1925,11 @@ export function drawClassBody(ctx: CanvasRenderingContext2D, x: number, y: numbe
 
 // ── Class-specific weapon/staff drawing ──
 export function drawWeapon(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, clsKey: string, color: string, S: number): void {
+  const render = getClassRender(clsKey);
+  if (render?.drawWeapon) {
+    render.drawWeapon(ctx, x, y, angle, color, S);
+    return;
+  }
   const staffStart = S * 0.5;
   const staffEnd = S * 1.8;
 

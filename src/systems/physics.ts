@@ -18,6 +18,7 @@ import {
 } from '../constants';
 import { Enemy, EnemyView, GamePhase, NetworkMode, PickupType, SfxName, SpellType } from '../types';
 import { castSpell, castChargedSpell, castSpellSilent, castUltimate, damageEnemy, switchStance, applyMarkToEnemy, detonateMarks } from './combat';
+import { dispatchTick } from '../classes/hooks';
 
 /** Callback set by main.ts to break circular dep with upgrades module */
 export let onChestPickup: ((state: GameState) => void) | null = null;
@@ -574,20 +575,11 @@ export function updatePlayers(state: GameState, dt: number): void {
 
     // ── PASSIVES ──
 
-    // Chronomancer: haste aura for ally
-    if (p.clsKey === 'chronomancer') {
-      const ally = state.players[1 - p.idx];
-      if (ally && ally.alive && dist(p.x, p.y, ally.x, ally.y) < 150) {
-        ally._hasteBonus = true;
-      } else if (ally) {
-        ally._hasteBonus = false;
-      }
-    }
+    // Non-class players default fury/haste off; hooks will set for their class.
+    if (p.clsKey !== 'berserker') p._furyActive = false;
+    // Per-class tick hooks (haste aura, fury, aura of light, gravity well, fortified, sentinel, etc.).
+    dispatchTick(state, p, dt);
     if (p._hasteBonus) p.moveSpeed = Math.max(p.moveSpeed, DEFAULT_MOVE_SPEED * 1.15);
-
-    // Berserker: fury below 50% HP
-    p._furyActive = p.clsKey === 'berserker' && p.hp <= p.maxHp / 2;
-    if (p._furyActive) p.moveSpeed = Math.max(p.moveSpeed, DEFAULT_MOVE_SPEED * 1.5);
 
     // Proximity aura damage
     if (p.cls.passive.proximityBonus?.aura) {
@@ -608,108 +600,10 @@ export function updatePlayers(state: GameState, dt: number): void {
       }
     }
 
-    // Druid: Regrowth - regen 1 HP every 7 seconds
-    if (p.clsKey === 'druid') {
-      p._auraTick = (p._auraTick || 0) + dt;
-      if (p._auraTick >= 7) {
-        p._auraTick = 0;
-        if (p.hp < p.maxHp) {
-          p.hp = Math.min(p.maxHp, p.hp + 1);
-          spawnText(state, p.x, p.y - 20, '+1 HP', '#44aa33');
-        }
-      }
-    }
-
-    // Monk: Inner Peace - 25% dodge naturally (added at creation, stacks with Dodge upgrade)
-    // Applied via dodgeChance in damagePlayer, set below
-    if (p.clsKey === 'monk' && p.dodgeChance < COMBAT.MONK_DODGE_CHANCE) {
-      p.dodgeChance = COMBAT.MONK_DODGE_CHANCE;
-    }
-
-    // Paladin: aura of light - heal nearby ally 2 HP/s
-    if (p.clsKey === 'paladin') {
-      const ally = state.players[1 - p.idx];
-      if (ally && ally.alive && dist(p.x, p.y, ally.x, ally.y) < RANGES.AURA) {
-        p._auraTick = (p._auraTick || 0) + dt;
-        if (p._auraTick >= TIMING.AURA_HEAL_TICK) {
-          p._auraTick = 0;
-          if (ally.hp < ally.maxHp) {
-            ally.hp = Math.min(ally.maxHp, ally.hp + 1);
-            spawnText(state, ally.x, ally.y - 20, '+1', '#ffffaa');
-          }
-        }
-      }
-    }
-
-    // Graviturge: gravity well aura — enemies within 80 units take 0.5 dps, each nearby enemy grants +1 mana/s
-    if (p.clsKey === 'graviturge') {
-      let nearbyCount = 0;
-      for (const e of state.enemies) {
-        if (!e.alive || e._friendly) continue;
-        if (dist(p.x, p.y, e.x, e.y) < 80) {
-          nearbyCount++;
-          e.hp -= 0.5 * dt;
-          if (e.hp <= 0 && e._deathTimer < 0) {
-            damageEnemy(state, e, 1, p.idx);
-          }
-        }
-      }
-      if (nearbyCount > 0) {
-        p.mana = Math.min(p.maxMana, p.mana + nearbyCount * 1 * dt);
-      }
-    }
-
-    // Bladecaller: kill rush speed boost decay
-    if (p.clsKey === 'bladecaller' && p._rushSpeed && p._rushSpeed > state.time) {
-      p.moveSpeed = Math.max(p.moveSpeed, DEFAULT_MOVE_SPEED * 1.1);
-    }
-
-    // Architect: fortification near own zones — 20% DR flag + bonus mana regen
-    if (p.clsKey === 'architect') {
-      p._fortified = false;
-      for (const z of state.zones) {
-        if (!z || z.duration <= 0 || z.owner !== p.idx) continue;
-        if (dist(p.x, p.y, z.x, z.y) < z.radius) {
-          p._fortified = true;
-          p.mana = Math.min(p.maxMana, p.mana + 1 * dt);
-          break;
-        }
-      }
-    }
-
-    // Warden: sentinel — 20% DR when facing enemies, mark melee attackers
-    if (p.clsKey === 'warden') {
-      p._facingDR = false;
-      for (const e of state.enemies) {
-        if (!e.alive || e._friendly) continue;
-        const d = dist(p.x, p.y, e.x, e.y);
-        if (d < 100) {
-          const aimAngle = Math.atan2(e.y - p.y, e.x - p.x);
-          const diff = Math.abs(((aimAngle - p.angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
-          if (diff < Math.PI / 3) {
-            p._facingDR = true;
-          }
-          // Mark melee-range enemies for ally bonus damage
-          if (d < 50) {
-            e._wardenMark = true;
-          }
-        }
-      }
-    }
-
     // Warden DR decay
     if (p._wardenDR > 0) p._wardenDR -= dt;
     // Invuln timer decay
     if (p._invulnTimer > 0) p._invulnTimer -= dt;
-
-    // Tidecaller: count active summons for Rising Tide passive
-    if (p.clsKey === 'tidecaller') {
-      let summonCount = 0;
-      for (const e of state.enemies) {
-        if (e.alive && e._friendly && e._owner === p.idx) summonCount++;
-      }
-      p._summonCount = Math.min(3, summonCount);
-    }
 
     // Time stop decay
     if (p._timeStopTimer > 0) {
