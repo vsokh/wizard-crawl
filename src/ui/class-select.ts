@@ -47,7 +47,7 @@ export const ULTIMATE_DESCRIPTIONS: Record<string, string> = {
   architect: 'Deploy a massive arcane construct that persists on the battlefield, damaging and slowing enemies.',
   hexblade: 'Curse all enemies with hex stacks that detonate in chain explosions.',
   warden: 'Become invulnerable and project a protective aura that shields nearby allies.',
-  cannoneer: 'Siege Mode: root in place for 4s and auto-fire heavy shells at enemies in range. You cannot move, but you hit devastatingly hard.',
+  cannoneer: 'Rain ~17 rockets on your cursor over 3 seconds. Keep aiming at clusters — the barrage follows the mouse.',
   soulbinder: 'Unleash a soul storm that drains life from all nearby enemies, healing you for a portion of damage dealt.',
   invoker: 'Summon the elemental convergence — overlapping fire, ice, and lightning zones at the target location.',
   tidecaller: 'Unleash a massive tsunami wave that pushes all enemies away, dealing damage and slowing them.',
@@ -165,7 +165,7 @@ export function generateSpellDescription(spell: SpellDefInput, classKey?: string
       } else if (spell.name === 'Roll') {
         parts.push('Rolls in aim direction with brief invulnerability. Fast evasive reposition.');
       } else if (spell.name === 'Shrapnel Burst') {
-        parts.push('Fires a shell that detonates mid-flight, spraying 10 shrapnel fragments in a ring.');
+        parts.push('Fires a rocket toward your cursor. Detonates on impact, spraying 10 shrapnel fragments in a ring.');
       } else {
         parts.push('Summons a companion to fight for you');
       }

@@ -1,29 +1,60 @@
 import { registerClassHooks } from '../hooks';
-import { clamp, dist, netSfx, shake, spawnParticles, spawnShockwave, spawnText } from '../../state';
+import { clamp, netSfx, rand, shake, spawnParticles, spawnShockwave, spawnText, toWorld } from '../../state';
 import { SfxName, SpellType } from '../../types';
-import { ROOM_WIDTH, ROOM_HEIGHT, WIZARD_SIZE } from '../../constants';
+import { ROOM_WIDTH, ROOM_HEIGHT } from '../../constants';
 
 // Recoil Cannonball: backward push distance + iframe window (weaker than Ranger Roll).
 const RECOIL_DIST = 90;
 const RECOIL_TIME = 0.14;
 const RECOIL_IFRAMES = 0.1;
 
-// Shrapnel Burst: forward-arcing shell that detonates mid-flight into a ring.
-const SHRAPNEL_RANGE = 240;
-const SHRAPNEL_DELAY = 0.4;
+// Shrapnel Burst: rocket flies to cursor and detonates into a ring of shrapnel.
+const SHRAPNEL_TRAVEL = 0.45;      // seconds to reach cursor
 const SHRAPNEL_COUNT = 10;
 const SHRAPNEL_SPEED = 420;
 const SHRAPNEL_DMG = 3;
 const SHRAPNEL_LIFE = 0.45;
 
-// Siege Mode: root + auto-fire.
-const SIEGE_DURATION = 4.0;
-const SIEGE_FIRE_RATE = 0.32;     // seconds between auto-shells
-const SIEGE_SHELL_DMG = 6;
-const SIEGE_SHELL_RADIUS = 55;
-const SIEGE_DELAY = 0.35;         // marker telegraph
-const SIEGE_RANGE = 460;          // target search range
-const SIEGE_DR = 0.3;             // 30% damage reduction while sieged
+// Rocket Barrage ultimate: rain rockets on the cursor over a few seconds.
+const BARRAGE_DURATION_MS = 3000;
+const BARRAGE_INTERVAL_MS = 180;   // ~17 rockets over 3s
+const BARRAGE_ROCKET_DMG = 5;
+const BARRAGE_RADIUS = 58;
+const BARRAGE_DELAY = 0.35;        // marker telegraph
+const BARRAGE_SCATTER = 36;        // random offset from cursor per rocket
+
+function launchRocketTo(
+  state: any,
+  p: any,
+  tx: number,
+  ty: number,
+  dmg: number,
+  color: string,
+  radius: number,
+  delay: number,
+) {
+  // Flying-shell trail from player to target
+  const steps = 8;
+  for (let i = 1; i <= steps; i++) {
+    setTimeout(() => {
+      const t = i / steps;
+      const sx = p.x + (tx - p.x) * t;
+      const sy = p.y + (ty - p.y) * t - Math.sin(t * Math.PI) * 40; // arc apex
+      spawnParticles(state, sx, sy, color, 3, 0.28);
+    }, i * (delay * 1000 / steps));
+  }
+  // Impact marker
+  setTimeout(() => {
+    const marker = state.aoeMarkers.acquire();
+    if (marker) {
+      marker.x = tx; marker.y = ty;
+      marker.radius = radius;
+      marker.delay = 0.001;   // instant explosion at end of flight
+      marker.dmg = dmg; marker.owner = p.idx;
+      marker.color = color; marker.age = 0; marker.stun = 0;
+    }
+  }, delay * 1000);
+}
 
 registerClassHooks('cannoneer', {
   // Heavy Caliber: every 4th shot deals 2x damage.
@@ -35,9 +66,8 @@ registerClassHooks('cannoneer', {
     }
   },
 
-  // RMB Recoil Cannonball: apply backward push + iframes, then let the
-  // normal Projectile cast path fire the shell. (Returning undefined keeps
-  // the default handler running.)
+  // RMB Recoil Cannonball: apply backward push + iframes, then fall through
+  // to the default Projectile cast so the shell fires.
   castRMBAbility: (state, p, _def, angle) => {
     p._rollTimer = RECOIL_TIME;
     p._rollVx = -Math.cos(angle) * (RECOIL_DIST / RECOIL_TIME);
@@ -48,26 +78,25 @@ registerClassHooks('cannoneer', {
     spawnShockwave(state, p.x, p.y, 28, 'rgba(220,130,50,.45)');
     shake(state, 2);
     netSfx(state, SfxName.Hit);
-    return undefined; // fall through to normal Projectile spawn
+    return undefined;
   },
 
-  // Q Shrapnel Burst: predict detonation point, arc a shell with trail
-  // particles over the delay, then spawn a ring of shrapnel at the point.
-  castQAbility: (state, p, def, angle) => {
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    const tx = clamp(p.x + cos * SHRAPNEL_RANGE, 40, ROOM_WIDTH - 40);
-    const ty = clamp(p.y + sin * SHRAPNEL_RANGE, 40, ROOM_HEIGHT - 40);
+  // Q Shrapnel Burst: rocket flies to the cursor world-position and
+  // detonates there into a radial shrapnel ring.
+  castQAbility: (state, p, def) => {
+    const wp = toWorld(state, state.mouseX, state.mouseY);
+    const tx = clamp(wp.x, 40, ROOM_WIDTH - 40);
+    const ty = clamp(wp.y, 40, ROOM_HEIGHT - 40);
 
-    // Flying-shell visual: staggered trail particles along the arc.
+    // Flying-shell visual along arc player → cursor
     const steps = 8;
     for (let i = 1; i <= steps; i++) {
       setTimeout(() => {
         const t = i / steps;
         const sx = p.x + (tx - p.x) * t;
-        const sy = p.y + (ty - p.y) * t - Math.sin(t * Math.PI) * 40; // slight arc
+        const sy = p.y + (ty - p.y) * t - Math.sin(t * Math.PI) * 40;
         spawnParticles(state, sx, sy, def.color, 3, 0.28);
-      }, i * (SHRAPNEL_DELAY * 1000 / steps));
+      }, i * (SHRAPNEL_TRAVEL * 1000 / steps));
     }
 
     // Detonation: ring of shrapnel projectiles radiating outward.
@@ -91,72 +120,35 @@ registerClassHooks('cannoneer', {
           stun: 0, clsKey: p.clsKey, _reversed: false, _bounces: 0,
         });
       }
-    }, SHRAPNEL_DELAY * 1000);
+    }, SHRAPNEL_TRAVEL * 1000);
 
-    return true; // override default
+    return true;
   },
 
-  // Space Siege Mode: root the player; auto-fire is handled in onTick.
+  // Space Rocket Barrage: rain rockets on the cursor for ~3s. The cursor is
+  // re-read every volley so aiming around mid-barrage works.
   castUltimate: (state, p) => {
-    p._siegeTimer = SIEGE_DURATION;
-    p._siegeFireTimer = 0;
-    p._rollTimer = 0; // cancel any active roll
+    const pw = p.ultPower || 1;
+    const dmg = Math.round(BARRAGE_ROCKET_DMG * pw);
+    const volleys = Math.floor(BARRAGE_DURATION_MS / BARRAGE_INTERVAL_MS);
+    for (let i = 0; i < volleys; i++) {
+      setTimeout(() => {
+        if (!p.alive) return;
+        const wp = toWorld(state, state.mouseX, state.mouseY);
+        const tx = clamp(wp.x + rand(-BARRAGE_SCATTER, BARRAGE_SCATTER), 40, ROOM_WIDTH - 40);
+        const ty = clamp(wp.y + rand(-BARRAGE_SCATTER, BARRAGE_SCATTER), 40, ROOM_HEIGHT - 40);
+        launchRocketTo(state, p, tx, ty, dmg, '#dd8833', BARRAGE_RADIUS, BARRAGE_DELAY);
+        if (i % 3 === 0) {
+          shake(state, 2);
+          netSfx(state, SfxName.Hit);
+        }
+      }, i * BARRAGE_INTERVAL_MS);
+    }
     spawnShockwave(state, p.x, p.y, 90, 'rgba(180,110,50,.5)');
     spawnParticles(state, p.x, p.y, '#dd8833', 18, 0.6);
-    spawnText(state, p.x, p.y - 40, 'SIEGE MODE', '#ffbb66');
+    spawnText(state, p.x, p.y - 40, 'ROCKET BARRAGE', '#ffbb66');
     netSfx(state, SfxName.Hit);
     shake(state, 5);
     return true;
   },
-
-  // Per-frame: during Siege, lock movement (done in physics.ts) and fire
-  // auto-aimed shells at nearest enemies.
-  onTick: (state, p, dt) => {
-    if (p._siegeTimer <= 0) return;
-    p._siegeTimer -= dt;
-    p._siegeFireTimer -= dt;
-
-    // Damage reduction flag — reuse wardenDR as a temporary DR channel.
-    p._wardenDR = Math.max(p._wardenDR || 0, SIEGE_DR);
-
-    if (p._siegeFireTimer <= 0) {
-      p._siegeFireTimer = SIEGE_FIRE_RATE;
-
-      // Find nearest enemy in range
-      let best: any = null;
-      let bestD = Infinity;
-      for (const e of state.enemies) {
-        if (!e.alive || e._friendly) continue;
-        const d = dist(p.x, p.y, e.x, e.y);
-        if (d < SIEGE_RANGE && d < bestD) { bestD = d; best = e; }
-      }
-
-      if (best) {
-        const pw = p.ultPower || 1;
-        const dmg = Math.round(SIEGE_SHELL_DMG * pw);
-        // Lead the target slightly using its velocity (matches player lock-on feel).
-        const tx = clamp(best.x + (best.vx || 0) * SIEGE_DELAY, 40, ROOM_WIDTH - 40);
-        const ty = clamp(best.y + (best.vy || 0) * SIEGE_DELAY, 40, ROOM_HEIGHT - 40);
-        const marker = state.aoeMarkers.acquire();
-        if (marker) {
-          marker.x = tx; marker.y = ty;
-          marker.radius = SIEGE_SHELL_RADIUS;
-          marker.delay = SIEGE_DELAY;
-          marker.dmg = dmg; marker.owner = p.idx;
-          marker.color = '#dd8833'; marker.age = 0; marker.stun = 0;
-        }
-        // Muzzle flash at player
-        const a = Math.atan2(ty - p.y, tx - p.x);
-        spawnParticles(state, p.x + Math.cos(a) * WIZARD_SIZE, p.y + Math.sin(a) * WIZARD_SIZE, '#ffcc77', 5, 0.3);
-        shake(state, 2);
-        netSfx(state, SfxName.Hit);
-      }
-    }
-
-    if (p._siegeTimer <= 0) {
-      spawnParticles(state, p.x, p.y, '#dd8833', 12, 0.4);
-      spawnText(state, p.x, p.y - 30, 'RELEASED', '#ffbb66');
-    }
-  },
-
 });

@@ -268,7 +268,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
         chargeTime: 1.0, chargeSlow: 0.4, chargeMinDmg: 1.0, chargeMaxDmg: 8.0, chargePierce: 1, chargeRadius: 25 },
       { name: 'Cannonball', key: 'RMB', type: SpellType.Projectile, dmg: 5, speed: 420, radius: 10, mana: 16, cd: 3.5, life: 2.2, pierce: 99, color: '#dd8833', trail: '#aa5522' },
       { name: 'Shrapnel Burst', key: 'Q', type: SpellType.Ultimate, ultCharge: 0, mana: 24, cd: 5, color: '#dd8833' },
-      { name: 'Siege Mode', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#885522', mana: 0, cd: 0 },
+      { name: 'Rocket Barrage', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#885522', mana: 0, cd: 0 },
     ],
   },
   soulbinder: {
