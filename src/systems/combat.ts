@@ -1007,6 +1007,29 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     p.channelSlot = idx;
     p.channelAngle = angle;
     // Mana already deducted above. Don't set cooldown yet — it starts when channel ends.
+    // Nova channels apply their burst effects on activation (stun, detonate, shield).
+    if (def.type === SpellType.Nova) {
+      spawnShockwave(state, p.x, p.y, def.range, def.color);
+      spawnParticles(state, p.x, p.y, def.color, 20);
+      for (const e of state.enemies) {
+        if (!e.alive) continue;
+        if (dist(p.x, p.y, e.x, e.y) <= def.range) {
+          damageEnemy(state, e, getEffectiveSpellDmg(p, idx), p.idx);
+          if (def.slow) e.slowTimer = (e.slowTimer || 0) + def.slow;
+          if (def.stun) e.stunTimer = (e.stunTimer || 0) + def.stun;
+          if (def.applyMark) applyMarkToEnemy(state, e, def.applyMark, p.idx);
+          if (def.detonateMark) detonateMarks(state, e, def.detonateMark, p.idx, def.color);
+        }
+      }
+      if (p.clsKey === 'stormcaller') {
+        p._dischargeShield = def.channel;
+        spawnParticles(state, p.x, p.y, '#cc88ff', 20, 1.1);
+        spawnParticles(state, p.x, p.y, '#ffffff', 10, 0.8);
+        flashScreen(state, 0.15, '200,140,255');
+        shake(state, 4);
+        netSfx(state, SfxName.Zap);
+      }
+    }
     return;
   }
 
@@ -1382,18 +1405,6 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
   } else if (def.type === SpellType.Nova) {
     spawnShockwave(state, p.x, p.y, def.range, def.color);
     spawnParticles(state, p.x, p.y, def.color, 20);
-    // Stormcaller Discharge: charged static field around the caster — stuns,
-    // destroys incoming projectiles (via the shield timer checked in eProj), and
-    // detonates static marks as a bonus.
-    if (p.clsKey === 'stormcaller') {
-      p._dischargeShield = 0.5;
-      spawnShockwave(state, p.x, p.y, def.range, '#cc88ff');
-      spawnParticles(state, p.x, p.y, '#cc88ff', 20, 1.1);
-      spawnParticles(state, p.x, p.y, '#ffffff', 10, 0.8);
-      flashScreen(state, 0.15, '200,140,255');
-      shake(state, 4);
-      netSfx(state, SfxName.Zap);
-    }
     let novaHealed = 0;
     for (const e of state.enemies) {
       if (!e.alive) continue;

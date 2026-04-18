@@ -264,6 +264,12 @@ export function updatePlayers(state: GameState, dt: number): void {
           || (chSlot === 2 && input.ability)
           || (chSlot === 3 && input.ult);
 
+        // Nova channels (Discharge): keep the shield topped up every frame so it
+        // stays at full strength until the channel ends, then naturally fades.
+        if (chDef.type === SpellType.Nova && p.clsKey === 'stormcaller') {
+          p._dischargeShield = Math.max(p._dischargeShield, 0.5);
+        }
+
         // Continuous beam channels: render beam + damage every frame (iframes gate rate)
         if (chDef.type === SpellType.Beam) {
           const inThunderGod = p._thunderGod > 0;
@@ -372,8 +378,10 @@ export function updatePlayers(state: GameState, dt: number): void {
         if (!slotHeld || (p.channelTimer || 0) >= chDef.channel) {
           const progress = Math.min(1, (p.channelTimer || 0) / chDef.channel);
 
-          // Non-Beam channels (charge-and-release): fire the spell on completion with scaled damage
-          if (chDef.type !== SpellType.Beam) {
+          // Non-Beam non-Nova channels (charge-and-release): fire the spell on completion
+          // with scaled damage. Beam channels damage continuously and Nova channels
+          // applied their burst on activation — neither re-fires here.
+          if (chDef.type !== SpellType.Beam && chDef.type !== SpellType.Nova) {
             const scaledDmg = chDef.dmg * (1 + ((chDef.channelScale || 1) - 1) * progress);
             const origDmg = chDef.dmg;
             const origMana = chDef.mana;
