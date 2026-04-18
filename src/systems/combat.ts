@@ -1422,12 +1422,14 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
   } else if (def.type === SpellType.Nova) {
     spawnShockwave(state, p.x, p.y, def.range, def.color);
     spawnParticles(state, p.x, p.y, def.color, 20);
-    // Stormcaller Discharge: radiating lightning bolts from the caster
+    // Stormcaller Discharge: dominant player-centered expanding ring + radiating bolts
     if (p.clsKey === 'stormcaller') {
-      spawnShockwave(state, p.x, p.y, def.range * 0.4, '#ffffff');
-      const boltCount = 8;
+      // Two extra shockwaves at the caster so the AoE origin is unmistakable
+      spawnShockwave(state, p.x, p.y, def.range, '#ffffff');
+      spawnShockwave(state, p.x, p.y, def.range * 0.5, '#ffee88');
+      const boltCount = 12;
       for (let i = 0; i < boltCount; i++) {
-        const ba = (i / boltCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.35;
+        const ba = (i / boltCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
         const bolt = state.beams.acquire();
         if (bolt) {
           bolt.x = p.x; bolt.y = p.y;
@@ -1438,9 +1440,10 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
           bolt.life = 0.22;
         }
       }
-      spawnParticles(state, p.x, p.y, '#ffffff', 14, 1.1);
-      flashScreen(state, 0.15, '255,220,100');
-      shake(state, 4);
+      spawnParticles(state, p.x, p.y, '#ffffff', 18, 1.2);
+      spawnParticles(state, p.x, p.y, '#ffcc44', 20, 1.4);
+      flashScreen(state, 0.2, '255,220,100');
+      shake(state, 5);
       netSfx(state, SfxName.Zap);
     }
     let novaHealed = 0;

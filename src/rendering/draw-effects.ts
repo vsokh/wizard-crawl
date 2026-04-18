@@ -31,10 +31,12 @@ export function updateFx(state: GameState, dt: number): void {
     }
   }
 
-  // Shockwaves
+  // Shockwaves — speed scales with maxR so large rings reach their target
+  // size within the fixed 0.4s lifetime (baseline 200 for small effects).
   for (let i = state.shockwaves.count - 1; i >= 0; i--) {
     const s = state.shockwaves.get(i);
-    s.radius += dt * 200;
+    const speed = Math.max(200, s.maxR * 2.5);
+    s.radius += dt * speed;
     s.life -= dt * 2.5;
     if (s.life <= 0) {
       state.shockwaves.release(i);
