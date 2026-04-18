@@ -267,7 +267,7 @@ export const CLASSES: Record<string, ClassDefInput> = {
       { name: 'Power Shot', key: 'LMB', type: SpellType.Projectile, dmg: 3, speed: 500, radius: 11, mana: 10, cd: 0.5, life: 1.5, explode: 40, pierce: 1, color: '#aa7733', trail: '#885522',
         chargeTime: 1.0, chargeSlow: 0.4, chargeMinDmg: 1.0, chargeMaxDmg: 8.0, chargePierce: 1, chargeRadius: 25 },
       { name: 'Cannonball', key: 'RMB', type: SpellType.Projectile, dmg: 5, speed: 420, radius: 10, mana: 16, cd: 3.5, life: 2.2, pierce: 99, color: '#dd8833', trail: '#aa5522' },
-      { name: 'Shrapnel Burst', key: 'Q', type: SpellType.Ultimate, ultCharge: 0, mana: 24, cd: 5, color: '#dd8833' },
+      { name: 'Heavy Shell', key: 'Q', type: SpellType.Ultimate, ultCharge: 0, mana: 28, cd: 6, color: '#dd8833' },
       { name: 'Rocket Barrage', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#885522', mana: 0, cd: 0 },
     ],
   },

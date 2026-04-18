@@ -164,8 +164,8 @@ export function generateSpellDescription(spell: SpellDefInput, classKey?: string
         parts.push('Raises a skeleton at the cursor (cap 6). Skeletons hunt Death-Marked targets for bonus damage.');
       } else if (spell.name === 'Roll') {
         parts.push('Rolls in aim direction with brief invulnerability. Fast evasive reposition.');
-      } else if (spell.name === 'Shrapnel Burst') {
-        parts.push('Fires a rocket toward your cursor. Detonates on impact, spraying 10 shrapnel fragments in a ring.');
+      } else if (spell.name === 'Heavy Shell') {
+        parts.push('Fires one massive slow rocket at your cursor. Obliterates a pack with a 110r blast.');
       } else {
         parts.push('Summons a companion to fight for you');
       }
