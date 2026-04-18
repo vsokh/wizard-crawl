@@ -266,8 +266,25 @@ export function updatePlayers(state: GameState, dt: number): void {
 
         // Nova channels (Discharge): keep the shield topped up every frame so it
         // stays at full strength until the channel ends, then naturally fades.
+        // Every 0.2s, stun any enemy currently inside the field for 0.3s so
+        // anything that walks in gets pinned the moment it crosses the boundary.
         if (chDef.type === SpellType.Nova && p.clsKey === 'stormcaller') {
           p._dischargeShield = Math.max(p._dischargeShield, 0.5);
+          const tickInterval = 0.2;
+          const prevTicks = Math.floor(((p.channelTimer || 0) - dt) / tickInterval);
+          const currTicks = Math.floor((p.channelTimer || 0) / tickInterval);
+          if (currTicks > prevTicks) {
+            const shieldR = chDef.range || 180;
+            const cand = state.enemyGrid.queryArea(p.x, p.y, shieldR);
+            for (const ei of cand) {
+              const e = state.enemies.at(ei);
+              if (!e.alive) continue;
+              if ((e.x - p.x) ** 2 + (e.y - p.y) ** 2 < shieldR * shieldR) {
+                e.stunTimer = Math.max(e.stunTimer || 0, 0.3);
+                spawnParticles(state, e.x, e.y, '#cc88ff', 2, 0.4);
+              }
+            }
+          }
         }
 
         // Continuous beam channels: render beam + damage every frame (iframes gate rate)
