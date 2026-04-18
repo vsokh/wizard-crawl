@@ -205,12 +205,12 @@ export const UPGRADE_POOL: UpgradeDef[] = [
     apply: (p: Player) => { p.armor = (p.armor || 0) + 3; p.barkSkinRegen = true; p.hpRegen = (p.hpRegen || 0) + 0.2; } },
 
   // ── Warlock ──
-  { name: 'Soul Siphon', desc: 'Dark Pact HP cost becomes healing instead (pay mana, gain HP)', forClass: 'warlock', color: '#6622aa',
-    apply: (p: Player) => { p.soulSiphon = true; } },
-  { name: 'Demonic Pact', desc: 'Imps are permanent and you can have 3 at once', forClass: 'warlock', color: '#6622aa',
-    apply: (p: Player) => { p.demonicPact = true; } },
-  { name: 'Hex', desc: 'Drain Life chains to 3 targets', forClass: 'warlock', color: '#6622aa',
-    apply: (p: Player) => { p.hexChain = (p.hexChain || 0) + 3; } },
+  { name: 'Hex Saturation', desc: 'Hex Powder applies +1 extra curse stack per hit', forClass: 'warlock', color: '#6622aa',
+    apply: (p: Player) => { p.hexSaturation = true; } },
+  { name: 'Extended Ritual', desc: 'Voodoo Totem lasts 2x longer and covers +40u radius', forClass: 'warlock', color: '#6622aa',
+    apply: (p: Player) => { p.extendedRitual = true; } },
+  { name: 'Bigger Detonations', desc: 'Release Hex heals +1 extra HP per stack consumed', forClass: 'warlock', color: '#6622aa',
+    apply: (p: Player) => { p.biggerDetonations = true; } },
 
   // ── Monk ──
   { name: 'Way of the Fist', desc: 'Chi Blast fires 3 projectiles in a fan', forClass: 'monk', color: '#eedd88',

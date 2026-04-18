@@ -1073,27 +1073,27 @@ describe('Augment apply() audit — all augments', () => {
 
   // ── Warlock (idx 103-105) ──
 
-  describe('[103] Soul Siphon (warlock)', () => {
-    it('sets soulSiphon to true', () => {
+  describe('[103] Hex Saturation (warlock)', () => {
+    it('sets hexSaturation to true', () => {
       const p = createTestPlayer(0, 'warlock');
       UPGRADE_POOL[103].apply(p, 1);
-      expect(p.soulSiphon).toBe(true);
+      expect(p.hexSaturation).toBe(true);
     });
   });
 
-  describe('[104] Demonic Pact (warlock)', () => {
-    it('sets demonicPact to true', () => {
+  describe('[104] Extended Ritual (warlock)', () => {
+    it('sets extendedRitual to true', () => {
       const p = createTestPlayer(0, 'warlock');
       UPGRADE_POOL[104].apply(p, 1);
-      expect(p.demonicPact).toBe(true);
+      expect(p.extendedRitual).toBe(true);
     });
   });
 
-  describe('[105] Hex (warlock)', () => {
-    it('sets hexChain to 3', () => {
+  describe('[105] Bigger Detonations (warlock)', () => {
+    it('sets biggerDetonations to true', () => {
       const p = createTestPlayer(0, 'warlock');
       UPGRADE_POOL[105].apply(p, 1);
-      expect(p.hexChain).toBe(3);
+      expect(p.biggerDetonations).toBe(true);
     });
   });
 

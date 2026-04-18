@@ -39,7 +39,7 @@ export const ULTIMATE_DESCRIPTIONS: Record<string, string> = {
   paladin: 'Heal all players for 75% max HP and smite all enemies.',
   ranger: 'Rain arrows in a circle around you for 3s. The storm follows your position — keep moving.',
   druid: 'Summon a ring of 6 thorn zones and 2 treant allies.',
-  warlock: 'Mark all enemies with Doom — after 3 seconds, they take 35% max HP damage.',
+  warlock: 'Summon a Loa spirit at cursor for 10s. Enemies within 250u gain curse stacks; when the Loa fades, every cursed enemy on the map detonates for stacks × 5.',
   monk: 'Deliver 20 rapid melee strikes in a cone with knockback.',
   engineer: 'Deploy a powerful Mega Turret with 20 HP that fires for 12 seconds.',
   graviturge: 'Create a gravity vortex that pulls enemies inward, crushing them with gravitational force.',
@@ -166,6 +166,10 @@ export function generateSpellDescription(spell: SpellDefInput, classKey?: string
         parts.push('Rolls in aim direction with brief invulnerability. Fast evasive reposition.');
       } else if (spell.name === 'Heavy Shell') {
         parts.push('Fires one massive slow rocket at your cursor. Obliterates a pack with a 110r blast.');
+      } else if (spell.name === 'Release Hex') {
+        parts.push('Detonates every cursed enemy within 180u of your cursor. Each explosion deals stacks × 3 dmg and heals you 1 HP per stack consumed.');
+      } else if (spell.name === 'Voodoo Totem') {
+        parts.push('Plants a bone totem (5s, 10 HP). Enemies within 150u gain 1 curse stack every 0.8s; you heal 1 HP/s while near it.');
       } else {
         parts.push('Summons a companion to fight for you');
       }

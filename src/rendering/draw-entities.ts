@@ -4103,7 +4103,8 @@ export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): vo
       const markColor = e._markName === 'frost' ? '#88CCFF' :
                         e._markName === 'soul' ? '#55aa88' :
                         e._markName === 'judgment' ? '#ffdd44' :
-                        e._markName === 'static' ? '#ffcc44' : '#ffaa44';
+                        e._markName === 'static' ? '#ffcc44' :
+                        e._markName === 'voodoo' ? '#cc55ee' : '#ffaa44';
       markIndicators.push({ x: e.x, y: e.y, r: et.size + 5, stacks: e._markStacks, color: markColor });
     }
   }

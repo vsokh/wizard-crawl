@@ -44,7 +44,7 @@ import {
   BOSS_WAVE_XP,
 } from '../constants';
 import { createFriendlyEnemy } from './dungeon';
-import { dispatchCastUltimate, dispatchCastQAbility, dispatchCastRMBAbility, dispatchDamageEnemy, dispatchKill } from '../classes/hooks';
+import { dispatchCastUltimate, dispatchCastQAbility, dispatchCastRMBAbility, dispatchDamageEnemy, dispatchKill, dispatchDamagePlayer } from '../classes/hooks';
 import '../classes/registry';
 import { dispatchSpell } from './spell-handlers';
 import './spell-handlers-builtin';
@@ -622,6 +622,7 @@ export function damagePlayer(state: GameState, p: Player, rawDmg: number, attack
   spawnParticles(state, p.x, p.y, '#ff4444', 8);
   netSfx(state, SfxName.Hit);
   spawnText(state, p.x, p.y - 20, `-${dmg}`, '#ff4444');
+  dispatchDamagePlayer(state, p, dmg);
 
   // Break Bladecaller stealth on damage
   if (p._stealth > 0) {
@@ -867,7 +868,8 @@ export function detonateMarks(
   const markColor = e._markName === 'frost' ? '#88CCFF' :
                     e._markName === 'soul' ? '#55aa88' :
                     e._markName === 'judgment' ? '#ffdd44' :
-                    e._markName === 'static' ? '#ffcc44' : '#ffaa44';
+                    e._markName === 'static' ? '#ffcc44' :
+                    e._markName === 'voodoo' ? '#cc55ee' : '#ffaa44';
   spawnText(state, e.x, e.y - 30, 'DETONATE!', markColor);
   spawnParticles(state, e.x, e.y, color, 12, 0.5);
   spawnShockwave(state, e.x, e.y, det.aoeOnDetonate || 40, color);
@@ -1006,18 +1008,6 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
     return;
   }
 
-  // Warlock Dark Pact: refund 30% mana cost but pay HP instead
-  if (p.clsKey === 'warlock' && def.mana > 0) {
-    const refund = Math.floor(def.mana * COMBAT.WARLOCK_MANA_REFUND);
-    p.mana += refund;
-    if (p.soulSiphon) {
-      p.hp = Math.min(p.maxHp, p.hp + 1);
-      spawnText(state, p.x, p.y - 20, '+1 HP', '#44ff88');
-    } else {
-      p.hp -= 1;
-      if (p.hp <= 0) p.hp = 1; // don't let Dark Pact kill you
-    }
-  }
   let cd = def.cd;
   // Bloodlust: reduce cooldown based on kill stacks (max +100% attack speed = halve cooldown)
   if (p.bloodlust && p._bloodlustStacks > 0) {
@@ -1273,7 +1263,7 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       }
       // Angle-based cone hit detection for wide cones.
       for (const e of state.enemies) {
-        if (!e.alive) continue;
+        if (!e.alive || e._friendly) continue;
         const d = dist(p.x, p.y, e.x, e.y);
         if (d > def.range) continue;
         const a2 = Math.atan2(e.y - p.y, e.x - p.x);

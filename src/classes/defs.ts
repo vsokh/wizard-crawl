@@ -139,15 +139,18 @@ export const CLASSES: Record<string, ClassDefInput> = {
   },
   warlock: {
     name: 'Warlock', color: '#8833aa', glow: '#662288',
-    desc: 'Dark magic. High risk, high reward.',
+    desc: 'Voodoo priest. Cone-sprays curses on packs and detonates them for massive lifesteal bursts.',
     hp: 6, moveSpeed: 175, maxMana: 120, manaRegen: 18,
-    passive: { name: 'Dark Pact', desc: 'Casting refunds 30% mana but costs 1 HP' },
+    passive: {
+      name: "Voodoo Priest's Pact",
+      desc: 'Blood Doll: damage you take is mirrored to the most-cursed enemy. Contagion: killing a cursed enemy spreads 1 stack to 2 nearest enemies within 120u.',
+    },
     spells: [
-      { name: 'Shadow Bolt', key: 'LMB', type: SpellType.Projectile, dmg: 3, speed: 260, radius: 10, mana: 10, cd: 0.5, life: 1.5, color: '#8833aa', trail: '#662288',
-        chargeTime: 0.8, chargeSlow: 0.5, chargeMinDmg: 1.5, chargeMaxDmg: 6.0, chargeRadius: 30 },
-      { name: 'Drain Life', key: 'RMB', type: SpellType.Beam, dmg: 2, range: 200, mana: 18, cd: 1, width: 4, drain: 2, color: '#aa44cc' },
-      { name: 'Summon Imp', key: 'Q', type: SpellType.Ultimate, ultCharge: 0, mana: 25, cd: 8, color: '#cc4466' },
-      { name: 'Doom', key: 'Space', type: SpellType.Ultimate, ultCharge: 90, color: '#662288', mana: 0, cd: 0 },
+      { name: 'Hex Powder', key: 'LMB', type: SpellType.Cone, dmg: 1, range: 120, mana: 4, cd: 0.35, angle: 1.2, color: '#8833aa',
+        applyMark: { name: 'voodoo', duration: 6, maxStacks: 10, visual: '#cc55ee' } },
+      { name: 'Release Hex', key: 'RMB', type: SpellType.Ultimate, ultCharge: 0, mana: 18, cd: 2.5, color: '#cc55ee' },
+      { name: 'Voodoo Totem', key: 'Q', type: SpellType.Ultimate, ultCharge: 0, mana: 22, cd: 6, color: '#8833aa' },
+      { name: 'Summon the Loa', key: 'Space', type: SpellType.Ultimate, ultCharge: 100, color: '#662288', mana: 0, cd: 0 },
     ],
   },
   monk: {

@@ -410,6 +410,9 @@ export interface Player {
   soulSiphon: boolean;
   demonicPact: boolean;
   hexChain: number;
+  hexSaturation: boolean;
+  extendedRitual: boolean;
+  biggerDetonations: boolean;
   zenMana: boolean;
   turretArmy: boolean;
   laserTurret: boolean;

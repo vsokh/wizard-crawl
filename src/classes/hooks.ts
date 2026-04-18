@@ -28,6 +28,9 @@ export interface ClassHooks {
   /** Called per tick while the player is alive. dt in seconds. */
   onTick?: (state: GameState, p: Player, dt: number) => void;
 
+  /** Called after damage is applied to the player, with the final damage amount. */
+  onDamagePlayer?: (state: GameState, p: Player, dmg: number) => void;
+
   /** Should enemies currently be able to target this player? Return false to hide (stealth). */
   isTargetable?: (p: Player) => boolean;
 }
@@ -76,6 +79,11 @@ export function dispatchDamageEnemy(state: GameState, p: Player, e: Enemy, dmg: 
 /** Run onKill for the active class. */
 export function dispatchKill(state: GameState, p: Player, e: Enemy): void {
   REGISTRY[p.clsKey]?.onKill?.(state, p, e);
+}
+
+/** Run onDamagePlayer for the active class. */
+export function dispatchDamagePlayer(state: GameState, p: Player, dmg: number): void {
+  REGISTRY[p.clsKey]?.onDamagePlayer?.(state, p, dmg);
 }
 
 /** Check targetability for a player. Defaults to true. */
