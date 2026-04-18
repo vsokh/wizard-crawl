@@ -3003,6 +3003,259 @@ function drawImp(ctx: CanvasRenderingContext2D, x: number, y: number, size: numb
   }
 }
 
+// ── Draw a warlock voodoo totem (stake + skull + fetish) ──
+function drawVoodooTotem(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, time: number): void {
+  const sway = Math.sin(time * 2.5) * 2;
+  const pulse = 0.5 + 0.5 * Math.sin(time * 3);
+
+  ctx.save();
+  ctx.translate(x, y);
+
+  // Ground shadow / ritual circle
+  ctx.fillStyle = 'rgba(102,34,136,.35)';
+  ctx.beginPath();
+  ctx.ellipse(0, size * 0.7, size * 1.4, size * 0.45, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = `rgba(204,85,238,${0.35 + pulse * 0.35})`;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath();
+  ctx.ellipse(0, size * 0.7, size * 1.4, size * 0.45, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Wooden stake (pole)
+  ctx.translate(sway * 0.15, 0);
+  ctx.fillStyle = '#6a4a2a';
+  ctx.strokeStyle = '#3d2a18';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.18, size * 0.8);
+  ctx.lineTo(-size * 0.22, -size * 0.4);
+  ctx.lineTo(size * 0.22, -size * 0.4);
+  ctx.lineTo(size * 0.18, size * 0.8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Wood grain lines
+  ctx.strokeStyle = 'rgba(40,20,5,.45)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.08, size * 0.6); ctx.lineTo(-size * 0.1, -size * 0.35);
+  ctx.moveTo(size * 0.05, size * 0.55); ctx.lineTo(size * 0.07, -size * 0.3);
+  ctx.stroke();
+
+  // Rope lashings
+  ctx.strokeStyle = '#4a3010';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.22, size * 0.2); ctx.lineTo(size * 0.22, size * 0.2);
+  ctx.moveTo(-size * 0.22, -size * 0.15); ctx.lineTo(size * 0.22, -size * 0.15);
+  ctx.stroke();
+
+  // Feather charm (left)
+  ctx.strokeStyle = '#cc3355';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.22, size * 0.2);
+  ctx.quadraticCurveTo(-size * 0.55, size * 0.4, -size * 0.7, size * 0.6);
+  ctx.stroke();
+  // Bone charm (right)
+  ctx.strokeStyle = '#e0d0a0';
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.moveTo(size * 0.22, size * 0.2);
+  ctx.lineTo(size * 0.5, size * 0.55);
+  ctx.stroke();
+  // Bone tip blobs
+  ctx.fillStyle = '#e0d0a0';
+  ctx.beginPath();
+  ctx.arc(size * 0.5, size * 0.55, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Skull on top
+  const skullY = -size * 0.75;
+  const skullR = size * 0.55;
+  // Glow halo
+  ctx.fillStyle = `rgba(204,85,238,${0.2 + pulse * 0.25})`;
+  ctx.beginPath();
+  ctx.arc(0, skullY, skullR * 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  // Skull dome
+  ctx.fillStyle = '#efe3c8';
+  ctx.strokeStyle = '#886644';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(0, skullY, skullR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Jaw
+  ctx.fillStyle = '#dcc8a0';
+  ctx.beginPath();
+  ctx.ellipse(0, skullY + skullR * 0.65, skullR * 0.7, skullR * 0.35, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Eye sockets glowing voodoo-purple
+  const eyeCol = `rgba(204,85,238,${0.8 + pulse * 0.2})`;
+  ctx.fillStyle = eyeCol;
+  ctx.beginPath();
+  ctx.arc(-skullR * 0.35, skullY - skullR * 0.05, skullR * 0.22, 0, Math.PI * 2);
+  ctx.arc(skullR * 0.35, skullY - skullR * 0.05, skullR * 0.22, 0, Math.PI * 2);
+  ctx.fill();
+  // Nose slit
+  ctx.fillStyle = '#5a3a20';
+  ctx.beginPath();
+  ctx.moveTo(-2, skullY + skullR * 0.2);
+  ctx.lineTo(0, skullY + skullR * 0.4);
+  ctx.lineTo(2, skullY + skullR * 0.2);
+  ctx.closePath();
+  ctx.fill();
+  // Teeth marks
+  ctx.strokeStyle = '#886644';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = -2; i <= 2; i++) {
+    const tx = i * skullR * 0.18;
+    ctx.moveTo(tx, skullY + skullR * 0.5);
+    ctx.lineTo(tx, skullY + skullR * 0.85);
+  }
+  ctx.stroke();
+
+  // Top feather crest
+  ctx.strokeStyle = '#552266';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, skullY - skullR);
+  ctx.quadraticCurveTo(sway * 0.6, skullY - skullR * 1.8, sway, skullY - skullR * 2.2);
+  ctx.stroke();
+  ctx.strokeStyle = '#cc55ee';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, skullY - skullR);
+  ctx.quadraticCurveTo(sway * 0.3, skullY - skullR * 1.6, sway * 0.6, skullY - skullR * 2);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// ── Draw the Loa spirit ultimate summon (giant spectral priest) ──
+function drawLoa(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, time: number, lifespan: number): void {
+  const float = Math.sin(time * 1.8) * 4;
+  const pulse = 0.5 + 0.5 * Math.sin(time * 2.5);
+  // Flicker extra hard when about to despawn
+  const dying = lifespan < 1.5 ? (1 - lifespan / 1.5) : 0;
+  const flicker = dying > 0 ? 0.6 + Math.random() * 0.4 : 1;
+
+  ctx.save();
+  ctx.translate(x, y + float);
+  ctx.globalAlpha = 0.85 * flicker;
+
+  // Outer aura
+  ctx.fillStyle = `rgba(204,85,238,${0.12 + pulse * 0.12})`;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = `rgba(170,60,210,${0.18 + pulse * 0.15})`;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 2.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Robe (wispy triangle body)
+  ctx.fillStyle = 'rgba(60,20,80,.75)';
+  ctx.strokeStyle = 'rgba(204,85,238,.7)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.9, size * 1.8);
+  ctx.lineTo(-size * 0.4, -size * 0.2);
+  ctx.lineTo(size * 0.4, -size * 0.2);
+  ctx.lineTo(size * 0.9, size * 1.8);
+  // Scalloped robe bottom
+  for (let i = 1; i <= 4; i++) {
+    const px = -size * 0.9 + (size * 1.8 * i / 4);
+    const py = size * 1.8 + Math.sin(time * 3 + i) * 4;
+    ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Rib/bone decorations on robe
+  ctx.strokeStyle = 'rgba(239,227,200,.5)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  for (let i = 0; i < 3; i++) {
+    const ry = i * size * 0.5;
+    ctx.moveTo(-size * 0.35, ry);
+    ctx.lineTo(size * 0.35, ry);
+  }
+  ctx.stroke();
+
+  // Shoulders / neck
+  ctx.fillStyle = 'rgba(239,227,200,.85)';
+  ctx.beginPath();
+  ctx.ellipse(0, -size * 0.3, size * 0.55, size * 0.18, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Skull face
+  const skullY = -size * 0.85;
+  const skullR = size * 0.65;
+  ctx.fillStyle = 'rgba(239,227,200,.95)';
+  ctx.strokeStyle = 'rgba(100,60,140,.8)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(0, skullY, skullR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Jaw
+  ctx.beginPath();
+  ctx.ellipse(0, skullY + skullR * 0.6, skullR * 0.72, skullR * 0.38, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Voodoo eye sockets (glowing)
+  ctx.fillStyle = `rgba(204,85,238,${0.9 + pulse * 0.1})`;
+  ctx.beginPath();
+  ctx.arc(-skullR * 0.35, skullY - skullR * 0.08, skullR * 0.24, 0, Math.PI * 2);
+  ctx.arc(skullR * 0.35, skullY - skullR * 0.08, skullR * 0.24, 0, Math.PI * 2);
+  ctx.fill();
+  // Nose
+  ctx.fillStyle = 'rgba(100,60,140,.9)';
+  ctx.beginPath();
+  ctx.moveTo(-3, skullY + skullR * 0.2);
+  ctx.lineTo(0, skullY + skullR * 0.45);
+  ctx.lineTo(3, skullY + skullR * 0.2);
+  ctx.closePath();
+  ctx.fill();
+  // Teeth
+  ctx.strokeStyle = 'rgba(100,60,140,.9)';
+  ctx.lineWidth = 1.3;
+  ctx.beginPath();
+  for (let i = -3; i <= 3; i++) {
+    const tx = i * skullR * 0.13;
+    ctx.moveTo(tx, skullY + skullR * 0.45);
+    ctx.lineTo(tx, skullY + skullR * 0.9);
+  }
+  ctx.stroke();
+
+  // Top hat (Baron Samedi vibe)
+  ctx.fillStyle = 'rgba(30,10,50,.95)';
+  ctx.strokeStyle = 'rgba(204,85,238,.6)';
+  ctx.lineWidth = 1.5;
+  // Brim
+  ctx.beginPath();
+  ctx.ellipse(0, skullY - skullR * 0.85, skullR * 1.4, skullR * 0.18, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Crown
+  ctx.fillRect(-skullR * 0.8, skullY - skullR * 1.8, skullR * 1.6, skullR);
+  ctx.strokeRect(-skullR * 0.8, skullY - skullR * 1.8, skullR * 1.6, skullR);
+  // Hat band
+  ctx.fillStyle = '#cc3355';
+  ctx.fillRect(-skullR * 0.8, skullY - skullR * 1.05, skullR * 1.6, skullR * 0.2);
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
 // ── Draw a friendly skeleton summon (necromancer minion) ──
 function drawFriendlySkeleton(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, target: { x: number; y: number } | null, time: number, isBoneWarrior: boolean): void {
   const angle = target ? Math.atan2(target.y - y, target.x - x) : 0;
@@ -3908,8 +4161,14 @@ export function drawEnemies(ctx: CanvasRenderingContext2D, state: GameState): vo
       const isWolf = e.type === '_wolf';
       const isImp = e.type === '_imp';
       const isSkeleton = e.type === '_skeleton';
+      const isTotem = e.type === '_totem';
+      const isLoa = e.type === '_loa';
 
-      if (isWolf) {
+      if (isTotem) {
+        drawVoodooTotem(ctx, e.x, e.y, et.size, state.time);
+      } else if (isLoa) {
+        drawLoa(ctx, e.x, e.y, et.size, state.time, e._lifespan);
+      } else if (isWolf) {
         let nearest = null;
         let nd = Infinity;
         for (const e2 of state.enemies) {
