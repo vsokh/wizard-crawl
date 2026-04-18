@@ -1159,46 +1159,6 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
       netSfx(state, SfxName.Fire);
       return;
     }
-    // Stormcaller: Thunder Strike — AoE + chain lightning on detonation
-    if (p.clsKey === 'stormcaller') {
-      const wp = toWorld(state, state.mouseX, state.mouseY);
-      const thunderAoe = state.aoeMarkers.acquire();
-      if (thunderAoe) {
-        thunderAoe.x = wp.x; thunderAoe.y = wp.y; thunderAoe.radius = def.radius; thunderAoe.delay = def.delay;
-        thunderAoe.dmg = def.dmg; thunderAoe.color = def.color; thunderAoe.owner = p.idx;
-        thunderAoe.stun = def.stun || 0; thunderAoe.age = 0;
-      }
-      // After detonation, chain to nearby enemies
-      setTimeout(() => {
-        const hitEnemies: EnemyView[] = [];
-        let lastX = wp.x, lastY = wp.y;
-        for (let chain = 0; chain < 3; chain++) {
-          let nearest: EnemyView | null = null;
-          let nd = Infinity;
-          for (const e of state.enemies) {
-            if (!e.alive || hitEnemies.includes(e)) continue;
-            const d = dist(lastX, lastY, e.x, e.y);
-            if (d < 150 && d > 20 && d < nd) { nd = d; nearest = e; }
-          }
-          if (!nearest) break;
-          hitEnemies.push(nearest);
-          damageEnemy(state, nearest, 2, p.idx);
-          nearest.stunTimer = (nearest.stunTimer || 0) + TIMING.STUN_DURATION;
-          const thunderBeam = state.beams.acquire();
-          if (thunderBeam) {
-            thunderBeam.x = lastX; thunderBeam.y = lastY;
-            thunderBeam.angle = Math.atan2(nearest.y - lastY, nearest.x - lastX);
-            thunderBeam.range = nd; thunderBeam.width = 3; thunderBeam.color = '#ffcc44'; thunderBeam.life = TIMING.BEAM_LIFE;
-          }
-          spawnParticles(state, nearest.x, nearest.y, '#ffcc44', 5, TIMING.PARTICLE_LIFE_SHORT);
-          lastX = nearest.x;
-          lastY = nearest.y;
-        }
-        if (hitEnemies.length > 0) netSfx(state, SfxName.Zap);
-      }, (def.delay || TIMING.SPELL_DEFAULT_DELAY) * 1000);
-      netSfx(state, SfxName.Arcane);
-      return;
-    }
     // Cryomancer: Frost Prison — strong slow + freeze after 1.5s
     if (p.clsKey === 'cryomancer') {
       const wp = toWorld(state, state.mouseX, state.mouseY);
@@ -1422,11 +1382,13 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
   } else if (def.type === SpellType.Nova) {
     spawnShockwave(state, p.x, p.y, def.range, def.color);
     spawnParticles(state, p.x, p.y, def.color, 20);
-    // Stormcaller Discharge: dominant player-centered expanding ring + radiating bolts
+    // Stormcaller Discharge: dominant player-centered expanding purple ring + bolts
     if (p.clsKey === 'stormcaller') {
-      // Two extra shockwaves at the caster so the AoE origin is unmistakable
-      spawnShockwave(state, p.x, p.y, def.range, '#ffffff');
-      spawnShockwave(state, p.x, p.y, def.range * 0.5, '#ffee88');
+      // Layered expanding rings — bright white core, mid purple, full-radius purple
+      spawnShockwave(state, p.x, p.y, def.range, '#cc88ff');
+      spawnShockwave(state, p.x, p.y, def.range * 0.65, '#bb66ff');
+      spawnShockwave(state, p.x, p.y, def.range * 0.3, '#ffffff');
+      // Radiating purple bolts
       const boltCount = 12;
       for (let i = 0; i < boltCount; i++) {
         const ba = (i / boltCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
@@ -1436,13 +1398,13 @@ export function castSpell(state: GameState, p: Player, idx: number, angle: numbe
           bolt.angle = ba;
           bolt.range = def.range;
           bolt.width = 3 + Math.random() * 2;
-          bolt.color = '#ffcc44';
+          bolt.color = '#cc88ff';
           bolt.life = 0.22;
         }
       }
-      spawnParticles(state, p.x, p.y, '#ffffff', 18, 1.2);
-      spawnParticles(state, p.x, p.y, '#ffcc44', 20, 1.4);
-      flashScreen(state, 0.2, '255,220,100');
+      spawnParticles(state, p.x, p.y, '#ffffff', 14, 1.1);
+      spawnParticles(state, p.x, p.y, '#cc88ff', 22, 1.4);
+      flashScreen(state, 0.2, '200,140,255');
       shake(state, 5);
       netSfx(state, SfxName.Zap);
     }
